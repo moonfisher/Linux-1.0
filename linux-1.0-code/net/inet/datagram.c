@@ -37,7 +37,6 @@
 #include "skbuff.h"
 #include "sock.h"
 
-
 /*
  *	Get a datagram skbuff, understands the peeking, nonblocking wakeups and possible
  *	races. This replaces identical code in packet,raw and udp, as well as the yet to
@@ -53,7 +52,7 @@ struct sk_buff *skb_recv_datagram(struct sock *sk, unsigned flags, int noblock, 
     /* Socket is inuse - so the timer doesn't attack it */
 restart:
     sk->inuse = 1;
-    while(sk->rqueue == NULL)	/* No data */
+    while (sk->rqueue == NULL) /* No data */
     {
         /* If we are shutdown then no more data is going to appear. We are done */
         if (sk->shutdown & RCV_SHUTDOWN)
@@ -63,7 +62,7 @@ restart:
             return NULL;
         }
 
-        if(sk->err)
+        if (sk->err)
         {
             release_sock(sk);
             *err = -sk->err;
@@ -72,7 +71,7 @@ restart:
         }
 
         /* Sequenced packets can come disconnected. If so we report the problem */
-        if(sk->type == SOCK_SEQPACKET && sk->state != TCP_ESTABLISHED)
+        if (sk->type == SOCK_SEQPACKET && sk->state != TCP_ESTABLISHED)
         {
             release_sock(sk);
             *err = -ENOTCONN;
@@ -99,9 +98,9 @@ restart:
             {
                 sti();
                 *err = -ERESTARTSYS;
-                return(NULL);
+                return (NULL);
             }
-            if(sk->err != 0)	/* Error while waiting for packet
+            if (sk->err != 0) /* Error while waiting for packet
 						   eg an icmp sent earlier by the
 						   peer has finaly turned up now */
             {
@@ -119,19 +118,19 @@ restart:
     if (!(flags & MSG_PEEK))
     {
         skb = skb_dequeue(&sk->rqueue);
-        if(skb != NULL)
+        if (skb != NULL)
             skb->users++;
         else
-            goto restart;	/* Avoid race if someone beats us to the data */
+            goto restart; /* Avoid race if someone beats us to the data */
     }
     else
     {
         cli();
         skb = skb_peek(&sk->rqueue);
-        if(skb != NULL)
+        if (skb != NULL)
             skb->users++;
         sti();
-        if(skb == NULL)	/* shouldn't happen but .. */
+        if (skb == NULL) /* shouldn't happen but .. */
             *err = -EAGAIN;
     }
     return skb;
@@ -144,13 +143,13 @@ void skb_free_datagram(struct sk_buff *skb)
     save_flags(flags);
     cli();
     skb->users--;
-    if(skb->users > 0)
+    if (skb->users > 0)
     {
         restore_flags(flags);
         return;
     }
     /* See if it needs destroying */
-    if(skb->list == NULL)	/* Been dequeued by someone - ie its read */
+    if (skb->list == NULL) /* Been dequeued by someone - ie its read */
         kfree_skb(skb, FREE_READ);
     restore_flags(flags);
 }
@@ -170,37 +169,37 @@ void skb_copy_datagram(struct sk_buff *skb, int offset, char *to, int size)
 int datagram_select(struct sock *sk, int sel_type, select_table *wait)
 {
     select_wait(sk->sleep, wait);
-    switch(sel_type)
+    switch (sel_type)
     {
     case SEL_IN:
         if (sk->type == SOCK_SEQPACKET && sk->state == TCP_CLOSE)
         {
             /* Connection closed: Wake up */
-            return(1);
+            return (1);
         }
         if (sk->rqueue != NULL || sk->err != 0)
         {
             /* This appears to be consistent
                with other stacks */
-            return(1);
+            return (1);
         }
-        return(0);
+        return (0);
 
     case SEL_OUT:
         if (sk->prot && sk->prot->wspace(sk) >= MIN_WRITE_SPACE)
         {
-            return(1);
+            return (1);
         }
         if (sk->prot == NULL && sk->sndbuf - sk->wmem_alloc >= MIN_WRITE_SPACE)
         {
-            return(1);
+            return (1);
         }
-        return(0);
+        return (0);
 
     case SEL_EX:
         if (sk->err)
-            return(1); /* Socket has gone into error state (eg icmp error) */
-        return(0);
+            return (1); /* Socket has gone into error state (eg icmp error) */
+        return (0);
     }
-    return(0);
+    return (0);
 }

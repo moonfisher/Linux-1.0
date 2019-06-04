@@ -18,7 +18,7 @@ static unsigned long ioport_registrar[IO_BITMAP_SIZE] = {0, /* ... */};
 #ifdef IODEBUG
 static char *ios(unsigned long l)
 {
-    static char str[33] = { '\0' };
+    static char str[33] = {'\0'};
     int i;
     unsigned long mask;
 
@@ -159,7 +159,6 @@ asmlinkage int sys_iopl(long ebx, long ecx, long edx,
     *(&eflags) = (eflags & 0xffffcfff) | (level << 12);
     return 0;
 }
-
 
 void snarf_region(unsigned int from, unsigned int num)
 {

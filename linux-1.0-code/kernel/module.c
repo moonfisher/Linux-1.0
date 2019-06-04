@@ -1,18 +1,18 @@
 #include "linux/errno.h"
 #include "linux/kernel.h"
 #include "asm/segment.h"
-#include "linux/mm.h"		/* defines GFP_KERNEL */
+#include "linux/mm.h" /* defines GFP_KERNEL */
 #include "linux/string.h"
 #include "linux/module.h"
 #include "linux/sched.h"
 #include "linux/malloc.h"
 
 struct module *module_list = NULL;
-int freeing_modules;		/* true if some modules are marked for deletion */
+int freeing_modules; /* true if some modules are marked for deletion */
 
-struct module *find_module( const char *name);
-int get_mod_name( char *user_name, char *buf);
-int free_modules( void);
+struct module *find_module(const char *name);
+int get_mod_name(char *user_name, char *buf);
+int free_modules(void);
 
 /*
  * Allocate space for a module.
@@ -39,18 +39,18 @@ sys_create_module(char *module_name, unsigned long size)
         return -EEXIST;
     }
     len = strlen(name) + 1;
-    if ((savename = (char *) kmalloc(len, GFP_KERNEL)) == NULL)
+    if ((savename = (char *)kmalloc(len, GFP_KERNEL)) == NULL)
         return -ENOMEM;
     memcpy(savename, name, len);
-    if ((mp = (struct module *) kmalloc(sizeof * mp, GFP_KERNEL)) == NULL)
+    if ((mp = (struct module *)kmalloc(sizeof *mp, GFP_KERNEL)) == NULL)
     {
         kfree(savename);
         return -ENOMEM;
     }
-    npages = (size + sizeof (int) + 4095) / 4096;
+    npages = (size + sizeof(int) + 4095) / 4096;
     if ((addr = vmalloc(npages * 4096)) == 0)
     {
-        kfree_s(mp, sizeof * mp);
+        kfree_s(mp, sizeof *mp);
         kfree(savename);
         return -ENOMEM;
     }
@@ -58,13 +58,13 @@ sys_create_module(char *module_name, unsigned long size)
     mp->size = npages;
     mp->addr = addr;
     mp->state = MOD_UNINITIALIZED;
-    * (int *) addr = 0;		/* set use count to zero */
+    *(int *)addr = 0; /* set use count to zero */
     mp->cleanup = NULL;
     mp->next = module_list;
     module_list = mp;
     printk("module `%s' (%lu pages @ 0x%08lx) created\n",
-           mp->name, (unsigned long) mp->size, (unsigned long) mp->addr);
-    return (int) addr;
+           mp->name, (unsigned long)mp->size, (unsigned long)mp->addr);
+    return (int)addr;
 }
 
 /*
@@ -90,18 +90,18 @@ sys_init_module(char *module_name, char *code, unsigned codesize,
 
     if ((error = get_mod_name(module_name, name)) != 0)
         return error;
-    printk( "initializing module `%s', %d (0x%x) bytes\n",
-            name, codesize, codesize);
+    printk("initializing module `%s', %d (0x%x) bytes\n",
+           name, codesize, codesize);
     memcpy_fromfs(&rt, routines, sizeof rt);
     if ((mp = find_module(name)) == NULL)
         return -ENOENT;
-    if ((codesize + sizeof (int) + 4095) / 4096 > mp->size)
+    if ((codesize + sizeof(int) + 4095) / 4096 > mp->size)
         return -EINVAL;
-    memcpy_fromfs((char *)mp->addr + sizeof (int), code, codesize);
-    memset((char *)mp->addr + sizeof (int) + codesize, 0,
-           mp->size * 4096 - (codesize + sizeof (int)));
-    printk( "  init entry @ 0x%08lx, cleanup entry @ 0x%08lx\n",
-            (unsigned long) rt.init, (unsigned long) rt.cleanup);
+    memcpy_fromfs((char *)mp->addr + sizeof(int), code, codesize);
+    memset((char *)mp->addr + sizeof(int) + codesize, 0,
+           mp->size * 4096 - (codesize + sizeof(int)));
+    printk("  init entry @ 0x%08lx, cleanup entry @ 0x%08lx\n",
+           (unsigned long)rt.init, (unsigned long)rt.cleanup);
     mp->cleanup = rt.cleanup;
     if ((*rt.init)() != 0)
         return -EBUSY;
@@ -155,10 +155,10 @@ sys_get_kernel_syms(struct kernel_sym *table)
     {
         from = symbol_table;
         to = table;
-        i = verify_area(VERIFY_WRITE, to, symbol_table_size * sizeof * table);
+        i = verify_area(VERIFY_WRITE, to, symbol_table_size * sizeof *table);
         if (i)
             return i;
-        for (i = symbol_table_size ; --i >= 0 ; )
+        for (i = symbol_table_size; --i >= 0;)
         {
             sym.value = from->addr;
             strncpy(sym.name, from->name, sizeof sym.name);
@@ -169,17 +169,15 @@ sys_get_kernel_syms(struct kernel_sym *table)
     return symbol_table_size;
 }
 
-
 /*
  * Copy the name of a module from user space.
  */
-int
-get_mod_name(char *user_name, char *buf)
+int get_mod_name(char *user_name, char *buf)
 {
     int i;
 
     i = 0;
-    for (i = 0 ; (buf[i] = get_fs_byte(user_name + i)) != '\0' ; )
+    for (i = 0; (buf[i] = get_fs_byte(user_name + i)) != '\0';)
     {
         if (++i >= MOD_MAX_NAME)
             return -E2BIG;
@@ -187,16 +185,15 @@ get_mod_name(char *user_name, char *buf)
     return 0;
 }
 
-
 /*
  * Look for a module by name, ignoring modules marked for deletion.
  */
 struct module *
-find_module( const char *name)
+find_module(const char *name)
 {
     struct module *mp;
 
-    for (mp = module_list ; mp ; mp = mp->next)
+    for (mp = module_list; mp; mp = mp->next)
     {
         if (mp->state == MOD_DELETED)
             continue;
@@ -206,13 +203,11 @@ find_module( const char *name)
     return mp;
 }
 
-
 /*
  * Try to free modules which have been marked for deletion.  Returns nonzero
  * if a module was actually freed.
  */
-int
-free_modules( void)
+int free_modules(void)
 {
     struct module *mp;
     struct module **mpp;
@@ -232,18 +227,17 @@ free_modules( void)
             freeing_modules = 1;
             mpp = &mp->next;
         }
-        else  	/* delete it */
+        else /* delete it */
         {
             *mpp = mp->next;
             vfree(mp->addr);
             kfree(mp->name);
-            kfree_s(mp, sizeof * mp);
+            kfree_s(mp, sizeof *mp);
             did_deletion = 1;
         }
     }
     return did_deletion;
 }
-
 
 /*
  * Called by the /proc file system to return a current list of modules.
@@ -257,10 +251,10 @@ int get_module_list(char *buf)
     char size[32];
 
     p = buf;
-    for (mp = module_list ; mp ; mp = mp->next)
+    for (mp = module_list; mp; mp = mp->next)
     {
         if (p - buf > 4096 - 100)
-            break;			/* avoid overflowing buffer */
+            break; /* avoid overflowing buffer */
         q = mp->name;
         i = 20;
         while (*q)

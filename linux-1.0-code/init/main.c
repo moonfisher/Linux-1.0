@@ -44,21 +44,9 @@ struct desc_struct default_ldt;
  * some others too.
  */
 #define __NR__exit __NR_exit
-static inline _syscall0(int, idle)
-static inline _syscall0(int, fork)
-static inline _syscall0(int, pause)
-static inline _syscall1(int, setup, void *, BIOS)
-static inline _syscall0(int, sync)
-static inline _syscall0(pid_t, setsid)
-static inline _syscall3(int, write, int, fd, const char *, buf, off_t, count)
-static inline _syscall1(int, dup, int, fd)
-static inline _syscall3(int, execve, const char *, file, char **, argv, char **, envp)
-static inline _syscall3(int, open, const char *, file, int, flag, int, mode)
-static inline _syscall1(int, close, int, fd)
-static inline _syscall1(int, _exit, int, exitcode)
-static inline _syscall3(pid_t, waitpid, pid_t, pid, int *, wait_stat, int, options)
+static inline _syscall0(int, idle) static inline _syscall0(int, fork) static inline _syscall0(int, pause) static inline _syscall1(int, setup, void *, BIOS) static inline _syscall0(int, sync) static inline _syscall0(pid_t, setsid) static inline _syscall3(int, write, int, fd, const char *, buf, off_t, count) static inline _syscall1(int, dup, int, fd) static inline _syscall3(int, execve, const char *, file, char **, argv, char **, envp) static inline _syscall3(int, open, const char *, file, int, flag, int, mode) static inline _syscall1(int, close, int, fd) static inline _syscall1(int, _exit, int, exitcode) static inline _syscall3(pid_t, waitpid, pid_t, pid, int *, wait_stat, int, options)
 
-static inline pid_t wait(int *wait_stat)
+    static inline pid_t wait(int *wait_stat)
 {
     return waitpid(-1, wait_stat, 0);
 }
@@ -71,7 +59,7 @@ extern char empty_zero_page[PAGE_SIZE];
 extern int vsprintf(char *, const char *, va_list);
 extern void init(void);
 extern void init_IRQ(void);
-extern long kmalloc_init (long, long);
+extern long kmalloc_init(long, long);
 extern long blk_dev_init(long, long);
 extern long chr_dev_init(long, long);
 extern void floppy_init(void);
@@ -104,25 +92,25 @@ extern unsigned long scsi_dev_init(unsigned long, unsigned long);
 /*
  * This is set up by the setup-routine at boot-time
  */
-#define PARAM	empty_zero_page
-#define EXT_MEM_K (*(unsigned short *) (PARAM+2))
-#define DRIVE_INFO (*(struct drive_info_struct *) (PARAM+0x80))
-#define SCREEN_INFO (*(struct screen_info *) (PARAM+0))
-#define MOUNT_ROOT_RDONLY (*(unsigned short *) (PARAM+0x1F2))
-#define RAMDISK_SIZE (*(unsigned short *) (PARAM+0x1F8))
-#define ORIG_ROOT_DEV (*(unsigned short *) (PARAM+0x1FC))
-#define AUX_DEVICE_INFO (*(unsigned char *) (PARAM+0x1FF))
+#define PARAM empty_zero_page
+#define EXT_MEM_K (*(unsigned short *)(PARAM + 2))
+#define DRIVE_INFO (*(struct drive_info_struct *)(PARAM + 0x80))
+#define SCREEN_INFO (*(struct screen_info *)(PARAM + 0))
+#define MOUNT_ROOT_RDONLY (*(unsigned short *)(PARAM + 0x1F2))
+#define RAMDISK_SIZE (*(unsigned short *)(PARAM + 0x1F8))
+#define ORIG_ROOT_DEV (*(unsigned short *)(PARAM + 0x1FC))
+#define AUX_DEVICE_INFO (*(unsigned char *)(PARAM + 0x1FF))
 
 /*
  * Boot command-line arguments
  */
 #define MAX_INIT_ARGS 8
 #define MAX_INIT_ENVS 8
-#define COMMAND_LINE ((char *) (PARAM+2048))
+#define COMMAND_LINE ((char *)(PARAM + 2048))
 
 extern void time_init(void);
 
-static unsigned long memory_start = 0;	/* After mem_init, stores the */
+static unsigned long memory_start = 0; /* After mem_init, stores the */
 /* amount of free user memory */
 static unsigned long memory_end = 0;
 static unsigned long low_memory_start = 0;
@@ -130,14 +118,21 @@ static unsigned long low_memory_start = 0;
 static char term[21];
 int rows, cols;
 
-static char *argv_init[MAX_INIT_ARGS + 2] = { "init", NULL, };
-static char *envp_init[MAX_INIT_ENVS + 2] = { "HOME=/", term, NULL, };
+static char *argv_init[MAX_INIT_ARGS + 2] = {
+    "init",
+    NULL,
+};
+static char *envp_init[MAX_INIT_ENVS + 2] = {
+    "HOME=/",
+    term,
+    NULL,
+};
 
-static char *argv_rc[] = { "/bin/sh", NULL };
-static char *envp_rc[] = { "HOME=/", term, NULL };
+static char *argv_rc[] = {"/bin/sh", NULL};
+static char *envp_rc[] = {"HOME=/", term, NULL};
 
-static char *argv[] = { "-/bin/sh", NULL };
-static char *envp[] = { "HOME=/usr/root", term, NULL };
+static char *argv[] = {"-/bin/sh", NULL};
+static char *envp[] = {"HOME=/usr/root", term, NULL};
 
 struct drive_info_struct
 {
@@ -151,7 +146,9 @@ int root_mountflags = 0;
 
 static char fpu_error = 0;
 
-static char command_line[80] = { 0, };
+static char command_line[80] = {
+    0,
+};
 
 char *get_options(char *str, int *ints)
 {
@@ -165,7 +162,7 @@ char *get_options(char *str, int *ints)
             cur++;
     }
     ints[0] = i - 1;
-    return(cur);
+    return (cur);
 }
 
 struct
@@ -173,40 +170,39 @@ struct
     char *str;
     void (*setup_func)(char *, int *);
 } bootsetups[] =
-{
-    { "reserve=", reserve_setup },
-    { "ether=", eth_setup },
-    { "hd=", hd_setup },
+    {
+        {"reserve=", reserve_setup},
+        {"ether=", eth_setup},
+        {"hd=", hd_setup},
 #ifdef CONFIG_BUSMOUSE
-    { "bmouse=", bmouse_setup },
+        {"bmouse=", bmouse_setup},
 #endif
 #ifdef CONFIG_SCSI_SEAGATE
-    { "st0x=", st0x_setup },
-    { "tmc8xx=", tmc8xx_setup },
+        {"st0x=", st0x_setup},
+        {"tmc8xx=", tmc8xx_setup},
 #endif
 #ifdef CONFIG_SCSI_T128
-    { "t128=", t128_setup },
+        {"t128=", t128_setup},
 #endif
 #ifdef CONFIG_SCSI_GENERIC_NCR5380
-    { "ncr5380=", generic_NCR5380_setup },
+        {"ncr5380=", generic_NCR5380_setup},
 #endif
 #ifdef CONFIG_SCSI_AHA152X
-    { "aha152x=", aha152x_setup},
+        {"aha152x=", aha152x_setup},
 #endif
 #ifdef CONFIG_BLK_DEV_XD
-    { "xd=", xd_setup },
+        {"xd=", xd_setup},
 #endif
 #ifdef CONFIG_MCD
-    { "mcd=", mcd_setup },
+        {"mcd=", mcd_setup},
 #endif
 #ifdef CONFIG_SOUND
-    { "sound=", sound_setup },
+        {"sound=", sound_setup},
 #endif
 #ifdef CONFIG_SBPCD
-    { "sbpcd=", sbpcd_setup },
+        {"sbpcd=", sbpcd_setup},
 #endif CONFIG_SBPCD
-    { 0, 0 }
-};
+        {0, 0}};
 
 int checksetup(char *line)
 {
@@ -219,11 +215,11 @@ int checksetup(char *line)
         if (!strncmp(line, bootsetups[i].str, n))
         {
             bootsetups[i].setup_func(get_options(line + n, ints), ints);
-            return(0);
+            return (0);
         }
         i++;
     }
-    return(1);
+    return (1);
 }
 
 unsigned long loops_per_sec = 1;
@@ -241,11 +237,11 @@ static void calibrate_delay(void)
         if (ticks >= HZ)
         {
             __asm__("mull %1 ; divl %2"
-                    :"=a" (loops_per_sec)
-                    :"d" (HZ),
-                    "r" (ticks),
-                    "0" (loops_per_sec)
-                    :"dx");
+                    : "=a"(loops_per_sec)
+                    : "d"(HZ),
+                      "r"(ticks),
+                      "0"(loops_per_sec)
+                    : "dx");
             printk("ok - %lu.%02lu BogoMips\n",
                    loops_per_sec / 500000,
                    (loops_per_sec / 5000) % 100);
@@ -254,7 +250,6 @@ static void calibrate_delay(void)
     }
     printk("failed\n");
 }
-
 
 /*
  * This is a simple kernel command line parsing function: it parses
@@ -270,19 +265,19 @@ static void calibrate_delay(void)
 static void parse_options(char *line)
 {
     char *next;
-    char *devnames[] = { "hda", "hdb", "sda", "sdb", "sdc", "sdd", "sde", "fd", "xda", "xdb", NULL };
-    int devnums[]    = { 0x300, 0x340, 0x800, 0x810, 0x820, 0x830, 0x840, 0x200, 0xC00, 0xC40, 0};
+    char *devnames[] = {"hda", "hdb", "sda", "sdb", "sdc", "sdd", "sde", "fd", "xda", "xdb", NULL};
+    int devnums[] = {0x300, 0x340, 0x800, 0x810, 0x820, 0x830, 0x840, 0x200, 0xC00, 0xC40, 0};
     int args, envs;
 
     if (!*line)
         return;
     args = 0;
-    envs = 1;	/* TERM is set to 'console' by default */
+    envs = 1; /* TERM is set to 'console' by default */
     next = line;
     while ((line = next) != NULL)
     {
         if ((next = strchr(line, ' ')) != NULL)
-            * next++ = 0;
+            *next++ = 0;
         /*
          * check for kernel options first..
          */
@@ -296,7 +291,7 @@ static void parse_options(char *line)
                 continue;
             }
             line += 5;
-            for (n = 0 ; devnames[n] ; n++)
+            for (n = 0; devnames[n]; n++)
             {
                 int len = strlen(devnames[n]);
                 if (!strncmp(line, devnames[n], len))
@@ -317,7 +312,10 @@ static void parse_options(char *line)
             hard_math = 0;
             __asm__("movl %%cr0,%%eax\n\t"
                     "orl $0xE,%%eax\n\t"
-                    "movl %%eax,%%cr0\n\t" : : : "ax");
+                    "movl %%eax,%%cr0\n\t"
+                    :
+                    :
+                    : "ax");
         }
         else
             checksetup(line);
@@ -351,8 +349,7 @@ static void copy_options(char *to, char *from)
         if (c == ' ' && !memcmp("mem=", from, 4))
             memory_end = simple_strtoul(from + 4, &from, 0);
         c = *(to++) = *(from++);
-    }
-    while (c);
+    } while (c);
 }
 
 static void copro_timeout(void)
@@ -389,13 +386,13 @@ asmlinkage void start_kernel(void)
         root_mountflags |= MS_RDONLY;
     if ((unsigned long)&end >= (1024 * 1024))
     {
-        memory_start = (unsigned long) &end;
+        memory_start = (unsigned long)&end;
         low_memory_start = PAGE_SIZE;
     }
     else
     {
         memory_start = 1024 * 1024;
-        low_memory_start = (unsigned long) &end;
+        low_memory_start = (unsigned long)&end;
     }
     low_memory_start = PAGE_ALIGN(low_memory_start);
     memory_start = paging_init(memory_start, memory_end);
@@ -406,8 +403,8 @@ asmlinkage void start_kernel(void)
     sched_init();
     parse_options(command_line);
 #ifdef CONFIG_PROFILE
-    prof_buffer = (unsigned long *) memory_start;
-    prof_len = (unsigned long) &end;
+    prof_buffer = (unsigned long *)memory_start;
+    prof_len = (unsigned long)&end;
     prof_len >>= 2;
     memory_start += prof_len * sizeof(unsigned long);
 #endif
@@ -447,9 +444,12 @@ asmlinkage void start_kernel(void)
         timer_table[COPRO_TIMER].expires = jiffies + 50;
         timer_table[COPRO_TIMER].fn = copro_timeout;
         timer_active |= 1 << COPRO_TIMER;
-        __asm__("clts ; fninit ; fnstcw %0 ; fwait":"=m" ( *&control_word));
+        __asm__("clts ; fninit ; fnstcw %0 ; fwait"
+                : "=m"(*&control_word));
         control_word &= 0xffc0;
-        __asm__("fldcw %0 ; fwait": :"m" ( *&control_word));
+        __asm__("fldcw %0 ; fwait"
+                :
+                : "m"(*&control_word));
         outb_p(inb_p(0x21) | (1 << 2), 0x21);
         __asm__("fldz ; fld1 ; fdiv %st,%st(1) ; fwait");
         timer_active &= ~(1 << COPRO_TIMER);
@@ -462,7 +462,8 @@ asmlinkage void start_kernel(void)
     {
         printk("No coprocessor found and no math emulation present.\n");
         printk("Giving up.\n");
-        for (;;) ;
+        for (;;)
+            ;
     }
 #endif
 
@@ -470,7 +471,7 @@ asmlinkage void start_kernel(void)
     printk(linux_banner);
 
     move_to_user_mode();
-    if (!fork())		/* we count on this going ok */
+    if (!fork()) /* we count on this going ok */
         init();
     /*
      * task[0] is meant to be used as an "idle" task: it may not sleep, but
@@ -481,7 +482,7 @@ asmlinkage void start_kernel(void)
      *
      * Right now task[0] just does a infinite idle loop.
      */
-    for(;;)
+    for (;;)
         idle();
 }
 
@@ -500,11 +501,11 @@ void init(void)
 {
     int pid, i;
 
-    setup((void *) &drive_info);
+    setup((void *)&drive_info);
     sprintf(term, "TERM=con%dx%d", ORIG_VIDEO_COLS, ORIG_VIDEO_LINES);
-    (void) open("/dev/tty1", O_RDWR, 0);
-    (void) dup(0);
-    (void) dup(0);
+    (void)open("/dev/tty1", O_RDWR, 0);
+    (void)dup(0);
+    (void)dup(0);
 
     execve("/etc/init", argv_init, envp_init);
     execve("/bin/init", argv_init, envp_init);
@@ -535,9 +536,9 @@ void init(void)
             close(1);
             close(2);
             setsid();
-            (void) open("/dev/tty1", O_RDWR, 0);
-            (void) dup(0);
-            (void) dup(0);
+            (void)open("/dev/tty1", O_RDWR, 0);
+            (void)dup(0);
+            (void)dup(0);
             _exit(execve("/bin/sh", argv, envp));
         }
         while (1)

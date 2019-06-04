@@ -28,33 +28,33 @@ static inline void console_verbose(void)
     console_loglevel = 15;
 }
 
-#define DO_ERROR(trapnr, signr, str, name, tsk) \
-asmlinkage void do_##name(struct pt_regs * regs, long error_code) \
-{ \
-	tsk->tss.error_code = error_code; \
-	tsk->tss.trap_no = trapnr; \
-	if (signr == SIGTRAP && current->flags & PF_PTRACED) \
-		current->blocked &= ~(1 << (SIGTRAP-1)); \
-	send_sig(signr, tsk, 1); \
-	die_if_kernel(str,regs,error_code); \
-}
+#define DO_ERROR(trapnr, signr, str, name, tsk)                      \
+    asmlinkage void do_##name(struct pt_regs *regs, long error_code) \
+    {                                                                \
+        tsk->tss.error_code = error_code;                            \
+        tsk->tss.trap_no = trapnr;                                   \
+        if (signr == SIGTRAP && current->flags & PF_PTRACED)         \
+            current->blocked &= ~(1 << (SIGTRAP - 1));               \
+        send_sig(signr, tsk, 1);                                     \
+        die_if_kernel(str, regs, error_code);                        \
+    }
 
-#define get_seg_byte(seg,addr) ({ \
+#define get_seg_byte(seg, addr) ({ \
 register char __res; \
 __asm__("push %%fs;mov %%ax,%%fs;movb %%fs:%2,%%al;pop %%fs" \
 	:"=a" (__res):"0" (seg),"m" (*(addr))); \
-__res;})
+__res; })
 
-#define get_seg_long(seg,addr) ({ \
+#define get_seg_long(seg, addr) ({ \
 register unsigned long __res; \
 __asm__("push %%fs;mov %%ax,%%fs;movl %%fs:%2,%%eax;pop %%fs" \
 	:"=a" (__res):"0" (seg),"m" (*(addr))); \
-__res;})
+__res; })
 
 #define _fs() ({ \
 register unsigned short __res; \
 __asm__("mov %%fs,%%ax":"=a" (__res):); \
-__res;})
+__res; })
 
 void page_exception(void);
 
@@ -83,7 +83,7 @@ asmlinkage void alignment_check(void);
     unsigned long esp;
     unsigned short ss;
 
-    esp = (unsigned long) &regs->esp;
+    esp = (unsigned long)&regs->esp;
     ss = KERNEL_DS;
     if ((regs->eflags & VM_MASK) || (3 & regs->cs) == 3)
         return;
@@ -103,23 +103,23 @@ asmlinkage void alignment_check(void);
            regs->ds, regs->es, regs->fs, regs->gs, ss);
     store_TR(i);
     printk("Pid: %d, process nr: %d (%s)\nStack: ", current->pid, 0xffff & i, current->comm);
-    for(i = 0; i < 5; i++)
+    for (i = 0; i < 5; i++)
         printk("%08lx ", get_seg_long(ss, (i + (unsigned long *)esp)));
     printk("\nCode: ");
-    for(i = 0; i < 20; i++)
+    for (i = 0; i < 20; i++)
         printk("%02x ", 0xff & get_seg_byte(regs->cs, (i + (char *)regs->eip)));
     printk("\n");
     do_exit(SIGSEGV);
 }
 
-DO_ERROR( 0, SIGFPE,  "divide error", divide_error, current)
-DO_ERROR( 3, SIGTRAP, "int3", int3, current)
-DO_ERROR( 4, SIGSEGV, "overflow", overflow, current)
-DO_ERROR( 5, SIGSEGV, "bounds", bounds, current)
-DO_ERROR( 6, SIGILL,  "invalid operand", invalid_op, current)
-DO_ERROR( 7, SIGSEGV, "device not available", device_not_available, current)
-DO_ERROR( 8, SIGSEGV, "double fault", double_fault, current)
-DO_ERROR( 9, SIGFPE,  "coprocessor segment overrun", coprocessor_segment_overrun, last_task_used_math)
+DO_ERROR(0, SIGFPE, "divide error", divide_error, current)
+DO_ERROR(3, SIGTRAP, "int3", int3, current)
+DO_ERROR(4, SIGSEGV, "overflow", overflow, current)
+DO_ERROR(5, SIGSEGV, "bounds", bounds, current)
+DO_ERROR(6, SIGILL, "invalid operand", invalid_op, current)
+DO_ERROR(7, SIGSEGV, "device not available", device_not_available, current)
+DO_ERROR(8, SIGSEGV, "double fault", double_fault, current)
+DO_ERROR(9, SIGFPE, "coprocessor segment overrun", coprocessor_segment_overrun, last_task_used_math)
 DO_ERROR(10, SIGSEGV, "invalid TSS", invalid_TSS, current)
 DO_ERROR(11, SIGSEGV, "segment not present", segment_not_present, current)
 DO_ERROR(12, SIGSEGV, "stack segment", stack_segment, current)
@@ -140,13 +140,14 @@ asmlinkage void do_debug(struct pt_regs *regs, long error_code)
     send_sig(SIGTRAP, current, 1);
     current->tss.trap_no = 1;
     current->tss.error_code = error_code;
-    if((regs->cs & 3) == 0)
+    if ((regs->cs & 3) == 0)
     {
         /* If this is a kernel mode trap, then reset db7 and allow us to continue */
-        __asm__("movl $0,%%edx\n\t" \
-                "movl %%edx,%%db7\n\t" \
-                : /* no output */ \
-                : /* no input */ :"dx");
+        __asm__("movl $0,%%edx\n\t"
+                "movl %%edx,%%db7\n\t"
+                : /* no output */
+                : /* no input */
+                : "dx");
 
         return;
     };
@@ -182,7 +183,8 @@ void math_error(void)
     send_sig(SIGFPE, last_task_used_math, 1);
     last_task_used_math->tss.trap_no = 16;
     last_task_used_math->tss.error_code = 0;
-    __asm__ __volatile__("fnsave %0":"=m" (*env));
+    __asm__ __volatile__("fnsave %0"
+                         : "=m"(*env));
     last_task_used_math = NULL;
     stts();
     env->fcs = (env->swd & 0x0000ffff) | (env->fcs & 0xffff0000);
@@ -204,7 +206,7 @@ void trap_init(void)
     set_trap_gate(0, &divide_error);
     set_trap_gate(1, &debug);
     set_trap_gate(2, &nmi);
-    set_system_gate(3, &int3);	/* int3-5 can be called from all */
+    set_system_gate(3, &int3); /* int3-5 can be called from all */
     set_system_gate(4, &overflow);
     set_system_gate(5, &bounds);
     set_trap_gate(6, &invalid_op);

@@ -16,9 +16,9 @@
 
 static unsigned long tvtojiffies(struct timeval *value)
 {
-    return((unsigned long )value->tv_sec * HZ +
-           (unsigned long )(value->tv_usec + (1000000 / HZ - 1)) /
-           (1000000 / HZ));
+    return ((unsigned long)value->tv_sec * HZ +
+            (unsigned long)(value->tv_usec + (1000000 / HZ - 1)) /
+                (1000000 / HZ));
 }
 
 static void jiffiestotv(unsigned long jiffies, struct timeval *value)
@@ -47,11 +47,11 @@ int _getitimer(int which, struct itimerval *value)
         interval = current->it_prof_incr;
         break;
     default:
-        return(-EINVAL);
+        return (-EINVAL);
     }
     jiffiestotv(val, &value->it_value);
     jiffiestotv(interval, &value->it_interval);
-    return(0);
+    return (0);
 }
 
 asmlinkage int sys_getitimer(int which, struct itimerval *value)
@@ -116,7 +116,7 @@ asmlinkage int sys_setitimer(int which, struct itimerval *value, struct itimerva
     struct itimerval set_buffer, get_buffer;
 
     if (!value)
-        memset((char *) &set_buffer, 0, sizeof(set_buffer));
+        memset((char *)&set_buffer, 0, sizeof(set_buffer));
     else
         memcpy_fromfs(&set_buffer, value, sizeof(set_buffer));
     error = _setitimer(which, &set_buffer, ovalue ? &get_buffer : 0);

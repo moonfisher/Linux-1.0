@@ -34,7 +34,7 @@ static struct vm_struct *vmlist = NULL;
  * The vmalloc() routines leaves a hole of 4kB between each vmalloced
  * area for the same reason. ;)
  */
-#define VMALLOC_OFFSET	(8*1024*1024)
+#define VMALLOC_OFFSET (8 * 1024 * 1024)
 
 static inline void set_pgdir(unsigned long dindex, unsigned long value)
 {
@@ -43,10 +43,9 @@ static inline void set_pgdir(unsigned long dindex, unsigned long value)
     p = &init_task;
     do
     {
-        ((unsigned long *) p->tss.cr3)[dindex] = value;
+        ((unsigned long *)p->tss.cr3)[dindex] = value;
         p = p->next_task;
-    }
-    while (p != &init_task);
+    } while (p != &init_task);
 }
 
 static int free_area_pages(unsigned long dindex, unsigned long index, unsigned long nr)
@@ -56,7 +55,7 @@ static int free_area_pages(unsigned long dindex, unsigned long index, unsigned l
     if (!(PAGE_PRESENT & (page = swapper_pg_dir[dindex])))
         return 0;
     page &= PAGE_MASK;
-    pte = index + (unsigned long *) page;
+    pte = index + (unsigned long *)page;
     do
     {
         unsigned long pg = *pte;
@@ -64,10 +63,9 @@ static int free_area_pages(unsigned long dindex, unsigned long index, unsigned l
         if (pg & PAGE_PRESENT)
             free_page(pg);
         pte++;
-    }
-    while (--nr);
-    pte = (unsigned long *) page;
-    for (nr = 0 ; nr < 1024 ; nr++, pte++)
+    } while (--nr);
+    pte = (unsigned long *)page;
+    for (nr = 0; nr < 1024; nr++, pte++)
         if (*pte)
             return 0;
     set_pgdir(dindex, 0);
@@ -99,8 +97,8 @@ static int alloc_area_pages(unsigned long dindex, unsigned long index, unsigned 
         }
     }
     page &= PAGE_MASK;
-    pte = index + (unsigned long *) page;
-    *pte = PAGE_SHARED;		/* remove a race with vfree() */
+    pte = index + (unsigned long *)page;
+    *pte = PAGE_SHARED; /* remove a race with vfree() */
     do
     {
         unsigned long pg = get_free_page(GFP_KERNEL);
@@ -109,8 +107,7 @@ static int alloc_area_pages(unsigned long dindex, unsigned long index, unsigned 
             return -ENOMEM;
         *pte = pg | PAGE_SHARED;
         pte++;
-    }
-    while (--nr);
+    } while (--nr);
     invalidate();
     return 0;
 }
@@ -121,8 +118,8 @@ static int do_area(void *addr, unsigned long size,
     unsigned long nr, dindex, index;
 
     nr = size >> PAGE_SHIFT;
-    dindex = (TASK_SIZE + (unsigned long) addr) >> 22;
-    index = (((unsigned long) addr) >> PAGE_SHIFT) & (PTRS_PER_PAGE - 1);
+    dindex = (TASK_SIZE + (unsigned long)addr) >> 22;
+    index = (((unsigned long)addr) >> PAGE_SHIFT) & (PTRS_PER_PAGE - 1);
     while (nr > 0)
     {
         unsigned long i = PTRS_PER_PAGE - index;
@@ -144,12 +141,12 @@ void vfree(void *addr)
 
     if (!addr)
         return;
-    if ((PAGE_SIZE - 1) & (unsigned long) addr)
+    if ((PAGE_SIZE - 1) & (unsigned long)addr)
     {
         printk("Trying to vfree() bad address (%p)\n", addr);
         return;
     }
-    for (p = &vmlist ; (tmp = *p) ; p = &tmp->next)
+    for (p = &vmlist; (tmp = *p); p = &tmp->next)
     {
         if (tmp->addr == addr)
         {
@@ -170,17 +167,17 @@ void *vmalloc(unsigned long size)
     size = PAGE_ALIGN(size);
     if (!size || size > high_memory)
         return NULL;
-    area = (struct vm_struct *) kmalloc(sizeof(*area), GFP_KERNEL);
+    area = (struct vm_struct *)kmalloc(sizeof(*area), GFP_KERNEL);
     if (!area)
         return NULL;
-    addr = (void *) ((high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET - 1));
+    addr = (void *)((high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET - 1));
     area->size = size + PAGE_SIZE;
     area->next = NULL;
-    for (p = &vmlist; (tmp = *p) ; p = &tmp->next)
+    for (p = &vmlist; (tmp = *p); p = &tmp->next)
     {
-        if (size + (unsigned long) addr < (unsigned long) tmp->addr)
+        if (size + (unsigned long)addr < (unsigned long)tmp->addr)
             break;
-        addr = (void *) (tmp->size + (unsigned long) tmp->addr);
+        addr = (void *)(tmp->size + (unsigned long)tmp->addr);
     }
     area->addr = addr;
     area->next = *p;
@@ -199,9 +196,9 @@ int vread(char *buf, char *addr, int count)
     char *vaddr, *buf_start = buf;
     int n;
 
-    for (p = &vmlist; (tmp = *p) ; p = &tmp->next)
+    for (p = &vmlist; (tmp = *p); p = &tmp->next)
     {
-        vaddr = (char *) tmp->addr;
+        vaddr = (char *)tmp->addr;
         while (addr < vaddr)
         {
             if (count == 0)

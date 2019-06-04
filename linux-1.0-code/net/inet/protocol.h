@@ -22,39 +22,34 @@
 #ifndef _PROTOCOL_H
 #define _PROTOCOL_H
 
-
-#define MAX_INET_PROTOS	32		/* Must be a power of 2		*/
-
+#define MAX_INET_PROTOS 32 /* Must be a power of 2		*/
 
 /* This is used to register protocols. */
 struct inet_protocol
 {
-    int			(*handler)(struct sk_buff *skb, struct device *dev,
-                           struct options *opt, unsigned long daddr,
-                           unsigned short len, unsigned long saddr,
-                           int redo, struct inet_protocol *protocol);
-    int			(*frag_handler)(struct sk_buff *skb, struct device *dev,
-                                struct options *opt, unsigned long daddr,
-                                unsigned short len, unsigned long saddr,
-                                int redo, struct inet_protocol *protocol);
-    void			(*err_handler)(int err, unsigned char *buff,
-                                   unsigned long daddr,
-                                   unsigned long saddr,
-                                   struct inet_protocol *protocol);
+    int (*handler)(struct sk_buff *skb, struct device *dev,
+                   struct options *opt, unsigned long daddr,
+                   unsigned short len, unsigned long saddr,
+                   int redo, struct inet_protocol *protocol);
+    int (*frag_handler)(struct sk_buff *skb, struct device *dev,
+                        struct options *opt, unsigned long daddr,
+                        unsigned short len, unsigned long saddr,
+                        int redo, struct inet_protocol *protocol);
+    void (*err_handler)(int err, unsigned char *buff,
+                        unsigned long daddr,
+                        unsigned long saddr,
+                        struct inet_protocol *protocol);
     struct inet_protocol *next;
-    unsigned char		protocol;
-    unsigned char		copy: 1;
-    void			*data;
-    char 			*name;
+    unsigned char protocol;
+    unsigned char copy : 1;
+    void *data;
+    char *name;
 };
-
 
 extern struct inet_protocol *inet_protocol_base;
 extern struct inet_protocol *inet_protos[MAX_INET_PROTOS];
 
+extern void inet_add_protocol(struct inet_protocol *prot);
+extern int inet_del_protocol(struct inet_protocol *prot);
 
-extern void		inet_add_protocol(struct inet_protocol *prot);
-extern int		inet_del_protocol(struct inet_protocol *prot);
-
-
-#endif	/* _PROTOCOL_H */
+#endif /* _PROTOCOL_H */

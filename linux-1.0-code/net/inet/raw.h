@@ -17,20 +17,18 @@
 #ifndef _RAW_H
 #define _RAW_H
 
-
 extern struct proto raw_prot;
 
-
-extern void	raw_err(int err, unsigned char *header, unsigned long daddr,
+extern void raw_err(int err, unsigned char *header, unsigned long daddr,
                     unsigned long saddr, struct inet_protocol *protocol);
-extern int	raw_rcv(struct sk_buff *skb, struct device *dev,
-                    struct options *opt, unsigned long daddr,
-                    unsigned short len, unsigned long saddr,
-                    int redo, struct inet_protocol *protocol);
-extern int	raw_recvfrom(struct sock *sk, unsigned char *to,
-                         int len, int noblock, unsigned flags,
-                         struct sockaddr_in *sin, int *addr_len);
-extern int	raw_read(struct sock *sk, unsigned char *buff,
-                     int len, int noblock, unsigned flags);
+extern int raw_rcv(struct sk_buff *skb, struct device *dev,
+                   struct options *opt, unsigned long daddr,
+                   unsigned short len, unsigned long saddr,
+                   int redo, struct inet_protocol *protocol);
+extern int raw_recvfrom(struct sock *sk, unsigned char *to,
+                        int len, int noblock, unsigned flags,
+                        struct sockaddr_in *sin, int *addr_len);
+extern int raw_read(struct sock *sk, unsigned char *buff,
+                    int len, int noblock, unsigned flags);
 
-#endif	/* _RAW_H */
+#endif /* _RAW_H */

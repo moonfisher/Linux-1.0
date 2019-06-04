@@ -71,9 +71,9 @@ static inline int put_stack_long(struct task_struct *task, int offset,
 {
     unsigned char *stack;
 
-    stack = (unsigned char *) task->tss.esp0;
+    stack = (unsigned char *)task->tss.esp0;
     stack += offset;
-    *(unsigned long *) stack = data;
+    *(unsigned long *)stack = data;
     return 0;
 }
 
@@ -97,7 +97,7 @@ repeat:
     {
         page &= PAGE_MASK;
         page += PAGE_PTR(addr);
-        page = *((unsigned long *) page);
+        page = *((unsigned long *)page);
     }
     if (!(page & PAGE_PRESENT))
     {
@@ -109,7 +109,7 @@ repeat:
         return 0;
     page &= PAGE_MASK;
     page += addr & ~PAGE_MASK;
-    return *(unsigned long *) page;
+    return *(unsigned long *)page;
 }
 
 /*
@@ -134,7 +134,7 @@ repeat:
         page &= PAGE_MASK;
         page += PAGE_PTR(addr);
         pte = page;
-        page = *((unsigned long *) page);
+        page = *((unsigned long *)page);
     }
     if (!(page & PAGE_PRESENT))
     {
@@ -143,7 +143,7 @@ repeat:
     }
     if (!(page & PAGE_RW))
     {
-        if(!(page & PAGE_COW))
+        if (!(page & PAGE_COW))
             readonly = 1;
         do_wp_page(PAGE_RW | PAGE_PRESENT, addr, tsk, 0);
         goto repeat;
@@ -152,13 +152,13 @@ repeat:
     if (page >= high_memory)
         return;
     /* we're bypassing pagetables, so we have to set the dirty bit ourselves */
-    *(unsigned long *) pte |= (PAGE_DIRTY | PAGE_COW);
+    *(unsigned long *)pte |= (PAGE_DIRTY | PAGE_COW);
     page &= PAGE_MASK;
     page += addr & ~PAGE_MASK;
-    *(unsigned long *) page = data;
-    if(readonly)
+    *(unsigned long *)page = data;
+    if (readonly)
     {
-        *(unsigned long *) pte &= ~ (PAGE_RW | PAGE_COW);
+        *(unsigned long *)pte &= ~(PAGE_RW | PAGE_COW);
         invalidate();
     }
 }
@@ -176,9 +176,9 @@ static int read_long(struct task_struct *tsk, unsigned long addr,
         return -EIO;
     if ((addr & ~PAGE_MASK) > PAGE_SIZE - sizeof(long))
     {
-        low = get_long(tsk, addr & ~(sizeof(long) -1));
-        high = get_long(tsk, (addr + sizeof(long)) & ~(sizeof(long) -1));
-        switch (addr & (sizeof(long) -1))
+        low = get_long(tsk, addr & ~(sizeof(long) - 1));
+        high = get_long(tsk, (addr + sizeof(long)) & ~(sizeof(long) - 1));
+        switch (addr & (sizeof(long) - 1))
         {
         case 1:
             low >>= 8;
@@ -213,9 +213,9 @@ static int write_long(struct task_struct *tsk, unsigned long addr,
         return -EIO;
     if ((addr & ~PAGE_MASK) > PAGE_SIZE - sizeof(long))
     {
-        low = get_long(tsk, addr & ~(sizeof(long) -1));
-        high = get_long(tsk, (addr + sizeof(long)) & ~(sizeof(long) -1));
-        switch (addr & (sizeof(long) -1))
+        low = get_long(tsk, addr & ~(sizeof(long) - 1));
+        high = get_long(tsk, (addr + sizeof(long)) & ~(sizeof(long) - 1));
+        switch (addr & (sizeof(long) - 1))
         {
         case 0: /* shouldn't happen, but safety first */
             low = data;
@@ -239,8 +239,8 @@ static int write_long(struct task_struct *tsk, unsigned long addr,
             high |= data >> 8;
             break;
         }
-        put_long(tsk, addr & ~(sizeof(long) -1), low);
-        put_long(tsk, (addr + sizeof(long)) & ~(sizeof(long) -1), high);
+        put_long(tsk, addr & ~(sizeof(long) - 1), low);
+        put_long(tsk, (addr + sizeof(long)) & ~(sizeof(long) - 1), high);
     }
     else
         put_long(tsk, addr, data);
@@ -264,7 +264,7 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         current->flags |= PF_PTRACED;
         return 0;
     }
-    if (pid == 1)		/* you may not mess with init */
+    if (pid == 1) /* you may not mess with init */
         return -EPERM;
     if (!(child = get_task(pid)))
         return -ESRCH;
@@ -273,7 +273,8 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         if (child == current)
             return -EPERM;
         if ((!child->dumpable || (current->uid != child->euid) ||
-                (current->gid != child->egid)) && !suser())
+             (current->gid != child->egid)) &&
+            !suser())
             return -EPERM;
         /* the same process cannot be attached many times */
         if (child->flags & PF_PTRACED)
@@ -310,9 +311,9 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         res = read_long(child, addr, &tmp);
         if (res < 0)
             return res;
-        res = verify_area(VERIFY_WRITE, (void *) data, sizeof(long));
+        res = verify_area(VERIFY_WRITE, (void *)data, sizeof(long));
         if (!res)
-            put_fs_long(tmp, (unsigned long *) data);
+            put_fs_long(tmp, (unsigned long *)data);
         return res;
     }
 
@@ -323,31 +324,31 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         int res;
 
         if ((addr & 3) || addr < 0 ||
-                addr > sizeof(struct user) - 3)
+            addr > sizeof(struct user) - 3)
             return -EIO;
 
-        res = verify_area(VERIFY_WRITE, (void *) data, sizeof(long));
+        res = verify_area(VERIFY_WRITE, (void *)data, sizeof(long));
         if (res)
             return res;
-        tmp = 0;  /* Default return condition */
-        if(addr < 17 * sizeof(long))
+        tmp = 0; /* Default return condition */
+        if (addr < 17 * sizeof(long))
         {
             addr = addr >> 2; /* temporary hack. */
 
             tmp = get_stack_long(child, sizeof(long) * addr - MAGICNUMBER);
             if (addr == DS || addr == ES ||
-                    addr == FS || addr == GS ||
-                    addr == CS || addr == SS)
+                addr == FS || addr == GS ||
+                addr == CS || addr == SS)
                 tmp &= 0xffff;
         };
-        if(addr >= (long) &dummy->u_debugreg[0] &&
-                addr <= (long) &dummy->u_debugreg[7])
+        if (addr >= (long)&dummy->u_debugreg[0] &&
+            addr <= (long)&dummy->u_debugreg[7])
         {
-            addr -= (long) &dummy->u_debugreg[0];
+            addr -= (long)&dummy->u_debugreg[0];
             addr = addr >> 2;
             tmp = child->debugreg[addr];
         };
-        put_fs_long(tmp, (unsigned long *) data);
+        put_fs_long(tmp, (unsigned long *)data);
         return 0;
     }
 
@@ -358,7 +359,7 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
 
     case PTRACE_POKEUSR: /* write the word at location addr in the USER area */
         if ((addr & 3) || addr < 0 ||
-                addr > sizeof(struct user) - 3)
+            addr > sizeof(struct user) - 3)
             return -EIO;
 
         addr = addr >> 2; /* temproary hack. */
@@ -366,23 +367,23 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         if (addr == ORIG_EAX)
             return -EIO;
         if (addr == DS || addr == ES ||
-                addr == FS || addr == GS ||
-                addr == CS || addr == SS)
+            addr == FS || addr == GS ||
+            addr == CS || addr == SS)
         {
             data &= 0xffff;
             if (data && (data & 3) != 3)
                 return -EIO;
         }
-        if (addr == EFL)     /* flags. */
+        if (addr == EFL) /* flags. */
         {
             data &= FLAG_MASK;
-            data |= get_stack_long(child, EFL * sizeof(long) - MAGICNUMBER)  & ~FLAG_MASK;
+            data |= get_stack_long(child, EFL * sizeof(long) - MAGICNUMBER) & ~FLAG_MASK;
         }
         /* Do not allow the user to set the debug register for kernel
            address space */
-        if(addr < 17)
+        if (addr < 17)
         {
-            if (put_stack_long(child, sizeof(long)*addr - MAGICNUMBER, data))
+            if (put_stack_long(child, sizeof(long) * addr - MAGICNUMBER, data))
                 return -EIO;
             return 0;
         };
@@ -392,25 +393,28 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
            have to be selective about what portions we allow someone
            to modify. */
 
-        addr = addr << 2;  /* Convert back again */
-        if(addr >= (long) &dummy->u_debugreg[0] &&
-                addr <= (long) &dummy->u_debugreg[7])
+        addr = addr << 2; /* Convert back again */
+        if (addr >= (long)&dummy->u_debugreg[0] &&
+            addr <= (long)&dummy->u_debugreg[7])
         {
 
-            if(addr == (long) &dummy->u_debugreg[4]) return -EIO;
-            if(addr == (long) &dummy->u_debugreg[5]) return -EIO;
-            if(addr < (long) &dummy->u_debugreg[4] &&
-                    ((unsigned long) data) >= 0xbffffffd) return -EIO;
+            if (addr == (long)&dummy->u_debugreg[4])
+                return -EIO;
+            if (addr == (long)&dummy->u_debugreg[5])
+                return -EIO;
+            if (addr < (long)&dummy->u_debugreg[4] &&
+                ((unsigned long)data) >= 0xbffffffd)
+                return -EIO;
 
-            if(addr == (long) &dummy->u_debugreg[7])
+            if (addr == (long)&dummy->u_debugreg[7])
             {
                 data &= ~DR_CONTROL_RESERVED;
-                for(i = 0; i < 4; i++)
+                for (i = 0; i < 4; i++)
                     if ((0x5f54 >> ((data >> (16 + 4 * i)) & 0xf)) & 1)
                         return -EIO;
             };
 
-            addr -= (long) &dummy->u_debugreg;
+            addr -= (long)&dummy->u_debugreg;
             addr = addr >> 2;
             child->debugreg[addr] = data;
             return 0;
@@ -418,11 +422,11 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         return -EIO;
 
     case PTRACE_SYSCALL: /* continue and stop at next (return from) syscall */
-    case PTRACE_CONT:   /* restart after signal. */
+    case PTRACE_CONT:    /* restart after signal. */
     {
         long tmp;
 
-        if ((unsigned long) data > NSIG)
+        if ((unsigned long)data > NSIG)
             return -EIO;
         if (request == PTRACE_SYSCALL)
             child->flags |= PF_TRACESYS;
@@ -432,7 +436,7 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         child->state = TASK_RUNNING;
         /* make sure the single step bit is not set. */
         tmp = get_stack_long(child, sizeof(long) * EFL - MAGICNUMBER) & ~TRAP_FLAG;
-        put_stack_long(child, sizeof(long)*EFL - MAGICNUMBER, tmp);
+        put_stack_long(child, sizeof(long) * EFL - MAGICNUMBER, tmp);
         return 0;
     }
 
@@ -449,30 +453,30 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         child->exit_code = SIGKILL;
         /* make sure the single step bit is not set. */
         tmp = get_stack_long(child, sizeof(long) * EFL - MAGICNUMBER) & ~TRAP_FLAG;
-        put_stack_long(child, sizeof(long)*EFL - MAGICNUMBER, tmp);
+        put_stack_long(child, sizeof(long) * EFL - MAGICNUMBER, tmp);
         return 0;
     }
 
-    case PTRACE_SINGLESTEP:    /* set the trap flag. */
+    case PTRACE_SINGLESTEP: /* set the trap flag. */
     {
         long tmp;
 
-        if ((unsigned long) data > NSIG)
+        if ((unsigned long)data > NSIG)
             return -EIO;
         child->flags &= ~PF_TRACESYS;
         tmp = get_stack_long(child, sizeof(long) * EFL - MAGICNUMBER) | TRAP_FLAG;
-        put_stack_long(child, sizeof(long)*EFL - MAGICNUMBER, tmp);
+        put_stack_long(child, sizeof(long) * EFL - MAGICNUMBER, tmp);
         child->state = TASK_RUNNING;
         child->exit_code = data;
         /* give it a chance to run. */
         return 0;
     }
 
-    case PTRACE_DETACH:   /* detach a process that was attached. */
+    case PTRACE_DETACH: /* detach a process that was attached. */
     {
         long tmp;
 
-        if ((unsigned long) data > NSIG)
+        if ((unsigned long)data > NSIG)
             return -EIO;
         child->flags &= ~(PF_PTRACED | PF_TRACESYS);
         child->state = TASK_RUNNING;
@@ -482,7 +486,7 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
         SET_LINKS(child);
         /* make sure the single step bit is not set. */
         tmp = get_stack_long(child, sizeof(long) * EFL - MAGICNUMBER) & ~TRAP_FLAG;
-        put_stack_long(child, sizeof(long)*EFL - MAGICNUMBER, tmp);
+        put_stack_long(child, sizeof(long) * EFL - MAGICNUMBER, tmp);
         return 0;
     }
 
@@ -493,8 +497,7 @@ asmlinkage int sys_ptrace(long request, long pid, long addr, long data)
 
 asmlinkage void syscall_trace(void)
 {
-    if ((current->flags & (PF_PTRACED | PF_TRACESYS))
-            != (PF_PTRACED | PF_TRACESYS))
+    if ((current->flags & (PF_PTRACED | PF_TRACESYS)) != (PF_PTRACED | PF_TRACESYS))
         return;
     current->exit_code = SIGTRAP;
     current->state = TASK_STOPPED;

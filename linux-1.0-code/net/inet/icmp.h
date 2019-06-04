@@ -16,21 +16,20 @@
  *		2 of the License, or (at your option) any later version.
  */
 #ifndef _ICMP_H
-#define	_ICMP_H
+#define _ICMP_H
 
 #include "linux/icmp.h"
 
-
 extern struct icmp_err icmp_err_convert[];
 
-extern void	icmp_send(struct sk_buff *skb_in,  int type, int code,
+extern void icmp_send(struct sk_buff *skb_in, int type, int code,
                       struct device *dev);
-extern int	icmp_rcv(struct sk_buff *skb1, struct device *dev,
-                     struct options *opt, unsigned long daddr,
-                     unsigned short len, unsigned long saddr,
-                     int redo, struct inet_protocol *protocol);
+extern int icmp_rcv(struct sk_buff *skb1, struct device *dev,
+                    struct options *opt, unsigned long daddr,
+                    unsigned short len, unsigned long saddr,
+                    int redo, struct inet_protocol *protocol);
 
-extern int	icmp_ioctl(struct sock *sk, int cmd,
-                       unsigned long arg);
+extern int icmp_ioctl(struct sock *sk, int cmd,
+                      unsigned long arg);
 
-#endif	/* _ICMP_H */
+#endif /* _ICMP_H */

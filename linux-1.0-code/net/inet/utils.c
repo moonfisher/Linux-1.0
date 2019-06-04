@@ -40,19 +40,17 @@
 #include "skbuff.h"
 #include "arp.h"
 
-
 /* Display an IP address in readable format. */
 char *in_ntoa(unsigned long in)
 {
     static char buff[18];
     register char *p;
 
-    p = (char *) &in;
+    p = (char *)&in;
     sprintf(buff, "%d.%d.%d.%d",
             (p[0] & 255), (p[1] & 255), (p[2] & 255), (p[3] & 255));
-    return(buff);
+    return (buff);
 }
-
 
 /* Convert an ASCII string to binary IP. */
 unsigned long
@@ -76,23 +74,23 @@ in_aton(char *str)
                 str++;
             }
             l |= val;
-            if (*str != '\0') str++;
+            if (*str != '\0')
+                str++;
         }
     }
-    return(htonl(l));
+    return (htonl(l));
 }
 
-
-void
-dprintf(int level, char *fmt, ...)
+void dprintf(int level, char *fmt, ...)
 {
     va_list args;
     char *buff;
     extern int vsprintf(char *buf, const char *fmt, va_list args);
 
-    if (level != inet_debug) return;
+    if (level != inet_debug)
+        return;
 
-    buff = (char *) kmalloc(256, GFP_ATOMIC);
+    buff = (char *)kmalloc(256, GFP_ATOMIC);
     if (buff != NULL)
     {
         va_start(args, fmt);
@@ -103,28 +101,27 @@ dprintf(int level, char *fmt, ...)
     }
 }
 
-
-int
-dbg_ioctl(void *arg, int level)
+int dbg_ioctl(void *arg, int level)
 {
     int val;
     int err;
 
-    if (!suser()) return(-EPERM);
+    if (!suser())
+        return (-EPERM);
     err = verify_area(VERIFY_READ, (void *)arg, sizeof(int));
-    if(err)
+    if (err)
         return err;
     val = get_fs_long((int *)arg);
-    switch(val)
+    switch (val)
     {
-    case 0:	/* OFF */
+    case 0: /* OFF */
         inet_debug = DBG_OFF;
         break;
-    case 1:	/* ON, INET */
+    case 1: /* ON, INET */
         inet_debug = level;
         break;
 
-    case DBG_RT:		/* modules */
+    case DBG_RT: /* modules */
     case DBG_DEV:
     case DBG_ETH:
     case DBG_PROTO:
@@ -132,10 +129,10 @@ dbg_ioctl(void *arg, int level)
     case DBG_PKT:
     case DBG_RAW:
 
-    case DBG_LOOPB:		/* drivers */
+    case DBG_LOOPB: /* drivers */
     case DBG_SLIP:
 
-    case DBG_ARP:		/* protocols */
+    case DBG_ARP: /* protocols */
     case DBG_IP:
     case DBG_ICMP:
     case DBG_TCP:
@@ -145,8 +142,8 @@ dbg_ioctl(void *arg, int level)
         break;
 
     default:
-        return(-EINVAL);
+        return (-EINVAL);
     }
 
-    return(0);
+    return (0);
 }

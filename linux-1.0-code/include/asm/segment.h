@@ -23,11 +23,15 @@ static inline unsigned short get_user_word(const short *addr)
 
 static inline unsigned long get_user_long(const int *addr)
 {
+#if ASM_NO_64
     unsigned long _v;
 
     __asm__ ("movl %%fs:%1,%0":"=r" (_v):"m" (*addr));
     \
     return _v;
+#else
+    return 0;
+#endif
 }
 
 #define get_fs_long(addr) get_user_long((int *)(addr))
@@ -48,7 +52,9 @@ static inline void put_user_word(short val, short *addr)
 
 static inline void put_user_long(unsigned long val, int *addr)
 {
+#if ASM_NO_64
     __asm__ ("movl %0,%%fs:%1": /* no outputs */ :"ir" (val), "m" (*addr));
+#endif
 }
 
 #define put_fs_long(x,addr) put_user_long((x),(int *)(addr))

@@ -19,18 +19,15 @@
 #include "linux/socket.h"
 #include "linux/ddi.h"
 
-
-#undef	DDI_DEBUG
-#ifdef	DDI_DEBUG
-#   define PRINTK(x)	printk x
+#undef DDI_DEBUG
+#ifdef DDI_DEBUG
+#define PRINTK(x) printk x
 #else
-#   define PRINTK(x)	/**/
+#define PRINTK(x) /**/
 #endif
 
-
-extern struct ddi_device	devices[];	/* device driver map	*/
-extern struct ddi_proto		protocols[];	/* network protocols	*/
-
+extern struct ddi_device devices[];  /* device driver map	*/
+extern struct ddi_proto protocols[]; /* network protocols	*/
 
 /*
  * This function gets called with an ASCII string representing the
@@ -46,34 +43,32 @@ ddi_map(const char *id)
 {
     register struct ddi_device *dev;
 
-    PRINTK (("DDI: MAP: looking for \"%s\": ", id));
+    PRINTK(("DDI: MAP: looking for \"%s\": ", id));
     dev = devices;
     while (dev->title != NULL)
     {
         if (strncmp(dev->name, id, DDI_MAXNAME) == 0)
         {
-            PRINTK (("OK at 0x%X\n", dev));
-            return(dev);
+            PRINTK(("OK at 0x%X\n", dev));
+            return (dev);
         }
         dev++;
     }
-    PRINTK (("NOT FOUND\n"));
-    return(NULL);
+    PRINTK(("NOT FOUND\n"));
+    return (NULL);
 }
-
 
 /*
  * This is the function that is called by a kernel routine during
  * system startup.  Its purpose is to walk trough the "devices"
  * table (defined above), and to call all moduled defined in it.
  */
-void
-ddi_init(void)
+void ddi_init(void)
 {
     struct ddi_proto *pro;
     struct ddi_device *dev;
 
-    PRINTK (("DDI: Starting up!\n"));
+    PRINTK(("DDI: Starting up!\n"));
 
     /* First off, kick all configured protocols. */
     pro = protocols;

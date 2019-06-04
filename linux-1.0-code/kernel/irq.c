@@ -98,7 +98,7 @@ asmlinkage void do_bottom_half(void)
 
     bh = bh_base;
     active = bh_active & bh_mask;
-    for (mask = 1, left = ~0 ; left & active ; bh++, mask += mask, left += left)
+    for (mask = 1, left = ~0; left & active; bh++, mask += mask, left += left)
     {
         if (mask & active)
         {
@@ -112,7 +112,7 @@ asmlinkage void do_bottom_half(void)
     }
     return;
 bad_bh:
-    printk ("irq.c:bad bottom half entry\n");
+    printk("irq.c:bad bottom half entry\n");
 }
 
 /*
@@ -152,51 +152,40 @@ BUILD_IRQ(SECOND, 15, 0x80)
  * fast ones, then the bad ones.
  */
 static void (*interrupt[16])(void) =
-{
-    IRQ0_interrupt, IRQ1_interrupt, IRQ2_interrupt, IRQ3_interrupt,
-    IRQ4_interrupt, IRQ5_interrupt, IRQ6_interrupt, IRQ7_interrupt,
-    IRQ8_interrupt, IRQ9_interrupt, IRQ10_interrupt, IRQ11_interrupt,
-    IRQ12_interrupt, IRQ13_interrupt, IRQ14_interrupt, IRQ15_interrupt
-};
+    {
+        IRQ0_interrupt, IRQ1_interrupt, IRQ2_interrupt, IRQ3_interrupt,
+        IRQ4_interrupt, IRQ5_interrupt, IRQ6_interrupt, IRQ7_interrupt,
+        IRQ8_interrupt, IRQ9_interrupt, IRQ10_interrupt, IRQ11_interrupt,
+        IRQ12_interrupt, IRQ13_interrupt, IRQ14_interrupt, IRQ15_interrupt};
 
 static void (*fast_interrupt[16])(void) =
-{
-    fast_IRQ0_interrupt, fast_IRQ1_interrupt,
-    fast_IRQ2_interrupt, fast_IRQ3_interrupt,
-    fast_IRQ4_interrupt, fast_IRQ5_interrupt,
-    fast_IRQ6_interrupt, fast_IRQ7_interrupt,
-    fast_IRQ8_interrupt, fast_IRQ9_interrupt,
-    fast_IRQ10_interrupt, fast_IRQ11_interrupt,
-    fast_IRQ12_interrupt, fast_IRQ13_interrupt,
-    fast_IRQ14_interrupt, fast_IRQ15_interrupt
-};
+    {
+        fast_IRQ0_interrupt, fast_IRQ1_interrupt,
+        fast_IRQ2_interrupt, fast_IRQ3_interrupt,
+        fast_IRQ4_interrupt, fast_IRQ5_interrupt,
+        fast_IRQ6_interrupt, fast_IRQ7_interrupt,
+        fast_IRQ8_interrupt, fast_IRQ9_interrupt,
+        fast_IRQ10_interrupt, fast_IRQ11_interrupt,
+        fast_IRQ12_interrupt, fast_IRQ13_interrupt,
+        fast_IRQ14_interrupt, fast_IRQ15_interrupt};
 
 static void (*bad_interrupt[16])(void) =
-{
-    bad_IRQ0_interrupt, bad_IRQ1_interrupt,
-    bad_IRQ2_interrupt, bad_IRQ3_interrupt,
-    bad_IRQ4_interrupt, bad_IRQ5_interrupt,
-    bad_IRQ6_interrupt, bad_IRQ7_interrupt,
-    bad_IRQ8_interrupt, bad_IRQ9_interrupt,
-    bad_IRQ10_interrupt, bad_IRQ11_interrupt,
-    bad_IRQ12_interrupt, bad_IRQ13_interrupt,
-    bad_IRQ14_interrupt, bad_IRQ15_interrupt
-};
+    {
+        bad_IRQ0_interrupt, bad_IRQ1_interrupt,
+        bad_IRQ2_interrupt, bad_IRQ3_interrupt,
+        bad_IRQ4_interrupt, bad_IRQ5_interrupt,
+        bad_IRQ6_interrupt, bad_IRQ7_interrupt,
+        bad_IRQ8_interrupt, bad_IRQ9_interrupt,
+        bad_IRQ10_interrupt, bad_IRQ11_interrupt,
+        bad_IRQ12_interrupt, bad_IRQ13_interrupt,
+        bad_IRQ14_interrupt, bad_IRQ15_interrupt};
 
 /*
  * Initial irq handlers.
  */
 static struct sigaction irq_sigaction[16] =
-{
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL },
-    { NULL, 0, 0, NULL }, { NULL, 0, 0, NULL }
-};
+    {
+        {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}, {NULL, 0, 0, NULL}};
 
 /*
  * do_IRQ handles IRQ's that have been installed without the
@@ -210,7 +199,7 @@ asmlinkage void do_IRQ(int irq, struct pt_regs *regs)
     struct sigaction *sa = irq + irq_sigaction;
 
     kstat.interrupts++;
-    sa->sa_handler((int) regs);
+    sa->sa_handler((int)regs);
 }
 
 /*
@@ -327,21 +316,20 @@ static void math_error_irq(int cpl)
     math_error();
 }
 
-static void no_action(int cpl) { }
+static void no_action(int cpl) {}
 
 static struct sigaction ignore_IRQ =
-{
-    no_action,
-    0,
-    SA_INTERRUPT,
-    NULL
-};
+    {
+        no_action,
+        0,
+        SA_INTERRUPT,
+        NULL};
 
 void init_IRQ(void)
 {
     int i;
 
-    for (i = 0; i < 16 ; i++)
+    for (i = 0; i < 16; i++)
         set_intr_gate(0x20 + i, bad_interrupt[i]);
     if (irqaction(2, &ignore_IRQ))
         printk("Unable to get IRQ2 for cascade\n");

@@ -14,7 +14,7 @@
 
 #include "asm/segment.h"
 
-#define _S(nr) (1<<((nr)-1))
+#define _S(nr) (1 << ((nr)-1))
 
 #define _BLOCKABLE (~(_S(SIGKILL) | _S(SIGSTOP)))
 
@@ -58,7 +58,7 @@ asmlinkage int sys_sigprocmask(int how, sigset_t *set, sigset_t *oset)
         error = verify_area(VERIFY_READ, set, sizeof(sigset_t));
         if (error)
             return error;
-        new_set = get_fs_long((unsigned long *) set) & _BLOCKABLE;
+        new_set = get_fs_long((unsigned long *)set) & _BLOCKABLE;
         switch (how)
         {
         case SIG_BLOCK:
@@ -79,7 +79,7 @@ asmlinkage int sys_sigprocmask(int how, sigset_t *set, sigset_t *oset)
         error = verify_area(VERIFY_WRITE, oset, sizeof(sigset_t));
         if (error)
             return error;
-        put_fs_long(old_set, (unsigned long *) oset);
+        put_fs_long(old_set, (unsigned long *)oset);
     }
     return 0;
 }
@@ -113,7 +113,7 @@ asmlinkage int sys_sigpending(sigset_t *set)
 asmlinkage int sys_sigsuspend(int restart, unsigned long oldmask, unsigned long set)
 {
     unsigned long mask;
-    struct pt_regs *regs = (struct pt_regs *) &restart;
+    struct pt_regs *regs = (struct pt_regs *)&restart;
 
     mask = current->blocked;
     current->blocked = set & _BLOCKABLE;
@@ -171,11 +171,11 @@ asmlinkage int sys_signal(int signum, unsigned long handler)
         return -EINVAL;
     if (handler >= TASK_SIZE)
         return -EFAULT;
-    tmp.sa_handler = (void (*)(int)) handler;
+    tmp.sa_handler = (void (*)(int))handler;
     tmp.sa_mask = 0;
     tmp.sa_flags = SA_ONESHOT | SA_NOMASK;
     tmp.sa_restorer = NULL;
-    handler = (long) current->sigaction[signum - 1].sa_handler;
+    handler = (long)current->sigaction[signum - 1].sa_handler;
     current->sigaction[signum - 1] = tmp;
     check_pending(signum);
     return handler;
@@ -202,7 +202,7 @@ asmlinkage int sys_sigaction(int signum, const struct sigaction *action,
             new_sa.sa_mask |= _S(signum);
             new_sa.sa_mask &= _BLOCKABLE;
         }
-        if (TASK_SIZE <= (unsigned long) new_sa.sa_handler)
+        if (TASK_SIZE <= (unsigned long)new_sa.sa_handler)
             return -EFAULT;
     }
     if (oldaction)
@@ -228,17 +228,21 @@ asmlinkage int sys_waitpid(pid_t pid, unsigned long *stat_addr, int options);
 asmlinkage int sys_sigreturn(unsigned long __unused)
 {
 #define COPY(x) regs->x = context.x
-#define COPY_SEG(x) \
-if ((context.x & 0xfffc) && (context.x & 3) != 3) goto badframe; COPY(x);
-#define COPY_SEG_STRICT(x) \
-if (!(context.x & 0xfffc) || (context.x & 3) != 3) goto badframe; COPY(x);
+#define COPY_SEG(x)                                   \
+    if ((context.x & 0xfffc) && (context.x & 3) != 3) \
+        goto badframe;                                \
+    COPY(x);
+#define COPY_SEG_STRICT(x)                             \
+    if (!(context.x & 0xfffc) || (context.x & 3) != 3) \
+        goto badframe;                                 \
+    COPY(x);
     struct sigcontext_struct context;
     struct pt_regs *regs;
 
-    regs = (struct pt_regs *) &__unused;
-    if (verify_area(VERIFY_READ, (void *) regs->esp, sizeof(context)))
+    regs = (struct pt_regs *)&__unused;
+    if (verify_area(VERIFY_READ, (void *)regs->esp, sizeof(context)))
         goto badframe;
-    memcpy_fromfs(&context, (void *) regs->esp, sizeof(context));
+    memcpy_fromfs(&context, (void *)regs->esp, sizeof(context));
     current->blocked = context.oldmask & _BLOCKABLE;
     COPY_SEG(ds);
     COPY_SEG(es);
@@ -256,7 +260,7 @@ if (!(context.x & 0xfffc) || (context.x & 3) != 3) goto badframe; COPY(x);
     COPY(esi);
     regs->eflags &= ~0xCD5;
     regs->eflags |= context.eflags & 0xCD5;
-    regs->orig_eax = -1;		/* disable syscall checks */
+    regs->orig_eax = -1; /* disable syscall checks */
     return context.eax;
 badframe:
     do_exit(SIGSEGV);
@@ -271,11 +275,11 @@ static void setup_frame(struct sigaction *sa, unsigned long **fp, unsigned long 
 {
     unsigned long *frame;
 
-#define __CODE ((unsigned long)(frame+24))
-#define CODE(x) ((unsigned long *) ((x)+__CODE))
+#define __CODE ((unsigned long)(frame + 24))
+#define CODE(x) ((unsigned long *)((x) + __CODE))
     frame = *fp;
     if (regs->ss != USER_DS)
-        frame = (unsigned long *) sa->sa_restorer;
+        frame = (unsigned long *)sa->sa_restorer;
     frame -= 32;
     if (verify_area(VERIFY_WRITE, frame, 32 * 4))
         do_exit(SIGSEGV);
@@ -301,13 +305,13 @@ static void setup_frame(struct sigaction *sa, unsigned long **fp, unsigned long 
     put_fs_long(regs->eflags, frame + 18);
     put_fs_long(regs->esp, frame + 19);
     put_fs_long(regs->ss, frame + 20);
-    put_fs_long(0, frame + 21);		/* 387 state pointer - not implemented*/
+    put_fs_long(0, frame + 21); /* 387 state pointer - not implemented*/
     /* non-iBCS2 extensions.. */
     put_fs_long(oldmask, frame + 22);
     put_fs_long(current->tss.cr2, frame + 23);
     /* set up the return code... */
-    put_fs_long(0x0000b858, CODE(0));	/* popl %eax ; movl $,%eax */
-    put_fs_long(0x80cd0000, CODE(4));	/* int $0x80 */
+    put_fs_long(0x0000b858, CODE(0)); /* popl %eax ; movl $,%eax */
+    put_fs_long(0x80cd0000, CODE(4)); /* int $0x80 */
     put_fs_long(__NR_sigreturn, CODE(2));
     *fp = frame;
 #undef __CODE
@@ -336,8 +340,8 @@ asmlinkage int do_signal(unsigned long oldmask, struct pt_regs *regs)
     {
         __asm__("bsf %2,%1\n\t"
                 "btrl %1,%0"
-                :"=m" (current->signal), "=r" (signr)
-                :"1" (signr));
+                : "=m"(current->signal), "=r"(signr)
+                : "1"(signr));
         sa = current->sigaction + signr;
         signr++;
         if ((current->flags & PF_PTRACED) && signr != SIGKILL)
@@ -387,7 +391,7 @@ asmlinkage int do_signal(unsigned long oldmask, struct pt_regs *regs)
                 current->state = TASK_STOPPED;
                 current->exit_code = signr;
                 if (!(current->p_pptr->sigaction[SIGCHLD - 1].sa_flags &
-                        SA_NOCLDSTOP))
+                      SA_NOCLDSTOP))
                     notify_parent(current);
                 schedule();
                 continue;
@@ -412,38 +416,40 @@ asmlinkage int do_signal(unsigned long oldmask, struct pt_regs *regs)
         if (regs->orig_eax >= 0)
         {
             if (regs->eax == -ERESTARTNOHAND ||
-                    (regs->eax == -ERESTARTSYS && !(sa->sa_flags & SA_RESTART)))
+                (regs->eax == -ERESTARTSYS && !(sa->sa_flags & SA_RESTART)))
                 regs->eax = -EINTR;
         }
         handler_signal |= 1 << (signr - 1);
         mask &= ~sa->sa_mask;
     }
     if (regs->orig_eax >= 0 &&
-            (regs->eax == -ERESTARTNOHAND ||
-             regs->eax == -ERESTARTSYS ||
-             regs->eax == -ERESTARTNOINTR))
+        (regs->eax == -ERESTARTNOHAND ||
+         regs->eax == -ERESTARTSYS ||
+         regs->eax == -ERESTARTNOINTR))
     {
         regs->eax = regs->orig_eax;
         regs->eip -= 2;
     }
-    if (!handler_signal)		/* no handler will be called - return 0 */
+    if (!handler_signal) /* no handler will be called - return 0 */
         return 0;
     eip = regs->eip;
-    frame = (unsigned long *) regs->esp;
+    frame = (unsigned long *)regs->esp;
     signr = 1;
     sa = current->sigaction;
-    for (mask = 1 ; mask ; sa++, signr++, mask += mask)
+    for (mask = 1; mask; sa++, signr++, mask += mask)
     {
         if (mask > handler_signal)
             break;
         if (!(mask & handler_signal))
             continue;
         setup_frame(sa, &frame, eip, regs, signr, oldmask);
-        eip = (unsigned long) sa->sa_handler;
+        eip = (unsigned long)sa->sa_handler;
         if (sa->sa_flags & SA_ONESHOT)
             sa->sa_handler = NULL;
         /* force a supervisor-mode page-in of the signal handler to reduce races */
-        __asm__("testb $0,%%fs:%0": :"m" (*(char *) eip));
+        __asm__("testb $0,%%fs:%0"
+                :
+                : "m"(*(char *)eip));
         regs->cs = USER_CS;
         regs->ss = USER_DS;
         regs->ds = USER_DS;
@@ -453,8 +459,8 @@ asmlinkage int do_signal(unsigned long oldmask, struct pt_regs *regs)
         current->blocked |= sa->sa_mask;
         oldmask |= sa->sa_mask;
     }
-    regs->esp = (unsigned long) frame;
-    regs->eip = eip;		/* "return" to the first handler */
+    regs->esp = (unsigned long)frame;
+    regs->eip = eip; /* "return" to the first handler */
     current->tss.trap_no = current->tss.error_code = 0;
     return 1;
 }

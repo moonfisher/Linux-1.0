@@ -43,7 +43,6 @@
 #include "arp.h"
 #include "icmp.h"
 
-
 static struct rtable *rt_base = NULL;
 static struct rtable *rt_loopback = NULL;
 
@@ -51,17 +50,17 @@ static struct rtable *rt_loopback = NULL;
 static void
 rt_print(struct rtable *rt)
 {
-    if (rt == NULL || inet_debug != DBG_RT) return;
+    if (rt == NULL || inet_debug != DBG_RT)
+        return;
 
     printk("RT: %06lx NXT=%06lx FLAGS=0x%02x\n",
-           (long) rt, (long) rt->rt_next, rt->rt_flags);
+           (long)rt, (long)rt->rt_next, rt->rt_flags);
     printk("    TARGET=%s ", in_ntoa(rt->rt_dst));
     printk("GW=%s ", in_ntoa(rt->rt_gateway));
     printk("    DEV=%s USE=%ld REF=%d\n",
            (rt->rt_dev == NULL) ? "NONE" : rt->rt_dev->name,
            rt->rt_use, rt->rt_refcnt);
 }
-
 
 /*
  * Remove a routing table entry.
@@ -75,7 +74,7 @@ static void rt_del(unsigned long dst)
     rp = &rt_base;
     save_flags(flags);
     cli();
-    while((r = *rp) != NULL)
+    while ((r = *rp) != NULL)
     {
         if (r->rt_dst != dst)
         {
@@ -89,7 +88,6 @@ static void rt_del(unsigned long dst)
     }
     restore_flags(flags);
 }
-
 
 /*
  * Remove all routing table entries for a device.
@@ -152,7 +150,7 @@ static inline struct device *get_gw_dev(unsigned long gw)
 {
     struct rtable *rt;
 
-    for (rt = rt_base ; ; rt = rt->rt_next)
+    for (rt = rt_base;; rt = rt->rt_next)
     {
         if (!rt)
             return NULL;
@@ -207,7 +205,7 @@ void rt_add(short flags, unsigned long dst, unsigned long mask,
     else
         gw = 0;
     /* Allocate an entry. */
-    rt = (struct rtable *) kmalloc(sizeof(struct rtable), GFP_ATOMIC);
+    rt = (struct rtable *)kmalloc(sizeof(struct rtable), GFP_ATOMIC);
     if (rt == NULL)
     {
         DPRINTF((DBG_RT, "RT: no memory for new route!\n"));
@@ -290,9 +288,9 @@ static int rt_new(struct rtentry *r)
         return -EAFNOSUPPORT;
 
     flags = r->rt_flags;
-    daddr = ((struct sockaddr_in *) &r->rt_dst)->sin_addr.s_addr;
-    mask = ((struct sockaddr_in *) &r->rt_genmask)->sin_addr.s_addr;
-    gw = ((struct sockaddr_in *) &r->rt_gateway)->sin_addr.s_addr;
+    daddr = ((struct sockaddr_in *)&r->rt_dst)->sin_addr.s_addr;
+    mask = ((struct sockaddr_in *)&r->rt_genmask)->sin_addr.s_addr;
+    gw = ((struct sockaddr_in *)&r->rt_gateway)->sin_addr.s_addr;
 
     /* BSD emulation: Permits route add someroute gw one-of-my-addresses
        to indicate which iface. Not as clean as the nice Linux dev technique
@@ -300,7 +298,7 @@ static int rt_new(struct rtentry *r)
     if (!dev && (flags & RTF_GATEWAY))
     {
         struct device *dev2;
-        for (dev2 = dev_base ; dev2 != NULL ; dev2 = dev2->next)
+        for (dev2 = dev_base; dev2 != NULL; dev2 = dev2->next)
         {
             if ((dev2->flags & IFF_UP) && dev2->pa_addr == gw)
             {
@@ -336,20 +334,17 @@ static int rt_new(struct rtentry *r)
     return 0;
 }
 
-
 static int rt_kill(struct rtentry *r)
 {
     struct sockaddr_in *trg;
 
-    trg = (struct sockaddr_in *) &r->rt_dst;
+    trg = (struct sockaddr_in *)&r->rt_dst;
     rt_del(trg->sin_addr.s_addr);
     return 0;
 }
 
-
 /* Called from the PROCfs module. */
-int
-rt_get_info(char *buffer)
+int rt_get_info(char *buffer)
 {
     struct rtable *r;
     char *pos;
@@ -367,7 +362,7 @@ rt_get_info(char *buffer)
                        r->rt_flags, r->rt_refcnt, r->rt_use, r->rt_metric,
                        r->rt_mask);
     }
-    return(pos - buffer);
+    return (pos - buffer);
 }
 
 /*
@@ -379,13 +374,13 @@ struct rtable *rt_route(unsigned long daddr, struct options *opt)
 {
     struct rtable *rt;
 
-    for (rt = rt_base; rt != NULL || early_out ; rt = rt->rt_next)
+    for (rt = rt_base; rt != NULL || early_out; rt = rt->rt_next)
     {
         if (!((rt->rt_dst ^ daddr) & rt->rt_mask))
             break;
         /* broadcast addresses can be special cases.. */
         if ((rt->rt_dev->flags & IFF_BROADCAST) &&
-                rt->rt_dev->pa_brdaddr == daddr)
+            rt->rt_dev->pa_brdaddr == daddr)
             break;
     }
     if (daddr == rt->rt_dev->pa_addr)
@@ -412,7 +407,7 @@ static int get_old_rtent(struct old_rtentry *src, struct rtentry *rt)
     rt->rt_dst = tmp.rt_dst;
     rt->rt_gateway = tmp.rt_gateway;
     rt->rt_genmask.sa_family = AF_INET;
-    ((struct sockaddr_in *) &rt->rt_genmask)->sin_addr.s_addr = tmp.rt_genmask;
+    ((struct sockaddr_in *)&rt->rt_genmask)->sin_addr.s_addr = tmp.rt_genmask;
     rt->rt_flags = tmp.rt_flags;
     rt->rt_dev = tmp.rt_dev;
     return 0;
@@ -423,7 +418,7 @@ int rt_ioctl(unsigned int cmd, void *arg)
     int err;
     struct rtentry rt;
 
-    switch(cmd)
+    switch (cmd)
     {
     case DDIOCSDBG:
         return dbg_ioctl(arg, DBG_RT);
@@ -431,7 +426,7 @@ int rt_ioctl(unsigned int cmd, void *arg)
     case SIOCDELRTOLD:
         if (!suser())
             return -EPERM;
-        err = get_old_rtent((struct old_rtentry *) arg, &rt);
+        err = get_old_rtent((struct old_rtentry *)arg, &rt);
         if (err)
             return err;
         return (cmd == SIOCDELRTOLD) ? rt_kill(&rt) : rt_new(&rt);

@@ -79,51 +79,45 @@
 #include "sock.h"
 #include "arp.h"
 
-
-#define ARP_MAX_TRIES	3
-
+#define ARP_MAX_TRIES 3
 
 static char *unk_print(unsigned char *, int);
 static char *eth_aprint(unsigned char *, int);
 
-
 static char *arp_cmds[] =
-{
-    "0x%04X",
-    "REQUEST",
-    "REPLY",
-    "REVERSE REQUEST",
-    "REVERSE REPLY",
-    NULL
-};
-#define	ARP_MAX_CMDS	(sizeof(arp_cmds) / sizeof(arp_cmds[0]))
+    {
+        "0x%04X",
+        "REQUEST",
+        "REPLY",
+        "REVERSE REQUEST",
+        "REVERSE REPLY",
+        NULL};
+#define ARP_MAX_CMDS (sizeof(arp_cmds) / sizeof(arp_cmds[0]))
 
 static struct
 {
-    char	*name;
-    char	*(*print)(unsigned char *ptr, int len);
+    char *name;
+    char *(*print)(unsigned char *ptr, int len);
 } arp_types[] =
-{
-    { "0x%04X",			unk_print	},
-    { "10 Mbps Ethernet", 	eth_aprint	},
-    { "3 Mbps Ethernet",		eth_aprint	},
-    { "AX.25",			unk_print	},
-    { "Pronet",			unk_print	},
-    { "Chaos",			unk_print	},
-    { "IEEE 802.2 Ethernet (?)",	eth_aprint	},
-    { "Arcnet",			unk_print	},
-    { "AppleTalk",		unk_print	},
-    { NULL,			NULL		}
-};
-#define	ARP_MAX_TYPE	(sizeof(arp_types) / sizeof(arp_types[0]))
-
+    {
+        {"0x%04X", unk_print},
+        {"10 Mbps Ethernet", eth_aprint},
+        {"3 Mbps Ethernet", eth_aprint},
+        {"AX.25", unk_print},
+        {"Pronet", unk_print},
+        {"Chaos", unk_print},
+        {"IEEE 802.2 Ethernet (?)", eth_aprint},
+        {"Arcnet", unk_print},
+        {"AppleTalk", unk_print},
+        {NULL, NULL}};
+#define ARP_MAX_TYPE (sizeof(arp_types) / sizeof(arp_types[0]))
 
 struct arp_table *arp_tables[ARP_TABLE_SIZE] =
-{
-    NULL,
+    {
+        NULL,
 };
 
-static int arp_proxies = 0;	/* So we can avoid the proxy arp
+static int arp_proxies = 0; /* So we can avoid the proxy arp
 				   overhead with the usual case of
 				   no proxy arps */
 
@@ -142,18 +136,17 @@ unk_print(unsigned char *ptr, int len)
 
     for (i = 0; i < len; i++)
         bufp += sprintf(bufp, "%02X ", (*ptr++ & 0377));
-    return(buff);
+    return (buff);
 }
-
 
 /* Dump the ADDRESS bytes of an Ethernet hardware type. */
 static char *
 eth_aprint(unsigned char *ptr, int len)
 {
-    if (len != ETH_ALEN) return("");
-    return(eth_print(ptr));
+    if (len != ETH_ALEN)
+        return ("");
+    return (eth_print(ptr));
 }
-
 
 /* Dump an ARP packet. Not complete yet for non-Ethernet packets. */
 static void
@@ -162,7 +155,8 @@ arp_print(struct arphdr *arp)
     int len, idx;
     unsigned char *ptr;
 
-    if (inet_debug != DBG_ARP) return;
+    if (inet_debug != DBG_ARP)
+        return;
 
     printk("ARP: ");
     if (arp == NULL)
@@ -173,15 +167,19 @@ arp_print(struct arphdr *arp)
 
     /* Print the opcode name. */
     len = htons(arp->ar_op);
-    if (len < ARP_MAX_CMDS) idx = len;
-    else idx = 0;
+    if (len < ARP_MAX_CMDS)
+        idx = len;
+    else
+        idx = 0;
     printk("op ");
     printk(arp_cmds[idx], len);
 
     /* Print the ARP header. */
     len = htons(arp->ar_hrd);
-    if (len < ARP_MAX_TYPE) idx = len;
-    else idx = 0;
+    if (len < ARP_MAX_TYPE)
+        idx = len;
+    else
+        idx = 0;
     printk("   hrd = ");
     printk(arp_types[idx].name, len);
     printk("   pro = 0x%04X\n", htons(arp->ar_pro));
@@ -193,16 +191,15 @@ arp_print(struct arphdr *arp)
      * this part will be redone.  ARP will then be a multi-family address
      * resolver, and the code below will be made more general. -FvK
      */
-    ptr = ((unsigned char *) &arp->ar_op) + sizeof(u_short);
+    ptr = ((unsigned char *)&arp->ar_op) + sizeof(u_short);
     printk("   sender HA = %s ", arp_types[idx].print(ptr, arp->ar_hln));
     ptr += arp->ar_hln;
-    printk("  PA = %s\n", in_ntoa(*(unsigned long *) ptr));
+    printk("  PA = %s\n", in_ntoa(*(unsigned long *)ptr));
     ptr += arp->ar_pln;
     printk("   target HA = %s ", arp_types[idx].print(ptr, arp->ar_hln));
     ptr += arp->ar_hln;
-    printk("  PA = %s\n", in_ntoa(*(unsigned long *) ptr));
+    printk("  PA = %s\n", in_ntoa(*(unsigned long *)ptr));
 }
-
 
 /* This will try to retransmit everything on the queue. */
 static void
@@ -215,7 +212,7 @@ arp_send_q(void)
     skb_new_list_head(&work_q);
     arp_q = NULL;
     sti();
-    while((skb = skb_dequeue(&work_q)) != NULL)
+    while ((skb = skb_dequeue(&work_q)) != NULL)
     {
         IS_SKB(skb);
         skb->magic = 0;
@@ -237,7 +234,7 @@ arp_send_q(void)
              * this packet from the queue.  (grinnik) -FvK
              */
             skb->sk = NULL;
-            if(skb->free)
+            if (skb->free)
                 kfree_skb(skb, FREE_WRITE);
             /* If free was 0, magic is now 0, next is 0 and
                the write queue will notice and kill */
@@ -249,7 +246,7 @@ arp_send_q(void)
         sti();
         if (skb->arp || !skb->dev->rebuild_header(skb->data, skb->dev))
         {
-            skb->arp  = 1;
+            skb->arp = 1;
             skb->dev->queue_xmit(skb, skb->dev, 0);
         }
         else
@@ -261,73 +258,71 @@ arp_send_q(void)
     }
 }
 
-
 static struct timer_list arp_timer;
 
 static void arp_queue_ticker(unsigned long data);
 
 static void arp_queue_kick(void)
 {
-    arp_timer.expires = 500;	/* 5 seconds */
+    arp_timer.expires = 500; /* 5 seconds */
     arp_timer.data = 0;
     arp_timer.function = arp_queue_ticker;
     del_timer(&arp_timer);
     add_timer(&arp_timer);
 }
 
-static void arp_queue_ticker(unsigned long data/*UNUSED*/)
+static void arp_queue_ticker(unsigned long data /*UNUSED*/)
 {
     arp_send_q();
     if (skb_peek(&arp_q))
         arp_queue_kick();
 }
 
-
-
 /* Create and send our response to an ARP request. */
 static int
-arp_response(struct arphdr *arp1, struct device *dev,  int addrtype)
+arp_response(struct arphdr *arp1, struct device *dev, int addrtype)
 {
     struct arphdr *arp2;
     struct sk_buff *skb;
     unsigned long src, dst;
     unsigned char *ptr1, *ptr2;
     int hlen;
-    struct arp_table *apt = NULL;/* =NULL otherwise the compiler gives warnings */
+    struct arp_table *apt = NULL; /* =NULL otherwise the compiler gives warnings */
 
     /* Decode the source (REQUEST) message. */
-    ptr1 = ((unsigned char *) &arp1->ar_op) + sizeof(u_short);
-    src = *((unsigned long *) (ptr1 + arp1->ar_hln));
-    dst = *((unsigned long *) (ptr1 + (arp1->ar_hln * 2) + arp1->ar_pln));
+    ptr1 = ((unsigned char *)&arp1->ar_op) + sizeof(u_short);
+    src = *((unsigned long *)(ptr1 + arp1->ar_hln));
+    dst = *((unsigned long *)(ptr1 + (arp1->ar_hln * 2) + arp1->ar_pln));
 
-    if(addrtype != IS_MYADDR)
+    if (addrtype != IS_MYADDR)
     {
         apt = arp_lookup_proxy(dst);
-        if(apt == NULL)
-            return(1);
+        if (apt == NULL)
+            return (1);
     }
 
     /* Get some mem and initialize it for the return trip. */
     skb = alloc_skb(sizeof(struct sk_buff) +
-                    sizeof(struct arphdr) +
-                    (2 * arp1->ar_hln) + (2 * arp1->ar_pln) +
-                    dev->hard_header_len, GFP_ATOMIC);
+                        sizeof(struct arphdr) +
+                        (2 * arp1->ar_hln) + (2 * arp1->ar_pln) +
+                        dev->hard_header_len,
+                    GFP_ATOMIC);
     if (skb == NULL)
     {
         printk("ARP: no memory available for ARP REPLY!\n");
-        return(1);
+        return (1);
     }
 
     skb->mem_addr = skb;
-    skb->len      = sizeof(struct arphdr) + (2 * arp1->ar_hln) +
-                    (2 * arp1->ar_pln) + dev->hard_header_len;
-    skb->mem_len  = sizeof(struct sk_buff) + skb->len;
+    skb->len = sizeof(struct arphdr) + (2 * arp1->ar_hln) +
+               (2 * arp1->ar_pln) + dev->hard_header_len;
+    skb->mem_len = sizeof(struct sk_buff) + skb->len;
     hlen = dev->hard_header(skb->data, dev, ETH_P_ARP, src, dst, skb->len);
     if (hlen < 0)
     {
         printk("ARP: cannot create HW frame header for REPLY !\n");
         kfree_skb(skb, FREE_WRITE);
-        return(1);
+        return (1);
     }
 
     /*
@@ -335,16 +330,16 @@ arp_response(struct arphdr *arp1, struct device *dev,  int addrtype)
      * This looks ugly, but we have to deal with the variable-length
      * ARP packets and such.  It is not as bad as it looks- FvK
      */
-    arp2 = (struct arphdr *) (skb->data + hlen);
-    ptr2 = ((unsigned char *) &arp2->ar_op) + sizeof(u_short);
+    arp2 = (struct arphdr *)(skb->data + hlen);
+    ptr2 = ((unsigned char *)&arp2->ar_op) + sizeof(u_short);
     arp2->ar_hrd = arp1->ar_hrd;
     arp2->ar_pro = arp1->ar_pro;
     arp2->ar_hln = arp1->ar_hln;
     arp2->ar_pln = arp1->ar_pln;
     arp2->ar_op = htons(ARPOP_REPLY);
-    if(addrtype == IS_MYADDR)
+    if (addrtype == IS_MYADDR)
         memcpy(ptr2, dev->dev_addr, arp2->ar_hln);
-    else		/* Proxy arp, so pull from the table */
+    else /* Proxy arp, so pull from the table */
         memcpy(ptr2, apt->ha, arp2->ar_hln);
     ptr2 += arp2->ar_hln;
     memcpy(ptr2, ptr1 + (arp1->ar_hln * 2) + arp1->ar_pln, arp2->ar_pln);
@@ -363,9 +358,8 @@ arp_response(struct arphdr *arp1, struct device *dev,  int addrtype)
 
     /* Queue the packet for transmission. */
     dev->queue_xmit(skb, dev, 0);
-    return(0);
+    return (0);
 }
-
 
 /* This will find an entry in the ARP table by looking at the IP address. */
 static struct arp_table *
@@ -380,26 +374,25 @@ arp_lookup(unsigned long paddr)
     if (chk_addr(paddr) == IS_MYADDR)
     {
         printk("ARP: ARPing my own IP address %s !\n", in_ntoa(paddr));
-        return(NULL);
+        return (NULL);
     }
 
     /* Loop through the table for the desired address. */
     hash = htonl(paddr) & (ARP_TABLE_SIZE - 1);
     cli();
     apt = arp_tables[hash];
-    while(apt != NULL)
+    while (apt != NULL)
     {
         if (apt->ip == paddr)
         {
             sti();
-            return(apt);
+            return (apt);
         }
         apt = apt->next;
     }
     sti();
-    return(NULL);
+    return (NULL);
 }
-
 
 /* This will find a proxy in the ARP table by looking at the IP address. */
 static struct arp_table *arp_lookup_proxy(unsigned long paddr)
@@ -413,23 +406,21 @@ static struct arp_table *arp_lookup_proxy(unsigned long paddr)
     hash = htonl(paddr) & (ARP_TABLE_SIZE - 1);
     cli();
     apt = arp_tables[hash];
-    while(apt != NULL)
+    while (apt != NULL)
     {
-        if (apt->ip == paddr && (apt->flags & ATF_PUBL) )
+        if (apt->ip == paddr && (apt->flags & ATF_PUBL))
         {
             sti();
-            return(apt);
+            return (apt);
         }
         apt = apt->next;
     }
     sti();
-    return(NULL);
+    return (NULL);
 }
 
-
 /* Delete an ARP mapping entry in the cache. */
-void
-arp_destructor(unsigned long paddr, int force)
+void arp_destructor(unsigned long paddr, int force)
 {
     struct arp_table *apt;
     struct arp_table **lapt;
@@ -452,10 +443,10 @@ arp_destructor(unsigned long paddr, int force)
     {
         if (apt->ip == paddr)
         {
-            if((apt->flags & ATF_PERM) && !force)
+            if ((apt->flags & ATF_PERM) && !force)
                 return;
             *lapt = apt->next;
-            if(apt->flags & ATF_PUBL)
+            if (apt->flags & ATF_PUBL)
                 arp_proxies--;
             kfree_s(apt, sizeof(struct arp_table));
             sti();
@@ -495,11 +486,11 @@ arp_create(unsigned long paddr, unsigned char *addr, int hlen, int htype)
     DPRINTF((DBG_ARP, "%s, ", eth_print(addr)));
     DPRINTF((DBG_ARP, "%d, %d)\n", hlen, htype));
 
-    apt = (struct arp_table *) kmalloc(sizeof(struct arp_table), GFP_ATOMIC);
+    apt = (struct arp_table *)kmalloc(sizeof(struct arp_table), GFP_ATOMIC);
     if (apt == NULL)
     {
         printk("ARP: no memory available for new ARP entry!\n");
-        return(NULL);
+        return (NULL);
     }
 
     /* Fill in the allocated ARP cache entry. */
@@ -507,16 +498,15 @@ arp_create(unsigned long paddr, unsigned char *addr, int hlen, int htype)
     apt->ip = paddr;
     apt->hlen = hlen;
     apt->htype = htype;
-    apt->flags = (ATF_INUSE | ATF_COM);		/* USED and COMPLETED entry */
+    apt->flags = (ATF_INUSE | ATF_COM); /* USED and COMPLETED entry */
     memcpy(apt->ha, addr, hlen);
     apt->last_used = jiffies;
     cli();
     apt->next = arp_tables[hash];
     arp_tables[hash] = apt;
     sti();
-    return(apt);
+    return (apt);
 }
-
 
 /*
  * An ARP REQUEST packet has arrived.
@@ -527,8 +517,7 @@ arp_create(unsigned long paddr, unsigned char *addr, int hlen, int htype)
  * one of our own IP addresses), we set up and send out an ARP REPLY
  * packet to the sender.
  */
-int
-arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
+int arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
 {
     struct arphdr *arp;
     struct arp_table *tbl;
@@ -546,16 +535,16 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
     {
         DPRINTF((DBG_ARP, "ARP: Bad packet received on device \"%s\" !\n", dev->name));
         kfree_skb(skb, FREE_READ);
-        return(0);
+        return (0);
     }
 
     /* For now we will only deal with IP addresses. */
-    if (((arp->ar_pro != NET16(0x00CC) && dev->type == 3) || (arp->ar_pro != NET16(ETH_P_IP) && dev->type != 3) ) || arp->ar_pln != 4)
+    if (((arp->ar_pro != NET16(0x00CC) && dev->type == 3) || (arp->ar_pro != NET16(ETH_P_IP) && dev->type != 3)) || arp->ar_pln != 4)
     {
         if (arp->ar_op != NET16(ARPOP_REQUEST))
             DPRINTF((DBG_ARP, "ARP: Non-IP request on device \"%s\" !\n", dev->name));
         kfree_skb(skb, FREE_READ);
-        return(0);
+        return (0);
     }
 
     /*
@@ -563,7 +552,7 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
      * info already present in the packet: the sender's
      * IP and hardware address.
      */
-    ptr = ((unsigned char *) &arp->ar_op) + sizeof(u_short);
+    ptr = ((unsigned char *)&arp->ar_op) + sizeof(u_short);
     memcpy(&src, ptr + arp->ar_hln, arp->ar_pln);
     tbl = arp_lookup(src);
     if (tbl != NULL)
@@ -580,7 +569,7 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
         if (chk_addr(dst) != IS_MYADDR && arp_proxies == 0)
         {
             kfree_skb(skb, FREE_READ);
-            return(0);
+            return (0);
         }
         else
         {
@@ -588,7 +577,7 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
             if (tbl == NULL)
             {
                 kfree_skb(skb, FREE_READ);
-                return(0);
+                return (0);
             }
         }
     }
@@ -607,14 +596,14 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
     if (arp->ar_op != NET16(ARPOP_REQUEST))
     {
         kfree_skb(skb, FREE_READ);
-        return(0);
+        return (0);
     }
 
     /*
      * A broadcast arp, ignore it
      */
 
-    if(chk_addr(dst) == IS_BROADCAST)
+    if (chk_addr(dst) == IS_BROADCAST)
     {
         kfree_skb(skb, FREE_READ);
         return 0;
@@ -625,7 +614,7 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
     {
         DPRINTF((DBG_ARP, "ARP: request was not for me!\n"));
         kfree_skb(skb, FREE_READ);
-        return(0);
+        return (0);
     }
 
     /*
@@ -634,13 +623,11 @@ arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
      */
     ret = arp_response(arp, dev, addr_hint);
     kfree_skb(skb, FREE_READ);
-    return(ret);
+    return (ret);
 }
 
-
 /* Create and send an ARP REQUEST packet. */
-void
-arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
+void arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
 {
     struct sk_buff *skb;
     struct arphdr *arp;
@@ -652,9 +639,10 @@ arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
     DPRINTF((DBG_ARP, "saddr=%s)\n", in_ntoa(saddr)));
 
     skb = alloc_skb(sizeof(struct sk_buff) +
-                    sizeof(struct arphdr) + (2 * dev->addr_len) +
-                    dev->hard_header_len +
-                    (2 * 4 /* arp->plen */), GFP_ATOMIC);
+                        sizeof(struct arphdr) + (2 * dev->addr_len) +
+                        dev->hard_header_len +
+                        (2 * 4 /* arp->plen */),
+                    GFP_ATOMIC);
     if (skb == NULL)
     {
         printk("ARP: No memory available for REQUEST %s\n", in_ntoa(paddr));
@@ -677,9 +665,9 @@ arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
         kfree_skb(skb, FREE_WRITE);
         return;
     }
-    arp = (struct arphdr *) (skb->data + tmp);
+    arp = (struct arphdr *)(skb->data + tmp);
     arp->ar_hrd = htons(dev->type);
-    if(dev->type != 3)	/* AX.25 */
+    if (dev->type != 3) /* AX.25 */
         arp->ar_pro = htons(ETH_P_IP);
     else
         arp->ar_pro = htons(0xCC);
@@ -687,7 +675,7 @@ arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
     arp->ar_pln = 4;
     arp->ar_op = htons(ARPOP_REQUEST);
 
-    ptr = ((unsigned char *) &arp->ar_op) + sizeof(u_short);
+    ptr = ((unsigned char *)&arp->ar_op) + sizeof(u_short);
     memcpy(ptr, dev->dev_addr, arp->ar_hln);
     ptr += arp->ar_hln;
     memcpy(ptr, &saddr, arp->ar_pln);
@@ -702,11 +690,9 @@ arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
     dev->queue_xmit(skb, dev, 0);
 }
 
-
 /* Find an ARP mapping in the cache. If not found, post a REQUEST. */
-int
-arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
-         unsigned long saddr)
+int arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
+             unsigned long saddr)
 {
     struct arp_table *apt;
 
@@ -714,14 +700,14 @@ arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
     DPRINTF((DBG_ARP, "paddr=%s, ", in_ntoa(paddr)));
     DPRINTF((DBG_ARP, "dev=%s, saddr=%s)\n", dev->name, in_ntoa(saddr)));
 
-    switch(chk_addr(paddr))
+    switch (chk_addr(paddr))
     {
     case IS_MYADDR:
         memcpy(haddr, dev->dev_addr, dev->addr_len);
-        return(0);
+        return (0);
     case IS_BROADCAST:
         memcpy(haddr, dev->broadcast, dev->addr_len);
-        return(0);
+        return (0);
     }
 
     apt = arp_lookup(paddr);
@@ -733,11 +719,11 @@ arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
          * verify the address for us.
          */
         if ((apt->flags & ATF_PERM) ||
-                (apt->last_used < jiffies + ARP_TIMEOUT && apt->hlen != 0))
+            (apt->last_used < jiffies + ARP_TIMEOUT && apt->hlen != 0))
         {
             apt->last_used = jiffies;
             memcpy(haddr, apt->ha, dev->addr_len);
-            return(0);
+            return (0);
         }
         else
         {
@@ -756,13 +742,11 @@ arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
     /* If we didn't find an entry, we will try to send an ARP packet. */
     arp_send(paddr, dev, saddr);
 
-    return(1);
+    return (1);
 }
 
-
 /* Add an entry to the ARP cache.  Check for dupes! */
-void
-arp_add(unsigned long addr, unsigned char *haddr, struct device *dev)
+void arp_add(unsigned long addr, unsigned char *haddr, struct device *dev)
 {
     struct arp_table *apt;
 
@@ -789,10 +773,8 @@ arp_add(unsigned long addr, unsigned char *haddr, struct device *dev)
     arp_create(addr, haddr, dev->addr_len, dev->type);
 }
 
-
 /* Create an ARP entry for a device's broadcast address. */
-void
-arp_add_broad(unsigned long addr, struct device *dev)
+void arp_add_broad(unsigned long addr, struct device *dev)
 {
     struct arp_table *apt;
 
@@ -804,10 +786,8 @@ arp_add_broad(unsigned long addr, struct device *dev)
     }
 }
 
-
 /* Queue an IP packet, while waiting for the ARP reply packet. */
-void
-arp_queue(struct sk_buff *skb)
+void arp_queue(struct sk_buff *skb)
 {
     cli();
     skb->tries = ARP_MAX_TRIES;
@@ -818,13 +798,12 @@ arp_queue(struct sk_buff *skb)
         printk("ARP: arp_queue skb already on queue magic=%X.\n", skb->magic);
         return;
     }
-    if(arp_q == NULL)
+    if (arp_q == NULL)
         arp_queue_kick();
     skb_queue_tail(&arp_q, skb);
     skb->magic = ARP_QUEUE_MAGIC;
     sti();
 }
-
 
 /*
  * Write the contents of the ARP cache to a PROCfs file.
@@ -841,8 +820,7 @@ arp_queue(struct sk_buff *skb)
  *
  * Perhaps we should redo PROCfs to handle larger buffers?  Michael?
  */
-int
-arp_get_info(char *buffer)
+int arp_get_info(char *buffer)
 {
     struct arpreq *req;
     struct arp_table *apt;
@@ -861,13 +839,13 @@ arp_get_info(char *buffer)
         {
             if (pos < (buffer + 4000))
             {
-                req = (struct arpreq *) pos;
-                memset((char *) req, 0, sizeof(struct arpreq));
+                req = (struct arpreq *)pos;
+                memset((char *)req, 0, sizeof(struct arpreq));
                 req->arp_pa.sa_family = AF_INET;
-                memcpy((char *) req->arp_pa.sa_data, (char *) &apt->ip, 4);
+                memcpy((char *)req->arp_pa.sa_data, (char *)&apt->ip, 4);
                 req->arp_ha.sa_family = apt->htype;
-                memcpy((char *) req->arp_ha.sa_data,
-                       (char *) &apt->ha, apt->hlen);
+                memcpy((char *)req->arp_ha.sa_data,
+                       (char *)&apt->ha, apt->hlen);
                 req->arp_flags = apt->flags;
             }
             pos += sizeof(struct arpreq);
@@ -876,9 +854,8 @@ arp_get_info(char *buffer)
             sti();
         }
     }
-    return(pos - buffer);
+    return (pos - buffer);
 }
-
 
 /* Set (create) an ARP cache entry. */
 static int
@@ -891,15 +868,16 @@ arp_req_set(struct arpreq *req)
 
     /* We only understand about IP addresses... */
     memcpy_fromfs(&r, req, sizeof(r));
-    if (r.arp_pa.sa_family != AF_INET) return(-EPFNOSUPPORT);
+    if (r.arp_pa.sa_family != AF_INET)
+        return (-EPFNOSUPPORT);
 
     /*
      * Find out about the hardware type.
      * We have to be compatible with BSD UNIX, so we have to
      * assume that a "not set" value (i.e. 0) means Ethernet.
      */
-    si = (struct sockaddr_in *) &r.arp_pa;
-    switch(r.arp_ha.sa_family)
+    si = (struct sockaddr_in *)&r.arp_pa;
+    switch (r.arp_ha.sa_family)
     {
     case 0:
     case ARPHRD_ETHER:
@@ -912,33 +890,33 @@ arp_req_set(struct arpreq *req)
         break;
 
     default:
-        return(-EPFNOSUPPORT);
+        return (-EPFNOSUPPORT);
     }
 
     /* Is there an existing entry for this address? */
     if (si->sin_addr.s_addr == 0)
     {
         printk("ARP: SETARP: requested PA is 0.0.0.0 !\n");
-        return(-EINVAL);
+        return (-EINVAL);
     }
     apt = arp_lookup(si->sin_addr.s_addr);
     if (apt == NULL)
     {
         apt = arp_create(si->sin_addr.s_addr,
-                         (unsigned char *) r.arp_ha.sa_data, hlen, htype);
-        if (apt == NULL) return(-ENOMEM);
+                         (unsigned char *)r.arp_ha.sa_data, hlen, htype);
+        if (apt == NULL)
+            return (-ENOMEM);
     }
 
     /* We now have a pointer to an ARP entry.  Update it! */
-    memcpy((char *) &apt->ha, (char *) &r.arp_ha.sa_data, hlen);
+    memcpy((char *)&apt->ha, (char *)&r.arp_ha.sa_data, hlen);
     apt->last_used = jiffies;
     apt->flags = r.arp_flags;
-    if(apt->flags & ATF_PUBL)
-        arp_proxies++;		/* Count proxy arps so we know if to use it */
+    if (apt->flags & ATF_PUBL)
+        arp_proxies++; /* Count proxy arps so we know if to use it */
 
-    return(0);
+    return (0);
 }
-
 
 /* Get an ARP cache entry. */
 static int
@@ -950,22 +928,23 @@ arp_req_get(struct arpreq *req)
 
     /* We only understand about IP addresses... */
     memcpy_fromfs(&r, req, sizeof(r));
-    if (r.arp_pa.sa_family != AF_INET) return(-EPFNOSUPPORT);
+    if (r.arp_pa.sa_family != AF_INET)
+        return (-EPFNOSUPPORT);
 
     /* Is there an existing entry for this address? */
-    si = (struct sockaddr_in *) &r.arp_pa;
+    si = (struct sockaddr_in *)&r.arp_pa;
     apt = arp_lookup(si->sin_addr.s_addr);
-    if (apt == NULL) return(-ENXIO);
+    if (apt == NULL)
+        return (-ENXIO);
 
     /* We found it; copy into structure. */
-    memcpy((char *) r.arp_ha.sa_data, (char *) &apt->ha, apt->hlen);
+    memcpy((char *)r.arp_ha.sa_data, (char *)&apt->ha, apt->hlen);
     r.arp_ha.sa_family = apt->htype;
 
     /* Copy the information back */
     memcpy_tofs(req, &r, sizeof(r));
-    return(0);
+    return (0);
 }
-
 
 /* Delete an ARP cache entry. */
 static int
@@ -976,50 +955,51 @@ arp_req_del(struct arpreq *req)
 
     /* We only understand about IP addresses... */
     memcpy_fromfs(&r, req, sizeof(r));
-    if (r.arp_pa.sa_family != AF_INET) return(-EPFNOSUPPORT);
+    if (r.arp_pa.sa_family != AF_INET)
+        return (-EPFNOSUPPORT);
 
-    si = (struct sockaddr_in *) &r.arp_pa;
+    si = (struct sockaddr_in *)&r.arp_pa;
 
     /* The system cope with this but splats up a nasty kernel message
        We trap it beforehand and tell the user off */
-    if(chk_addr(si->sin_addr.s_addr) == IS_MYADDR)
+    if (chk_addr(si->sin_addr.s_addr) == IS_MYADDR)
         return -EINVAL;
 
     arp_destroy(si->sin_addr.s_addr);
 
-    return(0);
+    return (0);
 }
 
-
 /* Handle an ARP layer I/O control request. */
-int
-arp_ioctl(unsigned int cmd, void *arg)
+int arp_ioctl(unsigned int cmd, void *arg)
 {
     int err;
-    switch(cmd)
+    switch (cmd)
     {
     case DDIOCSDBG:
-        return(dbg_ioctl(arg, DBG_ARP));
+        return (dbg_ioctl(arg, DBG_ARP));
     case SIOCDARP:
-        if (!suser()) return(-EPERM);
+        if (!suser())
+            return (-EPERM);
         err = verify_area(VERIFY_READ, arg, sizeof(struct arpreq));
-        if(err)
+        if (err)
             return err;
-        return(arp_req_del((struct arpreq *)arg));
+        return (arp_req_del((struct arpreq *)arg));
     case SIOCGARP:
         err = verify_area(VERIFY_WRITE, arg, sizeof(struct arpreq));
-        if(err)
+        if (err)
             return err;
-        return(arp_req_get((struct arpreq *)arg));
+        return (arp_req_get((struct arpreq *)arg));
     case SIOCSARP:
-        if (!suser()) return(-EPERM);
+        if (!suser())
+            return (-EPERM);
         err = verify_area(VERIFY_READ, arg, sizeof(struct arpreq));
-        if(err)
+        if (err)
             return err;
-        return(arp_req_set((struct arpreq *)arg));
+        return (arp_req_set((struct arpreq *)arg));
     default:
-        return(-EINVAL);
+        return (-EINVAL);
     }
     /*NOTREACHED*/
-    return(0);
+    return (0);
 }

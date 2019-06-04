@@ -23,6 +23,7 @@
 static inline int namecompare(int len, int maxlen,
                               const char *name, const char *buffer)
 {
+#if ASM_NO_64
     if (len >= maxlen || !buffer[len])
     {
         unsigned char same;
@@ -32,6 +33,7 @@ static inline int namecompare(int len, int maxlen,
                 :"cx", "di", "si");
         return same;
     }
+#endif
     return 0;
 }
 

@@ -68,19 +68,19 @@
 
 #include "asm/system.h"
 
-struct bucket_desc  	/* 16 bytes */
+struct bucket_desc /* 16 bytes */
 {
-    void			*page;
-    struct bucket_desc	*next;
-    void			*freeptr;
-    unsigned short		refcnt;
-    unsigned short		bucket_size;
+    void *page;
+    struct bucket_desc *next;
+    void *freeptr;
+    unsigned short refcnt;
+    unsigned short bucket_size;
 };
 
-struct _bucket_dir  	/* 8 bytes */
+struct _bucket_dir /* 8 bytes */
 {
-    unsigned int		size;
-    struct bucket_desc	*chain;
+    unsigned int size;
+    struct bucket_desc *chain;
 };
 
 #ifdef CONFIG_DEBUG_MALLOC
@@ -99,12 +99,12 @@ struct hdr_end
     int magic;
 };
 
-#define DEB_MAGIC_FREE  0x13579BDF /* free block */
+#define DEB_MAGIC_FREE 0x13579BDF  /* free block */
 #define DEB_MAGIC_ALLOC 0x2468ACE0 /* allocated block */
-#define DEB_MAGIC_USED  0x147AD036 /* allocated but bad */
+#define DEB_MAGIC_USED 0x147AD036  /* allocated but bad */
 #define DEB_MAGIC_FREED 0x258BE169 /* free but abused */
 
-#define DEB_MAGIC_END   0x369CF258 /* end marker */
+#define DEB_MAGIC_END 0x369CF258 /* end marker */
 
 #endif
 /*
@@ -120,25 +120,24 @@ struct hdr_end
  * Note that this list *must* be kept in order.
  */
 struct _bucket_dir bucket_dir[] =
-{
+    {
 #ifndef CONFIG_DEBUG_MALLOC /* Debug headers have too much overhead */
-    { 16,	(struct bucket_desc *) 0},
+        {16, (struct bucket_desc *)0},
 #endif
-    { 32,	(struct bucket_desc *) 0},
-    { 64,	(struct bucket_desc *) 0},
-    { 128,	(struct bucket_desc *) 0},
-    { 256,	(struct bucket_desc *) 0},
-    { 512,	(struct bucket_desc *) 0},
-    { 1024,	(struct bucket_desc *) 0},
-    { 2048, (struct bucket_desc *) 0},
-    { 4096, (struct bucket_desc *) 0},
-    { 0,    (struct bucket_desc *) 0}
-};   /* End of list marker */
+        {32, (struct bucket_desc *)0},
+        {64, (struct bucket_desc *)0},
+        {128, (struct bucket_desc *)0},
+        {256, (struct bucket_desc *)0},
+        {512, (struct bucket_desc *)0},
+        {1024, (struct bucket_desc *)0},
+        {2048, (struct bucket_desc *)0},
+        {4096, (struct bucket_desc *)0},
+        {0, (struct bucket_desc *)0}}; /* End of list marker */
 
 /*
  * This contains a linked list of free bucket descriptor blocks
  */
-static struct bucket_desc *free_bucket_desc = (struct bucket_desc *) 0;
+static struct bucket_desc *free_bucket_desc = (struct bucket_desc *)0;
 
 /*
  * This routine initializes a bucket description page.
@@ -152,8 +151,8 @@ static inline void init_bucket_desc(unsigned long page)
     struct bucket_desc *bdesc;
     int i;
 
-    bdesc = (struct bucket_desc *) page;
-    for (i = PAGE_SIZE / sizeof(struct bucket_desc); --i > 0; bdesc++ )
+    bdesc = (struct bucket_desc *)page;
+    for (i = PAGE_SIZE / sizeof(struct bucket_desc); --i > 0; bdesc++)
         bdesc->next = bdesc + 1;
     /*
      * This is done last, to avoid race conditions in case
@@ -161,7 +160,7 @@ static inline void init_bucket_desc(unsigned long page)
      */
     cli();
     bdesc->next = free_bucket_desc;
-    free_bucket_desc = (struct bucket_desc *) page;
+    free_bucket_desc = (struct bucket_desc *)page;
 }
 
 /*
@@ -178,11 +177,11 @@ kmalloc(unsigned int len, int priority)
 #endif
 {
     int i;
-    unsigned long		flags;
-    unsigned long		page;
-    struct _bucket_dir	*bdir;
-    struct bucket_desc	*bdesc;
-    void			*retval;
+    unsigned long flags;
+    unsigned long page;
+    struct _bucket_dir *bdir;
+    struct bucket_desc *bdesc;
+    void *retval;
 
 #ifdef CONFIG_DEBUG_MALLOC
     len += sizeof(struct hdr_start) + sizeof(struct hdr_end);
@@ -194,7 +193,7 @@ kmalloc(unsigned int len, int priority)
 
     /* The sizes are static so there is no reentry problem here. */
     bdir = bucket_dir;
-    for (bdir = bucket_dir ; bdir->size < len ; bdir++)
+    for (bdir = bucket_dir; bdir->size < len; bdir++)
     {
         if (!bdir->size)
             goto too_large;
@@ -204,7 +203,7 @@ kmalloc(unsigned int len, int priority)
      * Now we search for a bucket descriptor which has free space
      */
     save_flags(flags);
-    cli();			/* Avoid race conditions */
+    cli(); /* Avoid race conditions */
     for (bdesc = bdir->chain; bdesc != NULL; bdesc = bdesc->next)
         if (bdesc->freeptr)
             goto found_bdesc;
@@ -221,7 +220,7 @@ kmalloc(unsigned int len, int priority)
     if (!free_bucket_desc)
     {
         restore_flags(flags);
-        if(!(page = __get_free_page(priority)))
+        if (!(page = __get_free_page(priority)))
             return NULL;
         init_bucket_desc(page);
     }
@@ -230,7 +229,7 @@ kmalloc(unsigned int len, int priority)
     free_bucket_desc = bdesc->next;
     restore_flags(flags);
 
-    if(!(page = __get_free_page(priority)))
+    if (!(page = __get_free_page(priority)))
     {
         /*
          * Out of memory? Put the bucket descriptor back on the free list
@@ -244,15 +243,15 @@ kmalloc(unsigned int len, int priority)
 
     bdesc->refcnt = 0;
     bdesc->bucket_size = bdir->size;
-    bdesc->page = bdesc->freeptr = (void *) page;
+    bdesc->page = bdesc->freeptr = (void *)page;
 
     /* Set up the chain of free objects */
-    for (i = PAGE_SIZE / bdir->size; i > 0 ; i--)
+    for (i = PAGE_SIZE / bdir->size; i > 0; i--)
     {
 #ifdef CONFIG_DEBUG_MALLOC
         struct hdr_start *hd;
         struct hdr_end *he;
-        hd = (struct hdr_start *) page;
+        hd = (struct hdr_start *)page;
         he = (struct hdr_end *)(page + (bdir->size - sizeof(struct hdr_end)));
         hd->magic = DEB_MAGIC_FREE;
         hd->file = hd->ok_file = "(expand)";
@@ -262,9 +261,9 @@ kmalloc(unsigned int len, int priority)
 
         memset(hd + 1, 0xF8, hd->size);
 
-        *((void **) (hd + 1)) = (i == 1) ? NULL : (void *)(page + bdir->size);
+        *((void **)(hd + 1)) = (i == 1) ? NULL : (void *)(page + bdir->size);
 #else
-        *((void **) page) = (i == 1) ? NULL : (void *)(page + bdir->size);
+        *((void **)page) = (i == 1) ? NULL : (void *)(page + bdir->size);
 #endif
         page += bdir->size;
     }
@@ -277,42 +276,42 @@ kmalloc(unsigned int len, int priority)
     bdir->chain = bdesc;
 
 found_bdesc:
-    retval = (void *) bdesc->freeptr;
+    retval = (void *)bdesc->freeptr;
 #ifdef CONFIG_DEBUG_MALLOC
-    bdesc->freeptr = *((void **) (((char *)retval) + sizeof(struct hdr_start)));
+    bdesc->freeptr = *((void **)(((char *)retval) + sizeof(struct hdr_start)));
 #else
-    bdesc->freeptr = *((void **) retval);
+    bdesc->freeptr = *((void **)retval);
 #endif
     bdesc->refcnt++;
-    restore_flags(flags);	/* OK, we're safe again */
+    restore_flags(flags); /* OK, we're safe again */
 #ifdef CONFIG_DEBUG_MALLOC
     {
         struct hdr_start *hd;
         struct hdr_end *he;
 
-        hd = (struct hdr_start *) retval;
+        hd = (struct hdr_start *)retval;
         retval = hd + 1;
         len -= sizeof(struct hdr_start) + sizeof(struct hdr_end);
-        if(hd->magic != DEB_MAGIC_FREE && hd->magic != DEB_MAGIC_FREED)
+        if (hd->magic != DEB_MAGIC_FREE && hd->magic != DEB_MAGIC_FREED)
         {
             printk("DEB_MALLOC allocating %s block 0x%x (head 0x%x) from %s:%d, magic %x\n",
                    (hd->magic == DEB_MAGIC_ALLOC) ? "nonfree" : "trashed",
                    retval, hd, deb_file, deb_line, hd->magic);
             return NULL;
         }
-        if(len > hd->size || len > bdir->size - sizeof(struct hdr_start) - sizeof(struct hdr_end))
+        if (len > hd->size || len > bdir->size - sizeof(struct hdr_start) - sizeof(struct hdr_end))
         {
             printk("DEB_MALLOC got %x:%x-byte block, wanted %x, from %s:%d, last %s:%d\n",
                    hd->size, bdir->size, len, hd->file, hd->line, deb_file, deb_line);
             return NULL;
         }
         {
-            unsigned char *x = (unsigned char *) retval;
+            unsigned char *x = (unsigned char *)retval;
             unsigned short pos = 4;
             x += pos;
-            while(pos < hd->size)
+            while (pos < hd->size)
             {
-                if(*x++ != 0xF8)
+                if (*x++ != 0xF8)
                 {
                     printk("DEB_MALLOC used 0x%x:%x(%x) while free, from %s:%d\n",
                            retval, pos, hd->size, hd->file, hd->line);
@@ -322,7 +321,7 @@ found_bdesc:
             }
         }
         he = (struct hdr_end *)(((char *)retval) + hd->size);
-        if(he->magic != DEB_MAGIC_END)
+        if (he->magic != DEB_MAGIC_END)
         {
             printk("DEB_MALLOC overran 0x%x:%d while free, from %s:%d\n", retval, hd->size, hd->file, hd->line);
         }
@@ -352,12 +351,12 @@ void deb_kcheck_s(const char *deb_file, unsigned short deb_line,
 
     if (!obj)
         return;
-    hd = (struct hdr_start *) obj;
+    hd = (struct hdr_start *)obj;
     hd--;
 
-    if(hd->magic != DEB_MAGIC_ALLOC)
+    if (hd->magic != DEB_MAGIC_ALLOC)
     {
-        if(hd->magic == DEB_MAGIC_FREE)
+        if (hd->magic == DEB_MAGIC_FREE)
         {
             printk("DEB_MALLOC Using free block of 0x%x at %s:%d, by %s:%d, wasOK %s:%d\n",
                    obj, deb_file, deb_line, hd->file, hd->line, hd->ok_file, hd->ok_line);
@@ -366,9 +365,9 @@ void deb_kcheck_s(const char *deb_file, unsigned short deb_line,
         }
         return;
     }
-    if(hd->size != size)
+    if (hd->size != size)
     {
-        if(size != 0)
+        if (size != 0)
         {
             printk("DEB_MALLOC size for 0x%x given as %d, stored %d, at %s:%d, wasOK %s:%d\n",
                    obj, size, hd->size, deb_file, deb_line, hd->ok_file, hd->ok_line);
@@ -376,7 +375,7 @@ void deb_kcheck_s(const char *deb_file, unsigned short deb_line,
         size = hd->size;
     }
     he = (struct hdr_end *)(((char *)obj) + size);
-    if(he->magic != DEB_MAGIC_END)
+    if (he->magic != DEB_MAGIC_END)
     {
         printk("DEB_MALLOC overran block 0x%x:%d, at %s:%d, wasOK %s:%d\n",
                obj, hd->size, deb_file, deb_line, hd->ok_file, hd->ok_line);
@@ -402,10 +401,10 @@ void deb_kfree_s(const char *deb_file, unsigned short deb_line,
 void kfree_s(void *obj, int size)
 #endif
 {
-    unsigned long		flags;
-    void			*page;
-    struct _bucket_dir	*bdir;
-    struct bucket_desc	*bdesc, *prev;
+    unsigned long flags;
+    void *page;
+    struct _bucket_dir *bdir;
+    struct bucket_desc *bdesc, *prev;
 
     if (!obj)
         return;
@@ -413,29 +412,29 @@ void kfree_s(void *obj, int size)
     {
         struct hdr_start *hd;
         struct hdr_end *he;
-        hd = (struct hdr_start *) obj;
+        hd = (struct hdr_start *)obj;
         hd--;
 
-        if(hd->magic == DEB_MAGIC_FREE)
+        if (hd->magic == DEB_MAGIC_FREE)
         {
             printk("DEB_MALLOC dup free of 0x%x at %s:%d by %s:%d, wasOK %s:%d\n",
                    obj, deb_file, deb_line, hd->file, hd->line, hd->ok_file, hd->ok_line);
             return;
         }
-        if(hd->size != size)
+        if (hd->size != size)
         {
-            if(size != 0)
+            if (size != 0)
             {
-                if(hd->magic != DEB_MAGIC_USED)
+                if (hd->magic != DEB_MAGIC_USED)
                     printk("DEB_MALLOC size for 0x%x given as %d, stored %d, at %s:%d, wasOK %s:%d\n",
                            obj, size, hd->size, deb_file, deb_line, hd->ok_file, hd->ok_line);
             }
             size = hd->size;
         }
         he = (struct hdr_end *)(((char *)obj) + size);
-        if(he->magic != DEB_MAGIC_END)
+        if (he->magic != DEB_MAGIC_END)
         {
-            if(hd->magic != DEB_MAGIC_USED)
+            if (hd->magic != DEB_MAGIC_USED)
                 printk("DEB_MALLOC overran block 0x%x:%d, at %s:%d, from %s:%d, wasOK %s:%d\n",
                        obj, hd->size, deb_file, deb_line, hd->file, hd->line, hd->ok_file, hd->ok_line);
         }
@@ -444,7 +443,7 @@ void kfree_s(void *obj, int size)
 #endif
     save_flags(flags);
     /* Calculate what page this object lives in */
-    page = (void *)  ((unsigned long) obj & PAGE_MASK);
+    page = (void *)((unsigned long)obj & PAGE_MASK);
 
     /* Now search the buckets looking for that page */
     for (bdir = bucket_dir; bdir->size; bdir++)
@@ -474,7 +473,7 @@ void kfree_s(void *obj, int size)
 #ifdef CONFIG_DEBUG_MALLOC
     printk("Offending code: %s:%d\n", deb_file, deb_line);
 #else
-    printk("Offending eip: %08x\n", ((unsigned long *) &obj)[-1]);
+    printk("Offending eip: %08x\n", ((unsigned long *)&obj)[-1]);
 #endif
     return;
 
@@ -482,22 +481,22 @@ found:
     /* interrupts are off here. */
 #ifdef CONFIG_DEBUG_MALLOC
 
-    {
-        struct hdr_start *hd;
-        struct hdr_end *he;
-        hd = (struct hdr_start *) obj;
-        hd--;
+{
+    struct hdr_start *hd;
+    struct hdr_end *he;
+    hd = (struct hdr_start *)obj;
+    hd--;
 
-        hd->file = deb_file;
-        hd->line = deb_line;
-        hd->magic = DEB_MAGIC_FREE;
-        hd->size = bdir->size - sizeof(struct hdr_start) - sizeof(struct hdr_end);
-        he = (struct hdr_end *)(((char *)obj) + hd->size);
-        memset(obj, 0xf8, hd->size);
-        he->magic = DEB_MAGIC_END;
-        *((void **)obj) = bdesc->freeptr;
-        obj = hd;
-    }
+    hd->file = deb_file;
+    hd->line = deb_line;
+    hd->magic = DEB_MAGIC_FREE;
+    hd->size = bdir->size - sizeof(struct hdr_start) - sizeof(struct hdr_end);
+    he = (struct hdr_end *)(((char *)obj) + hd->size);
+    memset(obj, 0xf8, hd->size);
+    he->magic = DEB_MAGIC_END;
+    *((void **)obj) = bdesc->freeptr;
+    obj = hd;
+}
 #else
     *((void **)obj) = bdesc->freeptr;
 #endif
@@ -511,7 +510,7 @@ found:
          * may not be, if someone rudely interrupted us....
          */
         if ((prev && (prev->next != bdesc)) ||
-                (!prev && (bdir->chain != bdesc)))
+            (!prev && (bdir->chain != bdesc)))
             for (prev = bdir->chain; prev; prev = prev->next)
                 if (prev->next == bdesc)
                     break;
@@ -525,7 +524,7 @@ found:
         }
         bdesc->next = free_bucket_desc;
         free_bucket_desc = bdesc;
-        free_page((unsigned long) bdesc->page);
+        free_page((unsigned long)bdesc->page);
     }
     restore_flags(flags);
     return;
@@ -536,10 +535,10 @@ int get_malloc(char *buffer)
 {
     int len = 0;
     int i;
-    unsigned long		flags;
-    void			*page;
-    struct _bucket_dir	*bdir;
-    struct bucket_desc	*bdesc;
+    unsigned long flags;
+    void *page;
+    struct _bucket_dir *bdir;
+    struct bucket_desc *bdesc;
 
     save_flags(flags);
     cli(); /* To avoid race conditions */
@@ -548,13 +547,13 @@ int get_malloc(char *buffer)
         for (bdesc = bdir->chain; bdesc; bdesc = bdesc->next)
         {
             page = bdesc->page;
-            for (i = PAGE_SIZE / bdir->size; i > 0 ; i--)
+            for (i = PAGE_SIZE / bdir->size; i > 0; i--)
             {
                 struct hdr_start *hd;
                 hd = (struct hdr_start *)page;
-                if(hd->magic == DEB_MAGIC_ALLOC)
+                if (hd->magic == DEB_MAGIC_ALLOC)
                 {
-                    if(len > PAGE_SIZE - 80)
+                    if (len > PAGE_SIZE - 80)
                     {
                         restore_flags(flags);
                         len += sprintf(buffer + len, "...\n");

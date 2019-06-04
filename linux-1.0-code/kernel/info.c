@@ -32,7 +32,8 @@ asmlinkage int sys_sysinfo(struct sysinfo *info)
     val.loads[2] = avenrun[2] << (SI_LOAD_SHIFT - FSHIFT);
 
     for (p = &LAST_TASK; p > &FIRST_TASK; p--)
-        if (*p) val.procs++;
+        if (*p)
+            val.procs++;
 
     si_meminfo(&val);
     si_swapinfo(&val);

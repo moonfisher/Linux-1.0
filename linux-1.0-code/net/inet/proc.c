@@ -61,7 +61,7 @@ get__netinfo(struct proto *pro, char *buffer, int format)
     char *pos = buffer;
     int i;
     int timer_active;
-    unsigned long  dest, src;
+    unsigned long dest, src;
     unsigned short destp, srcp;
 
     s_array = pro->sock_array;
@@ -71,20 +71,20 @@ get__netinfo(struct proto *pro, char *buffer, int format)
      *	(eg a syn recv socket getting a reset), or a memory timer destroy. Instead of playing
      *	with timers we just concede defeat and cli().
      */
-    for(i = 0; i < SOCK_ARRAY_SIZE; i++)
+    for (i = 0; i < SOCK_ARRAY_SIZE; i++)
     {
         cli();
         sp = s_array[i];
-        while(sp != NULL)
+        while (sp != NULL)
         {
-            dest  = sp->daddr;
-            src   = sp->saddr;
+            dest = sp->daddr;
+            src = sp->saddr;
             destp = sp->dummy_th.dest;
-            srcp  = sp->dummy_th.source;
+            srcp = sp->dummy_th.source;
 
             /* Since we are Little Endian we need to swap the bytes :-( */
             destp = ntohs(destp);
-            srcp  = ntohs(srcp);
+            srcp = ntohs(srcp);
             timer_active = del_timer(&sp->timer);
             if (!timer_active)
                 sp->timer.expires = 0;
@@ -92,7 +92,7 @@ get__netinfo(struct proto *pro, char *buffer, int format)
                            i, src, srcp, dest, destp, sp->state,
                            format == 0 ? sp->write_seq - sp->rcv_ack_seq : sp->rmem_alloc,
                            format == 0 ? sp->acked_seq - sp->copied_seq : sp->wmem_alloc,
-                           timer_active, sp->timer.expires, (unsigned) sp->retransmits,
+                           timer_active, sp->timer.expires, (unsigned)sp->retransmits,
                            SOCK_INODE(sp->socket)->i_uid);
             if (timer_active)
                 add_timer(&sp->timer);
@@ -101,7 +101,7 @@ get__netinfo(struct proto *pro, char *buffer, int format)
             {
                 printk("oops, too many %s sockets for netinfo.\n",
                        pro->name);
-                return(strlen(buffer));
+                return (strlen(buffer));
             }
 
             /*
@@ -111,24 +111,21 @@ get__netinfo(struct proto *pro, char *buffer, int format)
              */
             sp = sp->next;
         }
-        sti();	/* We only turn interrupts back on for a moment, but because the interrupt queues anything built up
+        sti(); /* We only turn interrupts back on for a moment, but because the interrupt queues anything built up
 		   before this will clear before we jump back and cli, so its not as bad as it looks */
     }
-    return(strlen(buffer));
+    return (strlen(buffer));
 }
-
 
 int tcp_get_info(char *buffer)
 {
     return get__netinfo(&tcp_prot, buffer, 0);
 }
 
-
 int udp_get_info(char *buffer)
 {
     return get__netinfo(&udp_prot, buffer, 1);
 }
-
 
 int raw_get_info(char *buffer)
 {

@@ -34,7 +34,6 @@
 #include "skbuff.h"
 #include "sock.h"
 
-
 /* Socket buffer operations. Ideally much of this list swap stuff ought to be using
    exch instructions on the 386, and CAS/CAS2 on a 68K. This is the boring generic
    slow C version. No doubt when Linus sees this comment he'll do horrible things
@@ -52,24 +51,22 @@ volatile unsigned long net_skbcount = 0;
  *	Debugging paranoia. Can go later when this crud stack works
  */
 
-
-
 void skb_check(struct sk_buff *skb, int line, char *file)
 {
-    if(skb->magic_debug_cookie == SK_FREED_SKB)
+    if (skb->magic_debug_cookie == SK_FREED_SKB)
     {
         printk("File: %s Line %d, found a freed skb lurking in the undergrowth!\n",
                file, line);
         printk("skb=%p, real size=%ld, claimed size=%ld, magic=%d, list=%p, free=%d\n",
                skb, skb->truesize, skb->mem_len, skb->magic, skb->list, skb->free);
     }
-    if(skb->magic_debug_cookie != SK_GOOD_SKB)
+    if (skb->magic_debug_cookie != SK_GOOD_SKB)
     {
         printk("File: %s Line %d, passed a non skb!\n", file, line);
         printk("skb=%p, real size=%ld, claimed size=%ld, magic=%d, list=%p, free=%d\n",
                skb, skb->truesize, skb->mem_len, skb->magic, skb->list, skb->free);
     }
-    if(skb->mem_len != skb->truesize)
+    if (skb->mem_len != skb->truesize)
     {
         printk("File: %s Line %d, Dubious size setting!\n", file, line);
         printk("skb=%p, real size=%ld, claimed size=%ld, magic=%d, list=%p\n",
@@ -87,7 +84,7 @@ void skb_queue_head(struct sk_buff *volatile *list, struct sk_buff *newsk)
     unsigned long flags;
 
     IS_SKB(newsk);
-    if(newsk->list)
+    if (newsk->list)
         printk("Suspicious queue head: sk_buff on list!\n");
     save_flags(flags);
     cli();
@@ -95,7 +92,7 @@ void skb_queue_head(struct sk_buff *volatile *list, struct sk_buff *newsk)
 
     newsk->next = *list;
 
-    if(*list)
+    if (*list)
         newsk->prev = (*list)->prev;
     else
         newsk->prev = newsk;
@@ -115,7 +112,7 @@ void skb_queue_tail(struct sk_buff *volatile *list, struct sk_buff *newsk)
 {
     unsigned long flags;
 
-    if(newsk->list)
+    if (newsk->list)
         printk("Suspicious queue tail: sk_buff on list!\n");
 
     IS_SKB(newsk);
@@ -123,7 +120,7 @@ void skb_queue_tail(struct sk_buff *volatile *list, struct sk_buff *newsk)
     cli();
 
     newsk->list = list;
-    if(*list)
+    if (*list)
     {
         (*list)->prev->next = newsk;
         newsk->prev = (*list)->prev;
@@ -139,7 +136,6 @@ void skb_queue_tail(struct sk_buff *volatile *list, struct sk_buff *newsk)
     IS_SKB(newsk->prev);
     IS_SKB(newsk->next);
     restore_flags(flags);
-
 }
 
 /*
@@ -155,14 +151,14 @@ struct sk_buff *skb_dequeue(struct sk_buff *volatile *list)
     save_flags(flags);
     cli();
 
-    if(*list == NULL)
+    if (*list == NULL)
     {
         restore_flags(flags);
-        return(NULL);
+        return (NULL);
     }
 
     result = *list;
-    if(result->next == result)
+    if (result->next == result)
         *list = NULL;
     else
     {
@@ -174,13 +170,13 @@ struct sk_buff *skb_dequeue(struct sk_buff *volatile *list)
     IS_SKB(result);
     restore_flags(flags);
 
-    if(result->list != list)
+    if (result->list != list)
         printk("Dequeued packet has invalid list pointer\n");
 
     result->list = 0;
     result->next = 0;
     result->prev = 0;
-    return(result);
+    return (result);
 }
 
 /*
@@ -194,9 +190,9 @@ void skb_insert(struct sk_buff *old, struct sk_buff *newsk)
     IS_SKB(old);
     IS_SKB(newsk);
 
-    if(!old->list)
+    if (!old->list)
         printk("insert before unlisted item!\n");
-    if(newsk->list)
+    if (newsk->list)
         printk("inserted item is already on a list.\n");
 
     save_flags(flags);
@@ -221,9 +217,9 @@ void skb_append(struct sk_buff *old, struct sk_buff *newsk)
     IS_SKB(old);
     IS_SKB(newsk);
 
-    if(!old->list)
+    if (!old->list)
         printk("append before unlisted item!\n");
-    if(newsk->list)
+    if (newsk->list)
         printk("append item is already on a list.\n");
 
     save_flags(flags);
@@ -252,13 +248,13 @@ void skb_unlink(struct sk_buff *skb)
 
     IS_SKB(skb);
 
-    if(skb->list)
+    if (skb->list)
     {
         skb->next->prev = skb->prev;
         skb->prev->next = skb->next;
-        if(*skb->list == skb)
+        if (*skb->list == skb)
         {
-            if(skb->next == skb)
+            if (skb->next == skb)
                 *skb->list = NULL;
             else
                 *skb->list = skb->next;
@@ -279,15 +275,14 @@ void skb_unlink(struct sk_buff *skb)
 void skb_new_list_head(struct sk_buff *volatile *list)
 {
     struct sk_buff *skb = skb_peek(list);
-    if(skb != NULL)
+    if (skb != NULL)
     {
         do
         {
             IS_SKB(skb);
             skb->list = list;
             skb = skb->next;
-        }
-        while(skb != *list);
+        } while (skb != *list);
     }
 }
 
@@ -323,7 +318,7 @@ struct sk_buff *skb_peek_copy(struct sk_buff *volatile *list)
         save_flags(flags);
         cli();
         orig = skb_peek(list);
-        if(orig == NULL)
+        if (orig == NULL)
         {
             restore_flags(flags);
             return NULL;
@@ -332,14 +327,14 @@ struct sk_buff *skb_peek_copy(struct sk_buff *volatile *list)
         len = orig->truesize;
         restore_flags(flags);
 
-        newsk = alloc_skb(len, GFP_KERNEL);	/* May sleep */
+        newsk = alloc_skb(len, GFP_KERNEL); /* May sleep */
 
-        if(newsk == NULL)		/* Oh dear... not to worry */
+        if (newsk == NULL) /* Oh dear... not to worry */
             return NULL;
 
         save_flags(flags);
         cli();
-        if(skb_peek(list) != orig)	/* List changed go around another time */
+        if (skb_peek(list) != orig) /* List changed go around another time */
         {
             restore_flags(flags);
             newsk->sk = NULL;
@@ -362,11 +357,10 @@ struct sk_buff *skb_peek_copy(struct sk_buff *volatile *list)
         newsk->link3 = NULL;
         newsk->sk = NULL;
         newsk->free = 1;
-    }
-    while(0);
+    } while (0);
 
     restore_flags(flags);
-    return(newsk);
+    return (newsk);
 }
 
 /*
@@ -382,26 +376,25 @@ void kfree_skb(struct sk_buff *skb, int rw)
         return;
     }
     IS_SKB(skb);
-    if(skb->lock)
+    if (skb->lock)
     {
-        skb->free = 1;	/* Free when unlocked */
+        skb->free = 1; /* Free when unlocked */
         return;
     }
 
-    if(skb->free == 2)
+    if (skb->free == 2)
         printk("Warning: kfree_skb passed an skb that nobody set the free flag on!\n");
-    if(skb->list)
+    if (skb->list)
         printk("Warning: kfree_skb passed an skb still on a list.\n");
     skb->magic = 0;
     if (skb->sk)
     {
-        if(skb->sk->prot != NULL)
+        if (skb->sk->prot != NULL)
         {
             if (rw)
                 skb->sk->prot->rfree(skb->sk, skb->mem_addr, skb->mem_len);
             else
                 skb->sk->prot->wfree(skb->sk, skb->mem_addr, skb->mem_len);
-
         }
         else
         {
@@ -410,7 +403,7 @@ void kfree_skb(struct sk_buff *skb, int rw)
                 skb->sk->rmem_alloc -= skb->mem_len;
             else
                 skb->sk->wmem_alloc -= skb->mem_len;
-            if(!skb->sk->dead)
+            if (!skb->sk->dead)
                 wake_up_interruptible(skb->sk->sleep);
             kfree_skbmem(skb->mem_addr, skb->mem_len);
         }
@@ -436,10 +429,10 @@ struct sk_buff *alloc_skb(unsigned int size, int priority)
         priority = GFP_ATOMIC;
     }
     skb = (struct sk_buff *)kmalloc(size, priority);
-    if(skb == NULL)
+    if (skb == NULL)
         return NULL;
-    skb->free = 2;	/* Invalid so we pick up forgetful users */
-    skb->list = 0;	/* Not on a list */
+    skb->free = 2; /* Invalid so we pick up forgetful users */
+    skb->list = 0; /* Not on a list */
     skb->lock = 0;
     skb->truesize = size;
     skb->mem_len = size;
@@ -460,7 +453,7 @@ void kfree_skbmem(void *mem, unsigned size)
 {
     struct sk_buff *x = mem;
     IS_SKB(x);
-    if(x->magic_debug_cookie == SK_GOOD_SKB)
+    if (x->magic_debug_cookie == SK_GOOD_SKB)
     {
         x->magic_debug_cookie = SK_FREED_SKB;
         kfree_s(mem, size);
@@ -494,7 +487,7 @@ void skb_device_release(struct sk_buff *skb, int mode)
 
 int skb_device_locked(struct sk_buff *skb)
 {
-    if(skb->lock)
+    if (skb->lock)
         return 1;
     return 0;
 }

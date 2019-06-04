@@ -28,7 +28,7 @@ static int C_A_D = 1;
 
 extern void adjust_clock(void);
 
-#define	PZERO	15
+#define PZERO 15
 
 static int proc_sel(struct task_struct *p, int which, int who)
 {
@@ -37,15 +37,15 @@ static int proc_sel(struct task_struct *p, int which, int who)
     case PRIO_PROCESS:
         if (!who && p == current)
             return 1;
-        return(p->pid == who);
+        return (p->pid == who);
     case PRIO_PGRP:
         if (!who)
             who = current->pgrp;
-        return(p->pgrp == who);
+        return (p->pgrp == who);
     case PRIO_USER:
         if (!who)
             who = current->uid;
-        return(p->uid == who);
+        return (p->uid == who);
     }
     return 0;
 }
@@ -62,12 +62,12 @@ asmlinkage int sys_setpriority(int which, int who, int niceval)
     if ((priority = PZERO - niceval) <= 0)
         priority = 1;
 
-    for(p = &LAST_TASK; p > &FIRST_TASK; --p)
+    for (p = &LAST_TASK; p > &FIRST_TASK; --p)
     {
         if (!*p || !proc_sel(*p, which, who))
             continue;
         if ((*p)->uid != current->euid &&
-                (*p)->uid != current->uid && !suser())
+            (*p)->uid != current->uid && !suser())
         {
             error = EPERM;
             continue;
@@ -90,14 +90,14 @@ asmlinkage int sys_getpriority(int which, int who)
     if (which > 2 || which < 0)
         return -EINVAL;
 
-    for(p = &LAST_TASK; p > &FIRST_TASK; --p)
+    for (p = &LAST_TASK; p > &FIRST_TASK; --p)
     {
         if (!*p || !proc_sel(*p, which, who))
             continue;
         if ((*p)->priority > max_prio)
             max_prio = (*p)->priority;
     }
-    return(max_prio ? max_prio : -ESRCH);
+    return (max_prio ? max_prio : -ESRCH);
 }
 
 asmlinkage int sys_profil(void)
@@ -154,11 +154,11 @@ static void mark_screen_rdonly(struct task_struct *tsk)
 
     if ((tmp = tsk->tss.cr3) != 0)
     {
-        tmp = *(unsigned long *) tmp;
+        tmp = *(unsigned long *)tmp;
         if (tmp & PAGE_PRESENT)
         {
             tmp &= PAGE_MASK;
-            pg_table = (0xA0000 >> PAGE_SHIFT) + (unsigned long *) tmp;
+            pg_table = (0xA0000 >> PAGE_SHIFT) + (unsigned long *)tmp;
             tmp = 32;
             while (tmp--)
             {
@@ -173,7 +173,7 @@ static void mark_screen_rdonly(struct task_struct *tsk)
 asmlinkage int sys_vm86(struct vm86_struct *v86)
 {
     struct vm86_struct info;
-    struct pt_regs *pt_regs = (struct pt_regs *) &v86;
+    struct pt_regs *pt_regs = (struct pt_regs *)&v86;
 
     if (current->saved_kernel_stack)
         return -EPERM;
@@ -194,7 +194,7 @@ asmlinkage int sys_vm86(struct vm86_struct *v86)
     info.regs.eflags |= ~0x00000dd5 & pt_regs->eflags;
     info.regs.eflags |= VM_MASK;
     current->saved_kernel_stack = current->tss.esp0;
-    current->tss.esp0 = (unsigned long) pt_regs;
+    current->tss.esp0 = (unsigned long)pt_regs;
     current->vm86_info = v86;
     current->screen_bitmap = info.screen_bitmap;
     if (info.flags & VM86_SCREEN_BITMAP)
@@ -203,7 +203,7 @@ asmlinkage int sys_vm86(struct vm86_struct *v86)
                          "pushl $ret_from_sys_call\n\t"
                          "ret"
                          : /* no outputs */
-                         :"g" ((long) &(info.regs)), "a" (info.regs.eax));
+                         : "g"((long)&(info.regs)), "a"(info.regs.eax));
     return 0;
 }
 
@@ -247,7 +247,6 @@ void ctrl_alt_del(void)
         send_sig(SIGINT, task[1], 1);
 }
 
-
 /*
  * This is done BSD-style, with no consideration of the saved gid, except
  * that if you set the effective gid, it sets the saved gid too.  This
@@ -263,20 +262,20 @@ asmlinkage int sys_setregid(gid_t rgid, gid_t egid)
 {
     int old_rgid = current->gid;
 
-    if (rgid != (gid_t) -1)
+    if (rgid != (gid_t)-1)
     {
         if ((current->egid == rgid) ||
-                (old_rgid == rgid) ||
-                suser())
+            (old_rgid == rgid) ||
+            suser())
             current->gid = rgid;
         else
-            return(-EPERM);
+            return (-EPERM);
     }
-    if (egid != (gid_t) -1)
+    if (egid != (gid_t)-1)
     {
         if ((old_rgid == egid) ||
-                (current->egid == egid) ||
-                suser())
+            (current->egid == egid) ||
+            suser())
         {
             current->egid = egid;
             current->sgid = egid;
@@ -284,7 +283,7 @@ asmlinkage int sys_setregid(gid_t rgid, gid_t egid)
         else
         {
             current->gid = old_rgid;
-            return(-EPERM);
+            return (-EPERM);
         }
     }
     return 0;
@@ -351,20 +350,20 @@ asmlinkage int sys_setreuid(uid_t ruid, uid_t euid)
 {
     int old_ruid = current->uid;
 
-    if (ruid != (uid_t) -1)
+    if (ruid != (uid_t)-1)
     {
         if ((current->euid == ruid) ||
-                (old_ruid == ruid) ||
-                suser())
+            (old_ruid == ruid) ||
+            suser())
             current->uid = ruid;
         else
-            return(-EPERM);
+            return (-EPERM);
     }
-    if (euid != (uid_t) -1)
+    if (euid != (uid_t)-1)
     {
         if ((old_ruid == euid) ||
-                (current->euid == euid) ||
-                suser())
+            (current->euid == euid) ||
+            suser())
         {
             current->euid = euid;
             current->suid = euid;
@@ -372,7 +371,7 @@ asmlinkage int sys_setreuid(uid_t ruid, uid_t euid)
         else
         {
             current->uid = old_ruid;
-            return(-EPERM);
+            return (-EPERM);
         }
     }
     return 0;
@@ -397,14 +396,14 @@ asmlinkage int sys_setuid(uid_t uid)
         current->euid = uid;
     else
         return -EPERM;
-    return(0);
+    return (0);
 }
 
 asmlinkage int sys_times(struct tms *tbuf)
 {
     if (tbuf)
     {
-        int error = verify_area(VERIFY_WRITE, tbuf, sizeof * tbuf);
+        int error = verify_area(VERIFY_WRITE, tbuf, sizeof *tbuf);
         if (error)
             return error;
         put_fs_long(current->utime, (unsigned long *)&tbuf->tms_utime);
@@ -517,10 +516,10 @@ found_task:
     if (pgid != pid)
     {
         struct task_struct *tmp;
-        for_each_task (tmp)
+        for_each_task(tmp)
         {
             if (tmp->pgrp == pgid &&
-                    tmp->session == current->session)
+                tmp->session == current->session)
                 goto ok_pgid;
         }
         return -EPERM;
@@ -573,21 +572,21 @@ asmlinkage int sys_getgroups(int gidsetsize, gid_t *grouplist)
         if (i)
             return i;
     }
-    for (i = 0 ; (i < NGROUPS) && (current->groups[i] != NOGROUP) ; i++)
+    for (i = 0; (i < NGROUPS) && (current->groups[i] != NOGROUP); i++)
     {
         if (!gidsetsize)
             continue;
         if (i >= gidsetsize)
             break;
-        put_fs_word(current->groups[i], (short *) grouplist);
+        put_fs_word(current->groups[i], (short *)grouplist);
         grouplist++;
     }
-    return(i);
+    return (i);
 }
 
 asmlinkage int sys_setgroups(int gidsetsize, gid_t *grouplist)
 {
-    int	i;
+    int i;
 
     if (!suser())
         return -EPERM;
@@ -595,7 +594,7 @@ asmlinkage int sys_setgroups(int gidsetsize, gid_t *grouplist)
         return -EINVAL;
     for (i = 0; i < gidsetsize; i++, grouplist++)
     {
-        current->groups[i] = get_fs_word((unsigned short *) grouplist);
+        current->groups[i] = get_fs_word((unsigned short *)grouplist);
     }
     if (i < NGROUPS)
         current->groups[i] = NOGROUP;
@@ -604,7 +603,7 @@ asmlinkage int sys_setgroups(int gidsetsize, gid_t *grouplist)
 
 int in_group_p(gid_t grp)
 {
-    int	i;
+    int i;
 
     if (grp == current->egid)
         return 1;
@@ -625,9 +624,9 @@ asmlinkage int sys_newuname(struct new_utsname *name)
 
     if (!name)
         return -EFAULT;
-    error = verify_area(VERIFY_WRITE, name, sizeof * name);
+    error = verify_area(VERIFY_WRITE, name, sizeof *name);
     if (!error)
-        memcpy_tofs(name, &system_utsname, sizeof * name);
+        memcpy_tofs(name, &system_utsname, sizeof *name);
     return error;
 }
 
@@ -636,19 +635,19 @@ asmlinkage int sys_uname(struct old_utsname *name)
     int error;
     if (!name)
         return -EFAULT;
-    error = verify_area(VERIFY_WRITE, name, sizeof * name);
+    error = verify_area(VERIFY_WRITE, name, sizeof *name);
     if (error)
         return error;
     memcpy_tofs(&name->sysname, &system_utsname.sysname,
-                sizeof (system_utsname.sysname));
+                sizeof(system_utsname.sysname));
     memcpy_tofs(&name->nodename, &system_utsname.nodename,
-                sizeof (system_utsname.nodename));
+                sizeof(system_utsname.nodename));
     memcpy_tofs(&name->release, &system_utsname.release,
-                sizeof (system_utsname.release));
+                sizeof(system_utsname.release));
     memcpy_tofs(&name->version, &system_utsname.version,
-                sizeof (system_utsname.version));
+                sizeof(system_utsname.version));
     memcpy_tofs(&name->machine, &system_utsname.machine,
-                sizeof (system_utsname.machine));
+                sizeof(system_utsname.machine));
     return 0;
 }
 
@@ -657,7 +656,7 @@ asmlinkage int sys_olduname(struct oldold_utsname *name)
     int error;
     if (!name)
         return -EFAULT;
-    error = verify_area(VERIFY_WRITE, name, sizeof * name);
+    error = verify_area(VERIFY_WRITE, name, sizeof *name);
     if (error)
         return error;
     memcpy_tofs(&name->sysname, &system_utsname.sysname, __OLD_UTS_LEN);
@@ -678,7 +677,7 @@ asmlinkage int sys_olduname(struct oldold_utsname *name)
  */
 asmlinkage int sys_sethostname(char *name, int len)
 {
-    int	i;
+    int i;
 
     if (!suser())
         return -EPERM;
@@ -699,7 +698,7 @@ asmlinkage int sys_sethostname(char *name, int len)
  */
 asmlinkage int sys_setdomainname(char *name, int len)
 {
-    int	i;
+    int i;
 
     if (!suser())
         return -EPERM;
@@ -720,13 +719,13 @@ asmlinkage int sys_getrlimit(unsigned int resource, struct rlimit *rlim)
 
     if (resource >= RLIM_NLIMITS)
         return -EINVAL;
-    error = verify_area(VERIFY_WRITE, rlim, sizeof * rlim);
+    error = verify_area(VERIFY_WRITE, rlim, sizeof *rlim);
     if (error)
         return error;
     put_fs_long(current->rlim[resource].rlim_cur,
-                (unsigned long *) rlim);
+                (unsigned long *)rlim);
     put_fs_long(current->rlim[resource].rlim_max,
-                ((unsigned long *) rlim) + 1);
+                ((unsigned long *)rlim) + 1);
     return 0;
 }
 
@@ -737,11 +736,11 @@ asmlinkage int sys_setrlimit(unsigned int resource, struct rlimit *rlim)
     if (resource >= RLIM_NLIMITS)
         return -EINVAL;
     old_rlim = current->rlim + resource;
-    new_rlim.rlim_cur = get_fs_long((unsigned long *) rlim);
-    new_rlim.rlim_max = get_fs_long(((unsigned long *) rlim) + 1);
+    new_rlim.rlim_cur = get_fs_long((unsigned long *)rlim);
+    new_rlim.rlim_max = get_fs_long(((unsigned long *)rlim) + 1);
     if (((new_rlim.rlim_cur > old_rlim->rlim_max) ||
-            (new_rlim.rlim_max > old_rlim->rlim_max)) &&
-            !suser())
+         (new_rlim.rlim_max > old_rlim->rlim_max)) &&
+        !suser())
         return -EPERM;
     *old_rlim = new_rlim;
     return 0;
@@ -759,12 +758,12 @@ int getrusage(struct task_struct *p, int who, struct rusage *ru)
 {
     int error;
     struct rusage r;
-    unsigned long	*lp, *lpend, *dest;
+    unsigned long *lp, *lpend, *dest;
 
-    error = verify_area(VERIFY_WRITE, ru, sizeof * ru);
+    error = verify_area(VERIFY_WRITE, ru, sizeof *ru);
     if (error)
         return error;
-    memset((char *) &r, 0, sizeof(r));
+    memset((char *)&r, 0, sizeof(r));
     switch (who)
     {
     case RUSAGE_SELF:
@@ -792,9 +791,9 @@ int getrusage(struct task_struct *p, int who, struct rusage *ru)
         r.ru_majflt = p->maj_flt + p->cmaj_flt;
         break;
     }
-    lp = (unsigned long *) &r;
-    lpend = (unsigned long *) (&r + 1);
-    dest = (unsigned long *) ru;
+    lp = (unsigned long *)&r;
+    lpend = (unsigned long *)(&r + 1);
+    dest = (unsigned long *)ru;
     for (; lp < lpend; lp++, dest++)
         put_fs_long(*lp, dest);
     return 0;

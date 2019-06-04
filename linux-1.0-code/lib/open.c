@@ -16,9 +16,9 @@ int open(const char *filename, int flag, ...)
     va_start(arg, flag);
     __asm__("movl %2,%%ebx\n\t"
             "int $0x80"
-            :"=a" (res)
-            :"0" (__NR_open), "g" ((long)(filename)), "c" (flag),
-            "d" (va_arg(arg, int)));
+            : "=a"(res)
+            : "0"(__NR_open), "g"((long)(filename)), "c"(flag),
+              "d"(va_arg(arg, int)));
     if (res >= 0)
         return res;
     errno = -res;

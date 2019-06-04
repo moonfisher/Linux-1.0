@@ -9,4 +9,3 @@
 #include "linux/unistd.h"
 
 _syscall0(pid_t, setsid)
-

@@ -46,13 +46,13 @@ void time_init(void)
      * the time.			- Torsten
      */
     /* read RTC exactly on falling edge of update flag */
-    for (i = 0 ; i < 1000000 ; i++)	/* may take up to 1 second... */
+    for (i = 0; i < 1000000; i++) /* may take up to 1 second... */
         if (CMOS_READ(RTC_FREQ_SELECT) & RTC_UIP)
             break;
-    for (i = 0 ; i < 1000000 ; i++)	/* must try at least 2.228 ms*/
+    for (i = 0; i < 1000000; i++) /* must try at least 2.228 ms*/
         if (!(CMOS_READ(RTC_FREQ_SELECT) & RTC_UIP))
             break;
-    do   /* Isn't this overkill ? UIP above should guarantee consistency */
+    do /* Isn't this overkill ? UIP above should guarantee consistency */
     {
         time.sec = CMOS_READ(RTC_SECONDS);
         time.min = CMOS_READ(RTC_MINUTES);
@@ -60,8 +60,7 @@ void time_init(void)
         time.day = CMOS_READ(RTC_DAY_OF_MONTH);
         time.mon = CMOS_READ(RTC_MONTH);
         time.year = CMOS_READ(RTC_YEAR);
-    }
-    while (time.sec != CMOS_READ(RTC_SECONDS));
+    } while (time.sec != CMOS_READ(RTC_SECONDS));
     if (!(CMOS_READ(RTC_CONTROL) & RTC_DM_BINARY) || RTC_ALWAYS_BCD)
     {
         BCD_TO_BIN(time.sec);
@@ -78,7 +77,7 @@ void time_init(void)
  * The timezone where the local system is located.  Used as a default by some
  * programs who obtain this value by using gettimeofday.
  */
-struct timezone sys_tz = { 0, 0};
+struct timezone sys_tz = {0, 0};
 
 asmlinkage int sys_time(long *tloc)
 {
@@ -100,7 +99,7 @@ asmlinkage int sys_stime(long *tptr)
     if (!suser())
         return -EPERM;
     cli();
-    xtime.tv_sec = get_fs_long((unsigned long *) tptr);
+    xtime.tv_sec = get_fs_long((unsigned long *)tptr);
     xtime.tv_usec = 0;
     time_status = TIME_BAD;
     time_maxerror = 0x70000000;
@@ -149,8 +148,8 @@ static inline unsigned long do_gettimeoffset(void)
     unsigned long offset = 0;
 
     /* timer count may underflow right here */
-    outb_p(0x00, 0x43);	/* latch the count ASAP */
-    count = inb_p(0x40);	/* read the latched count */
+    outb_p(0x00, 0x43);  /* latch the count ASAP */
+    count = inb_p(0x40); /* read the latched count */
     count |= inb(0x40) << 8;
     /* we know probability of underflow is always MUCH less than 1% */
     if (count > (LATCH - LATCH / 100))
@@ -180,7 +179,7 @@ static inline void do_gettimeofday(struct timeval *tv)
         tv->tv_sec++;
     }
     sti();
-#else /* not __i386__ */
+#else  /* not __i386__ */
     cli();
     *tv = xtime;
     sti();
@@ -194,20 +193,20 @@ asmlinkage int sys_gettimeofday(struct timeval *tv, struct timezone *tz)
     if (tv)
     {
         struct timeval ktv;
-        error = verify_area(VERIFY_WRITE, tv, sizeof * tv);
+        error = verify_area(VERIFY_WRITE, tv, sizeof *tv);
         if (error)
             return error;
         do_gettimeofday(&ktv);
-        put_fs_long(ktv.tv_sec, (unsigned long *) &tv->tv_sec);
-        put_fs_long(ktv.tv_usec, (unsigned long *) &tv->tv_usec);
+        put_fs_long(ktv.tv_sec, (unsigned long *)&tv->tv_sec);
+        put_fs_long(ktv.tv_usec, (unsigned long *)&tv->tv_usec);
     }
     if (tz)
     {
-        error = verify_area(VERIFY_WRITE, tz, sizeof * tz);
+        error = verify_area(VERIFY_WRITE, tz, sizeof *tz);
         if (error)
             return error;
-        put_fs_long(sys_tz.tz_minuteswest, (unsigned long *) tz);
-        put_fs_long(sys_tz.tz_dsttime, ((unsigned long *) tz) + 1);
+        put_fs_long(sys_tz.tz_minuteswest, (unsigned long *)tz);
+        put_fs_long(sys_tz.tz_dsttime, ((unsigned long *)tz) + 1);
     }
     return 0;
 }
@@ -246,14 +245,14 @@ inline static void warp_clock(void)
  */
 asmlinkage int sys_settimeofday(struct timeval *tv, struct timezone *tz)
 {
-    static int	firsttime = 1;
+    static int firsttime = 1;
 
     if (!suser())
         return -EPERM;
     if (tz)
     {
-        sys_tz.tz_minuteswest = get_fs_long((unsigned long *) tz);
-        sys_tz.tz_dsttime = get_fs_long(((unsigned long *) tz) + 1);
+        sys_tz.tz_minuteswest = get_fs_long((unsigned long *)tz);
+        sys_tz.tz_dsttime = get_fs_long(((unsigned long *)tz) + 1);
         if (firsttime)
         {
             firsttime = 0;
@@ -322,8 +321,7 @@ asmlinkage int sys_adjtimex(struct timex *txc_p)
 
     if (txc.mode & ADJ_OFFSET)
         /* Microsec field limited to -131000 .. 131000 usecs */
-        if (txc.offset <= -(1 << (31 - SHIFT_UPDATE))
-                || txc.offset >= (1 << (31 - SHIFT_UPDATE)))
+        if (txc.offset <= -(1 << (31 - SHIFT_UPDATE)) || txc.offset >= (1 << (31 - SHIFT_UPDATE)))
             return -EINVAL;
 
     /* time_status must be in a fairly small range */
@@ -391,18 +389,17 @@ asmlinkage int sys_adjtimex(struct timex *txc_p)
             }
         if (txc.mode & ADJ_TICK)
             tick = txc.tick;
-
     }
-    txc.offset	   = save_adjust;
-    txc.frequency	   = ((time_freq + 1) >> (SHIFT_KF - 16));
-    txc.maxerror	   = time_maxerror;
-    txc.esterror	   = time_esterror;
-    txc.status	   = time_status;
-    txc.time_constant  = time_constant;
-    txc.precision	   = time_precision;
-    txc.tolerance	   = time_tolerance;
-    txc.time	   = xtime;
-    txc.tick	   = tick;
+    txc.offset = save_adjust;
+    txc.frequency = ((time_freq + 1) >> (SHIFT_KF - 16));
+    txc.maxerror = time_maxerror;
+    txc.esterror = time_esterror;
+    txc.status = time_status;
+    txc.time_constant = time_constant;
+    txc.precision = time_precision;
+    txc.tolerance = time_tolerance;
+    txc.time = xtime;
+    txc.tick = tick;
 
     sti();
 
@@ -431,9 +428,7 @@ int set_rtc_mmss(unsigned long nowtime)
      * messing with unknown time zones but requires your
      * RTC not to be off by more than 30 minutes
      */
-    if (((cmos_minutes < real_minutes) ?
-            (real_minutes - cmos_minutes) :
-            (cmos_minutes - real_minutes)) < 30)
+    if (((cmos_minutes < real_minutes) ? (real_minutes - cmos_minutes) : (cmos_minutes - real_minutes)) < 30)
     {
         if (!(save_control & RTC_DM_BINARY) || RTC_ALWAYS_BCD)
         {

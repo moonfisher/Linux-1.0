@@ -20,7 +20,7 @@
 #include "linux/sched.h"
 #include "linux/kernel.h"
 
-#define LOG_BUF_LEN	4096
+#define LOG_BUF_LEN 4096
 
 static char buf[1024];
 
@@ -63,11 +63,11 @@ asmlinkage int sys_syslog(int type, char *buf, int len)
         return -EPERM;
     switch (type)
     {
-    case 0:		/* Close log */
+    case 0: /* Close log */
         return 0;
-    case 1:		/* Open log */
+    case 1: /* Open log */
         return 0;
-    case 2:		/* Read from log */
+    case 2: /* Read from log */
         if (!buf || len < 0)
             return -EINVAL;
         if (!len)
@@ -88,7 +88,7 @@ asmlinkage int sys_syslog(int type, char *buf, int len)
         i = 0;
         while (log_size && i < len)
         {
-            c = *((char *) log_buf + log_start);
+            c = *((char *)log_buf + log_start);
             log_start++;
             log_size--;
             log_start &= LOG_BUF_LEN - 1;
@@ -100,10 +100,10 @@ asmlinkage int sys_syslog(int type, char *buf, int len)
         }
         sti();
         return i;
-    case 4:		/* Read/clear last kernel messages */
+    case 4: /* Read/clear last kernel messages */
         do_clear = 1;
     /* FALL THRU */
-    case 3:		/* Read last kernel messages */
+    case 3: /* Read last kernel messages */
         if (!buf || len < 0)
             return -EINVAL;
         if (!len)
@@ -119,19 +119,19 @@ asmlinkage int sys_syslog(int type, char *buf, int len)
         j = log_start + log_size - count;
         for (i = 0; i < count; i++)
         {
-            c = *((char *) log_buf + (j++ & (LOG_BUF_LEN - 1)));
+            c = *((char *)log_buf + (j++ & (LOG_BUF_LEN - 1)));
             put_fs_byte(c, buf++);
         }
         if (do_clear)
             logged_chars = 0;
         return i;
-    case 5:		/* Clear ring buffer */
+    case 5: /* Clear ring buffer */
         logged_chars = 0;
         return 0;
-    case 6:		/* Disable logging to console */
+    case 6:                   /* Disable logging to console */
         console_loglevel = 1; /* only panic messages shown */
         return 0;
-    case 7:		/* Enable logging to console */
+    case 7: /* Enable logging to console */
         console_loglevel = DEFAULT_CONSOLE_LOGLEVEL;
         return 0;
     case 8:
@@ -142,7 +142,6 @@ asmlinkage int sys_syslog(int type, char *buf, int len)
     }
     return -EINVAL;
 }
-
 
 asmlinkage int printk(const char *fmt, ...)
 {
@@ -167,8 +166,7 @@ asmlinkage int printk(const char *fmt, ...)
                 p[0] != '<' ||
                 p[1] < '0' ||
                 p[1] > '7' ||
-                p[2] != '>'
-            )
+                p[2] != '>')
             {
                 p -= 3;
                 p[0] = '<';
@@ -213,11 +211,11 @@ asmlinkage int printk(const char *fmt, ...)
  */
 void register_console(void (*proc)(const char *))
 {
-    int	i, j;
-    int	p = log_start;
-    char	buf[16];
-    char	msg_level = -1;
-    char	*q;
+    int i, j;
+    int p = log_start;
+    char buf[16];
+    char msg_level = -1;
+    char *q;
 
     console_print_proc = proc;
 

@@ -49,8 +49,10 @@ int register_chrdev(unsigned int major, const char *name, struct file_operations
 {
     if (major >= MAX_CHRDEV)
         return -EINVAL;
+    
     if (chrdevs[major].fops)
         return -EBUSY;
+    
     chrdevs[major].name = name;
     chrdevs[major].fops = fops;
     return 0;

@@ -156,12 +156,6 @@
 		C480EC8922A4ABC60093D61D /* floppy.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EA9522A4ABC50093D61D /* floppy.c */; };
 		C480EC8A22A4ABC60093D61D /* mcd.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EA9622A4ABC50093D61D /* mcd.c */; };
 		C480EC8B22A4ABC60093D61D /* hd.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EA9722A4ABC50093D61D /* hd.c */; };
-		C480EC9122A4ABC60093D61D /* inflate.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB2A22A4ABC50093D61D /* inflate.c */; };
-		C480EC9222A4ABC60093D61D /* unzip.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB2B22A4ABC50093D61D /* unzip.c */; };
-		C480EC9322A4ABC60093D61D /* xtract.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB2C22A4ABC50093D61D /* xtract.c */; };
-		C480EC9422A4ABC60093D61D /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = C480EB2D22A4ABC50093D61D /* Makefile */; };
-		C480EC9522A4ABC60093D61D /* piggyback.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB3022A4ABC50093D61D /* piggyback.c */; };
-		C480EC9622A4ABC60093D61D /* misc.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB3122A4ABC50093D61D /* misc.c */; };
 		C480EC9722A4ABC60093D61D /* Makefile in Sources */ = {isa = PBXBuildFile; fileRef = C480EB3522A4ABC50093D61D /* Makefile */; };
 		C480EC9822A4ABC60093D61D /* emulate.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB3622A4ABC50093D61D /* emulate.c */; };
 		C480EC9922A4ABC60093D61D /* execve.c in Sources */ = {isa = PBXBuildFile; fileRef = C480EB3922A4ABC50093D61D /* execve.c */; };
@@ -1807,7 +1801,6 @@
 				C480EC1622A4ABC60093D61D /* Space.c in Sources */,
 				C480EC0C22A4ABC60093D61D /* plip.c in Sources */,
 				C480EC1E22A4ABC60093D61D /* tpqic02.c in Sources */,
-				C480EC9622A4ABC60093D61D /* misc.c in Sources */,
 				C480ECD422A4ABC60093D61D /* Makefile in Sources */,
 				C480ED0422A4ABC60093D61D /* devices.c in Sources */,
 				C480ECDD22A4ABC60093D61D /* Makefile in Sources */,
@@ -1908,7 +1901,6 @@
 				C480ECB322A4ABC60093D61D /* link.c in Sources */,
 				C480ECA122A4ABC60093D61D /* wait.c in Sources */,
 				C480EC1022A4ABC60093D61D /* 3c509.c in Sources */,
-				C480EC9322A4ABC60093D61D /* xtract.c in Sources */,
 				C480EBF622A4ABC60093D61D /* ip.c in Sources */,
 				C480ED2A22A4ABC60093D61D /* exit.c in Sources */,
 				C480EC9A22A4ABC60093D61D /* ctype.c in Sources */,
@@ -1927,7 +1919,6 @@
 				C480EC9E22A4ABC60093D61D /* _exit.c in Sources */,
 				C480EBF122A4ABC60093D61D /* proc.c in Sources */,
 				C480ECEF22A4ABC60093D61D /* ialloc.c in Sources */,
-				C480EC9522A4ABC60093D61D /* piggyback.c in Sources */,
 				C480EC1B22A4ABC60093D61D /* atp.c in Sources */,
 				C480EC5922A4ABC60093D61D /* Makefile in Sources */,
 				C480ED0122A4ABC60093D61D /* fifo.c in Sources */,
@@ -1944,7 +1935,6 @@
 				C480EC4122A4ABC60093D61D /* sd_ioctl.c in Sources */,
 				C480ED0522A4ABC60093D61D /* namei.c in Sources */,
 				C480EC5D22A4ABC60093D61D /* poly_sin.c in Sources */,
-				C480EC9122A4ABC60093D61D /* inflate.c in Sources */,
 				C480EC6722A4ABC60093D61D /* dev_table.c in Sources */,
 				C480EC8222A4ABC60093D61D /* cdu31a.c in Sources */,
 				C480ECA722A4ABC60093D61D /* memory.c in Sources */,
@@ -1981,7 +1971,6 @@
 				C480ED2022A4ABC60093D61D /* irq.c in Sources */,
 				C480EC3622A4ABC60093D61D /* Makefile in Sources */,
 				C480ED0F22A4ABC60093D61D /* namei.c in Sources */,
-				C480EC9222A4ABC60093D61D /* unzip.c in Sources */,
 				C480ECBD22A4ABC60093D61D /* hpfs_fs.c in Sources */,
 				C480EC7922A4ABC60093D61D /* patmgr.c in Sources */,
 				C480ED2F22A4ABC60093D61D /* ldt.c in Sources */,
@@ -1989,7 +1978,6 @@
 				C480ED1B22A4ABC60093D61D /* file.c in Sources */,
 				C480ECC022A4ABC60093D61D /* binfmt_coff.c in Sources */,
 				C480EC6F22A4ABC60093D61D /* Makefile in Sources */,
-				C480EC9422A4ABC60093D61D /* Makefile in Sources */,
 				C480ECE022A4ABC60093D61D /* inode.c in Sources */,
 				C480EC6B22A4ABC60093D61D /* sb_dsp.c in Sources */,
 				C480EC8822A4ABC60093D61D /* ll_rw_blk.c in Sources */,
@@ -2232,6 +2220,7 @@
 		C480E99522A4ABA80093D61D /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../linux-1.0-code/include\"";
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -2241,6 +2230,7 @@
 		C480E99622A4ABA80093D61D /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CLANG_CXX_LIBRARY = "libc++";
 				CODE_SIGN_STYLE = Automatic;
 				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/../linux-1.0-code/include\"";
 				PRODUCT_NAME = "$(TARGET_NAME)";

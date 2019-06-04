@@ -29,7 +29,7 @@ asmlinkage void ret_from_sys_call(void) __asm__("ret_from_sys_call");
 
 /* These should maybe be in <linux/tasks.h" */
 
-#define MAX_TASKS_PER_USER (NR_TASKS/2)
+#define MAX_TASKS_PER_USER (NR_TASKS / 2)
 #define MIN_TASKS_LEFT_FOR_ROOT 4
 
 extern int shm_fork(struct task_struct *, struct task_struct *);
@@ -59,11 +59,11 @@ repeat:
         if (task[i]->uid == current->uid)
             this_user_tasks++;
         if (task[i]->pid == last_pid || task[i]->pgrp == last_pid ||
-                task[i]->session == last_pid)
+            task[i]->session == last_pid)
             goto repeat;
     }
     if (tasks_free <= MIN_TASKS_LEFT_FOR_ROOT ||
-            this_user_tasks > MAX_TASKS_PER_USER)
+        this_user_tasks > MAX_TASKS_PER_USER)
         if (current->uid)
             return -EAGAIN;
     return free_task;
@@ -101,9 +101,9 @@ int dup_mmap(struct task_struct *tsk)
     tsk->mmap = NULL;
     tsk->stk_vma = NULL;
     p = &tsk->mmap;
-    for (mpnt = current->mmap ; mpnt ; mpnt = mpnt->vm_next)
+    for (mpnt = current->mmap; mpnt; mpnt = mpnt->vm_next)
     {
-        tmp = (struct vm_area_struct *) kmalloc(sizeof(struct vm_area_struct), GFP_KERNEL);
+        tmp = (struct vm_area_struct *)kmalloc(sizeof(struct vm_area_struct), GFP_KERNEL);
         if (!tmp)
             return -ENOMEM;
         *tmp = *mpnt;
@@ -120,7 +120,7 @@ int dup_mmap(struct task_struct *tsk)
 }
 
 #define IS_CLONE (regs.orig_eax == __NR_clone)
-#define copy_vm(p) ((clone_flags & COPYVM)?copy_page_tables(p):clone_page_tables(p))
+#define copy_vm(p) ((clone_flags & COPYVM) ? copy_page_tables(p) : clone_page_tables(p))
 
 /*
  *  Ok, this is the main fork-routine. It copies the system process
@@ -135,7 +135,7 @@ asmlinkage int sys_fork(struct pt_regs regs)
     struct file *f;
     unsigned long clone_flags = COPYVM | SIGCHLD;
 
-    if(!(p = (struct task_struct *)__get_free_page(GFP_KERNEL)))
+    if (!(p = (struct task_struct *)__get_free_page(GFP_KERNEL)))
         goto bad_fork;
     nr = find_empty_process();
     if (nr < 0)
@@ -154,7 +154,7 @@ asmlinkage int sys_fork(struct pt_regs regs)
     p->signal = 0;
     p->it_real_value = p->it_virt_value = p->it_prof_value = 0;
     p->it_real_incr = p->it_virt_incr = p->it_prof_incr = 0;
-    p->leader = 0;		/* process leadership doesn't inherit */
+    p->leader = 0; /* process leadership doesn't inherit */
     p->utime = p->stime = 0;
     p->cutime = p->cstime = 0;
     p->min_flt = p->maj_flt = 0;
@@ -174,13 +174,13 @@ asmlinkage int sys_fork(struct pt_regs regs)
     p->tss.ss0 = KERNEL_DS;
     p->tss.esp0 = p->kernel_stack_page + PAGE_SIZE;
     p->tss.tr = _TSS(nr);
-    childregs = ((struct pt_regs *) (p->kernel_stack_page + PAGE_SIZE)) - 1;
-    p->tss.esp = (unsigned long) childregs;
-    p->tss.eip = (unsigned long) ret_from_sys_call;
+    childregs = ((struct pt_regs *)(p->kernel_stack_page + PAGE_SIZE)) - 1;
+    p->tss.esp = (unsigned long)childregs;
+    p->tss.eip = (unsigned long)ret_from_sys_call;
     *childregs = regs;
     childregs->eax = 0;
     p->tss.back_link = 0;
-    p->tss.eflags = regs.eflags & 0xffffcfff;	/* iopl is always 0 for a new process */
+    p->tss.eflags = regs.eflags & 0xffffcfff; /* iopl is always 0 for a new process */
     if (IS_CLONE)
     {
         if (regs.ebx)
@@ -193,15 +193,16 @@ asmlinkage int sys_fork(struct pt_regs regs)
     p->tss.ldt = _LDT(nr);
     if (p->ldt)
     {
-        p->ldt = (struct desc_struct *) vmalloc(LDT_ENTRIES * LDT_ENTRY_SIZE);
+        p->ldt = (struct desc_struct *)vmalloc(LDT_ENTRIES * LDT_ENTRY_SIZE);
         if (p->ldt != NULL)
             memcpy(p->ldt, current->ldt, LDT_ENTRIES * LDT_ENTRY_SIZE);
     }
     p->tss.bitmap = offsetof(struct tss_struct, io_bitmap);
-    for (i = 0; i < IO_BITMAP_SIZE + 1 ; i++) /* IO bitmap is actually SIZE+1 */
+    for (i = 0; i < IO_BITMAP_SIZE + 1; i++) /* IO bitmap is actually SIZE+1 */
         p->tss.io_bitmap[i] = ~0;
     if (last_task_used_math == current)
-        __asm__("clts ; fnsave %0 ; frstor %0":"=m" (p->tss.i387));
+        __asm__("clts ; fnsave %0 ; frstor %0"
+                : "=m"(p->tss.i387));
     p->semun = NULL;
     p->shm = NULL;
     if (copy_vm(p) || shm_fork(current, p))
@@ -232,14 +233,14 @@ asmlinkage int sys_fork(struct pt_regs regs)
         set_ldt_desc(gdt + (nr << 1) + FIRST_LDT_ENTRY, &default_ldt, 1);
 
     p->counter = current->counter >> 1;
-    p->state = TASK_RUNNING;	/* do this last, just in case */
+    p->state = TASK_RUNNING; /* do this last, just in case */
     return p->pid;
 bad_fork_cleanup:
     task[nr] = NULL;
     REMOVE_LINKS(p);
     free_page(p->kernel_stack_page);
 bad_fork_free:
-    free_page((long) p);
+    free_page((long)p);
 bad_fork:
     return -EAGAIN;
 }

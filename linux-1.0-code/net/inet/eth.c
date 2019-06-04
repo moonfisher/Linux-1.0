@@ -45,18 +45,17 @@
 #include "linux/errno.h"
 #include "arp.h"
 
-
 /* Display an Ethernet address in readable format. */
 char *eth_print(unsigned char *ptr)
 {
     static char buff[64];
 
-    if (ptr == NULL) return("[NONE]");
+    if (ptr == NULL)
+        return ("[NONE]");
     sprintf(buff, "%02X:%02X:%02X:%02X:%02X:%02X",
             (ptr[0] & 255), (ptr[1] & 255), (ptr[2] & 255),
-            (ptr[3] & 255), (ptr[4] & 255), (ptr[5] & 255)
-           );
-    return(buff);
+            (ptr[3] & 255), (ptr[4] & 255), (ptr[5] & 255));
+    return (buff);
 }
 
 void eth_setup(char *str, int *ints)
@@ -84,21 +83,19 @@ void eth_setup(char *str, int *ints)
 }
 
 /* Display the contents of the Ethernet MAC header. */
-void
-eth_dump(struct ethhdr *eth)
+void eth_dump(struct ethhdr *eth)
 {
-    if (inet_debug != DBG_ETH) return;
+    if (inet_debug != DBG_ETH)
+        return;
 
     printk("eth: SRC = %s ", eth_print(eth->h_source));
     printk("DST = %s ", eth_print(eth->h_dest));
     printk("TYPE = %04X\n", ntohs(eth->h_proto));
 }
 
-
 /* Create the Ethernet MAC header. */
-int
-eth_header(unsigned char *buff, struct device *dev, unsigned short type,
-           unsigned long daddr, unsigned long saddr, unsigned len)
+int eth_header(unsigned char *buff, struct device *dev, unsigned short type,
+               unsigned long daddr, unsigned long saddr, unsigned len)
 {
     struct ethhdr *eth;
 
@@ -106,7 +103,7 @@ eth_header(unsigned char *buff, struct device *dev, unsigned short type,
     DPRINTF((DBG_DEV, "%s, 0x%X)\n", in_ntoa(daddr), type));
 
     /* Fill in the basic Ethernet MAC header. */
-    eth = (struct ethhdr *) buff;
+    eth = (struct ethhdr *)buff;
     eth->h_proto = htons(type);
 
     /* We don't ARP for the LOOPBACK device... */
@@ -115,7 +112,7 @@ eth_header(unsigned char *buff, struct device *dev, unsigned short type,
         DPRINTF((DBG_DEV, "ETH: No header for loopback\n"));
         memcpy(eth->h_source, dev->dev_addr, dev->addr_len);
         memset(eth->h_dest, 0, dev->addr_len);
-        return(dev->hard_header_len);
+        return (dev->hard_header_len);
     }
 
     /* Check if we can use the MAC BROADCAST address. */
@@ -124,7 +121,7 @@ eth_header(unsigned char *buff, struct device *dev, unsigned short type,
         DPRINTF((DBG_DEV, "ETH: Using MAC Broadcast\n"));
         memcpy(eth->h_source, dev->dev_addr, dev->addr_len);
         memcpy(eth->h_dest, dev->broadcast, dev->addr_len);
-        return(dev->hard_header_len);
+        return (dev->hard_header_len);
     }
     cli();
     memcpy(eth->h_source, &saddr, 4);
@@ -132,50 +129,46 @@ eth_header(unsigned char *buff, struct device *dev, unsigned short type,
     if (arp_find(eth->h_dest, daddr, dev, dev->pa_addr))
     {
         sti();
-        if(type != ETH_P_IP)
+        if (type != ETH_P_IP)
             printk("Erk: protocol %X got into an arp request state!\n", type);
-        return(-dev->hard_header_len);
+        return (-dev->hard_header_len);
     }
     else
     {
-        memcpy(eth->h_source, dev->dev_addr, dev->addr_len);	/* This was missing causing chaos if the
+        memcpy(eth->h_source, dev->dev_addr, dev->addr_len); /* This was missing causing chaos if the
   								   header built correctly! */
         sti();
-        return(dev->hard_header_len);
+        return (dev->hard_header_len);
     }
 }
 
-
 /* Rebuild the Ethernet MAC header. */
-int
-eth_rebuild_header(void *buff, struct device *dev)
+int eth_rebuild_header(void *buff, struct device *dev)
 {
     struct ethhdr *eth;
     unsigned long src, dst;
 
     DPRINTF((DBG_DEV, "ETH: Using MAC Broadcast\n"));
-    eth = (struct ethhdr *) buff;
-    src = *(unsigned long *) eth->h_source;
-    dst = *(unsigned long *) eth->h_dest;
+    eth = (struct ethhdr *)buff;
+    src = *(unsigned long *)eth->h_source;
+    dst = *(unsigned long *)eth->h_dest;
     DPRINTF((DBG_DEV, "ETH: RebuildHeader: SRC=%s ", in_ntoa(src)));
     DPRINTF((DBG_DEV, "DST=%s\n", in_ntoa(dst)));
-    if(eth->h_proto != htons(ETH_P_ARP))	/* This ntohs kind of helps a bit! */
-        if (arp_find(eth->h_dest, dst, dev, dev->pa_addr /* src */)) return(1);
+    if (eth->h_proto != htons(ETH_P_ARP)) /* This ntohs kind of helps a bit! */
+        if (arp_find(eth->h_dest, dst, dev, dev->pa_addr /* src */))
+            return (1);
     memcpy(eth->h_source, dev->dev_addr, dev->addr_len);
-    return(0);
+    return (0);
 }
 
-
 /* Add an ARP entry for a host on this interface. */
-void
-eth_add_arp(unsigned long addr, struct sk_buff *skb, struct device *dev)
+void eth_add_arp(unsigned long addr, struct sk_buff *skb, struct device *dev)
 {
     struct ethhdr *eth;
 
-    eth = (struct ethhdr *) skb->data;
+    eth = (struct ethhdr *)skb->data;
     arp_add(addr, eth->h_source, dev);
 }
-
 
 /* Determine the packet's protocol ID. */
 unsigned short
@@ -183,9 +176,9 @@ eth_type_trans(struct sk_buff *skb, struct device *dev)
 {
     struct ethhdr *eth;
 
-    eth = (struct ethhdr *) skb->data;
+    eth = (struct ethhdr *)skb->data;
 
-    if(ntohs(eth->h_proto) < 1536)
-        return(htons(ETH_P_802_3));
-    return(eth->h_proto);
+    if (ntohs(eth->h_proto) < 1536)
+        return (htons(ETH_P_802_3));
+    return (eth->h_proto);
 }

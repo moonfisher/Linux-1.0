@@ -36,8 +36,8 @@ static int anon_map(struct inode *, struct file *,
  *
  */
 
-#define CODE_SPACE(addr)	\
- (PAGE_ALIGN(addr) < current->start_code + current->end_code)
+#define CODE_SPACE(addr) \
+    (PAGE_ALIGN(addr) < current->start_code + current->end_code)
 
 int do_mmap(struct file *file, unsigned long addr, unsigned long len,
             unsigned long prot, unsigned long flags, unsigned long off)
@@ -91,7 +91,7 @@ int do_mmap(struct file *file, unsigned long addr, unsigned long len,
         addr = SHM_RANGE_START;
         while (addr + len < SHM_RANGE_END)
         {
-            for (vmm = current->mmap ; vmm ; vmm = vmm->vm_next)
+            for (vmm = current->mmap; vmm; vmm = vmm->vm_next)
             {
                 if (addr >= vmm->vm_end)
                     continue;
@@ -125,7 +125,7 @@ int do_mmap(struct file *file, unsigned long addr, unsigned long len,
     if (!mask)
         return -EINVAL;
 
-    do_munmap(addr, len);	/* Clear old maps */
+    do_munmap(addr, len); /* Clear old maps */
 
     if (file)
         error = file->f_op->mmap(file->f_inode, file, addr, len, mask, off);
@@ -189,8 +189,8 @@ void unmap_fixup(struct vm_area_struct *area,
     unsigned long end = addr + len;
 
     if (addr < area->vm_start || addr >= area->vm_end ||
-            end <= area->vm_start || end > area->vm_end ||
-            end < addr)
+        end <= area->vm_start || end > area->vm_end ||
+        end < addr)
     {
         printk("unmap_fixup: area=%lx-%lx, unmap %lx-%lx!!\n",
                area->vm_start, area->vm_end, addr, end);
@@ -226,7 +226,7 @@ void unmap_fixup(struct vm_area_struct *area,
         if (mpnt->vm_inode)
             mpnt->vm_inode->i_count++;
         insert_vm_struct(current, mpnt);
-        area->vm_end = addr;	/* Truncate area */
+        area->vm_end = addr; /* Truncate area */
     }
 
     /* construct whatever mapping is needed */
@@ -234,7 +234,6 @@ void unmap_fixup(struct vm_area_struct *area,
     *mpnt = *area;
     insert_vm_struct(current, mpnt);
 }
-
 
 asmlinkage int sys_mprotect(unsigned long addr, size_t len, unsigned long prot)
 {
@@ -275,7 +274,7 @@ int do_munmap(unsigned long addr, size_t len)
         unsigned long end = addr + len;
 
         if ((addr < mpnt->vm_start && end <= mpnt->vm_start) ||
-                (addr >= mpnt->vm_end && end > mpnt->vm_end))
+            (addr >= mpnt->vm_end && end > mpnt->vm_end))
         {
             npp = &mpnt->vm_next;
             continue;
@@ -326,7 +325,7 @@ int generic_mmap(struct inode *inode, struct file *file,
     extern struct vm_operations_struct file_mmap;
     struct buffer_head *bh;
 
-    if (prot & PAGE_RW)	/* only PAGE_COW or read-only supported right now */
+    if (prot & PAGE_RW) /* only PAGE_COW or read-only supported right now */
         return -EINVAL;
     if (off & (inode->i_sb->s_blocksize - 1))
         return -EINVAL;
@@ -343,7 +342,7 @@ int generic_mmap(struct inode *inode, struct file *file,
     }
     brelse(bh);
 
-    mpnt = (struct vm_area_struct * ) kmalloc(sizeof(struct vm_area_struct), GFP_KERNEL);
+    mpnt = (struct vm_area_struct *)kmalloc(sizeof(struct vm_area_struct), GFP_KERNEL);
     if (!mpnt)
         return -ENOMEM;
 
@@ -375,16 +374,16 @@ void insert_vm_struct(struct task_struct *t, struct vm_area_struct *vmp)
 
     nxtpp = &t->mmap;
 
-    for(mpnt = t->mmap; mpnt != NULL; mpnt = mpnt->vm_next)
+    for (mpnt = t->mmap; mpnt != NULL; mpnt = mpnt->vm_next)
     {
         if (mpnt->vm_start > vmp->vm_start)
             break;
         nxtpp = &mpnt->vm_next;
 
         if ((vmp->vm_start >= mpnt->vm_start &&
-                vmp->vm_start < mpnt->vm_end) ||
-                (vmp->vm_end >= mpnt->vm_start &&
-                 vmp->vm_end < mpnt->vm_end))
+             vmp->vm_start < mpnt->vm_end) ||
+            (vmp->vm_end >= mpnt->vm_start &&
+             vmp->vm_end < mpnt->vm_end))
             printk("insert_vm_struct: ins area %lx-%lx in area %lx-%lx\n",
                    vmp->vm_start, vmp->vm_end,
                    mpnt->vm_start, vmp->vm_end);
@@ -408,9 +407,9 @@ void merge_segments(struct vm_area_struct *mpnt,
     if (mpnt == NULL)
         return;
 
-    for(prev = mpnt, mpnt = mpnt->vm_next;
-            mpnt != NULL;
-            prev = mpnt, mpnt = next)
+    for (prev = mpnt, mpnt = mpnt->vm_next;
+         mpnt != NULL;
+         prev = mpnt, mpnt = next)
     {
         int mp;
 
@@ -430,12 +429,12 @@ void merge_segments(struct vm_area_struct *mpnt,
          * What does the share pointer mean?
          */
         if (prev->vm_ops != mpnt->vm_ops ||
-                prev->vm_page_prot != mpnt->vm_page_prot ||
-                prev->vm_inode != mpnt->vm_inode ||
-                prev->vm_end != mpnt->vm_start ||
-                !mp ||
-                prev->vm_share != mpnt->vm_share ||		/* ?? */
-                prev->vm_next != mpnt)			/* !!! */
+            prev->vm_page_prot != mpnt->vm_page_prot ||
+            prev->vm_inode != mpnt->vm_inode ||
+            prev->vm_end != mpnt->vm_start ||
+            !mp ||
+            prev->vm_share != mpnt->vm_share || /* ?? */
+            prev->vm_next != mpnt)              /* !!! */
             continue;
 
         /*
@@ -463,7 +462,7 @@ static int anon_map(struct inode *ino, struct file *file,
     if (zeromap_page_range(addr, len, mask))
         return -ENOMEM;
 
-    mpnt = (struct vm_area_struct * ) kmalloc(sizeof(struct vm_area_struct), GFP_KERNEL);
+    mpnt = (struct vm_area_struct *)kmalloc(sizeof(struct vm_area_struct), GFP_KERNEL);
     if (!mpnt)
         return -ENOMEM;
 
@@ -486,7 +485,7 @@ int ignoff_mergep(const struct vm_area_struct *m1,
                   const struct vm_area_struct *m2,
                   void *data)
 {
-    if (m1->vm_inode != m2->vm_inode)	/* Just to be sure */
+    if (m1->vm_inode != m2->vm_inode) /* Just to be sure */
         return 0;
 
     return (struct inode *)data == m1->vm_inode;

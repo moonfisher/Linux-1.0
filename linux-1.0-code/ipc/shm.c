@@ -13,16 +13,16 @@
 #include "linux/stat.h"
 #include "linux/malloc.h"
 
-extern int ipcperms (struct ipc_perm *ipcp, short semflg);
+extern int ipcperms(struct ipc_perm *ipcp, short semflg);
 extern unsigned int get_swap_page(void);
-static int findkey (key_t key);
-static int newseg (key_t key, int shmflg, int size);
-static int shm_map (struct shm_desc *shmd, int remap);
-static void killseg (int id);
+static int findkey(key_t key);
+static int newseg(key_t key, int shmflg, int size);
+static int shm_map(struct shm_desc *shmd, int remap);
+static void killseg(int id);
 
-static int shm_tot = 0;  /* total number of shared memory pages */
-static int shm_rss = 0; /* number of shared memory pages that are in memory */
-static int shm_swp = 0; /* number of shared memory pages that are in swap */
+static int shm_tot = 0;   /* total number of shared memory pages */
+static int shm_rss = 0;   /* number of shared memory pages that are in memory */
+static int shm_swp = 0;   /* number of shared memory pages that are in swap */
 static int max_shmid = 0; /* every used id is <= max_shmid */
 static struct wait_queue *shm_lock = NULL;
 static struct shmid_ds *shm_segs[SHMMNI];
@@ -34,18 +34,18 @@ static ulong swap_attempts = 0;
 static ulong swap_successes = 0;
 static ulong used_segs = 0;
 
-void shm_init (void)
+void shm_init(void)
 {
     int id;
 
     for (id = 0; id < SHMMNI; id++)
-        shm_segs[id] = (struct shmid_ds *) IPC_UNUSED;
+        shm_segs[id] = (struct shmid_ds *)IPC_UNUSED;
     shm_tot = shm_rss = shm_seq = max_shmid = used_segs = 0;
     shm_lock = NULL;
     return;
 }
 
-static int findkey (key_t key)
+static int findkey(key_t key)
 {
     int id;
     struct shmid_ds *shp;
@@ -53,7 +53,7 @@ static int findkey (key_t key)
     for (id = 0; id <= max_shmid; id++)
     {
         while ((shp = shm_segs[id]) == IPC_NOID)
-            sleep_on (&shm_lock);
+            sleep_on(&shm_lock);
         if (shp == IPC_UNUSED)
             continue;
         if (key == shp->shm_perm.key)
@@ -65,7 +65,7 @@ static int findkey (key_t key)
 /*
  * allocate new shmid_ds and pgtable. protected by shm_segs[id] = NOID.
  */
-static int newseg (key_t key, int shmflg, int size)
+static int newseg(key_t key, int shmflg, int size)
 {
     struct shmid_ds *shp;
     int numpages = (size + PAGE_SIZE - 1) >> PAGE_SHIFT;
@@ -78,32 +78,33 @@ static int newseg (key_t key, int shmflg, int size)
     for (id = 0; id < SHMMNI; id++)
         if (shm_segs[id] == IPC_UNUSED)
         {
-            shm_segs[id] = (struct shmid_ds *) IPC_NOID;
+            shm_segs[id] = (struct shmid_ds *)IPC_NOID;
             goto found;
         }
     return -ENOSPC;
 
 found:
-    shp = (struct shmid_ds *) kmalloc (sizeof (*shp), GFP_KERNEL);
+    shp = (struct shmid_ds *)kmalloc(sizeof(*shp), GFP_KERNEL);
     if (!shp)
     {
-        shm_segs[id] = (struct shmid_ds *) IPC_UNUSED;
+        shm_segs[id] = (struct shmid_ds *)IPC_UNUSED;
         if (shm_lock)
-            wake_up (&shm_lock);
+            wake_up(&shm_lock);
         return -ENOMEM;
     }
 
-    shp->shm_pages = (ulong *) kmalloc (numpages * sizeof(ulong), GFP_KERNEL);
+    shp->shm_pages = (ulong *)kmalloc(numpages * sizeof(ulong), GFP_KERNEL);
     if (!shp->shm_pages)
     {
-        shm_segs[id] = (struct shmid_ds *) IPC_UNUSED;
+        shm_segs[id] = (struct shmid_ds *)IPC_UNUSED;
         if (shm_lock)
-            wake_up (&shm_lock);
-        kfree_s (shp, sizeof (*shp));
+            wake_up(&shm_lock);
+        kfree_s(shp, sizeof(*shp));
         return -ENOMEM;
     }
 
-    for (i = 0; i < numpages; shp->shm_pages[i++] = 0);
+    for (i = 0; i < numpages; shp->shm_pages[i++] = 0)
+        ;
     shm_tot += numpages;
     shp->shm_perm.key = key;
     shp->shm_perm.mode = (shmflg & S_IRWXUGO);
@@ -123,11 +124,11 @@ found:
     shm_segs[id] = shp;
     used_segs++;
     if (shm_lock)
-        wake_up (&shm_lock);
+        wake_up(&shm_lock);
     return id + (int)shm_seq * SHMMNI;
 }
 
-int sys_shmget (key_t key, int size, int shmflg)
+int sys_shmget(key_t key, int size, int shmflg)
 {
     struct shmid_ds *shp;
     int id = 0;
@@ -136,7 +137,7 @@ int sys_shmget (key_t key, int size, int shmflg)
         return -EINVAL;
     if (key == IPC_PRIVATE)
         return newseg(key, shmflg, size);
-    if ((id = findkey (key)) == -1)
+    if ((id = findkey(key)) == -1)
     {
         if (!(shmflg & IPC_CREAT))
             return -ENOENT;
@@ -149,7 +150,7 @@ int sys_shmget (key_t key, int size, int shmflg)
         return -EIDRM;
     if (size > shp->shm_segsz)
         return -EINVAL;
-    if (ipcperms (&shp->shm_perm, shmflg))
+    if (ipcperms(&shp->shm_perm, shmflg))
         return -EACCES;
     return shp->shm_perm.seq * SHMMNI + id;
 }
@@ -158,7 +159,7 @@ int sys_shmget (key_t key, int size, int shmflg)
  * Only called after testing nattch and SHM_DEST.
  * Here pages, pgtable and shmid_ds are freed.
  */
-static void killseg (int id)
+static void killseg(int id)
 {
     struct shmid_ds *shp;
     int i, numpages;
@@ -167,43 +168,44 @@ static void killseg (int id)
     shp = shm_segs[id];
     if (shp == IPC_NOID || shp == IPC_UNUSED)
     {
-        printk ("shm nono: killseg called on unused seg id=%d\n", id);
+        printk("shm nono: killseg called on unused seg id=%d\n", id);
         return;
     }
-    shp->shm_perm.seq++;     /* for shmat */
+    shp->shm_perm.seq++; /* for shmat */
     numpages = shp->shm_npages;
     shm_seq++;
-    shm_segs[id] = (struct shmid_ds *) IPC_UNUSED;
+    shm_segs[id] = (struct shmid_ds *)IPC_UNUSED;
     used_segs--;
     if (id == max_shmid)
-        while (max_shmid && (shm_segs[--max_shmid] == IPC_UNUSED));
+        while (max_shmid && (shm_segs[--max_shmid] == IPC_UNUSED))
+            ;
     if (!shp->shm_pages)
     {
-        printk ("shm nono: killseg shp->pages=NULL. id=%d\n", id);
+        printk("shm nono: killseg shp->pages=NULL. id=%d\n", id);
         return;
     }
-    for (i = 0; i < numpages ; i++)
+    for (i = 0; i < numpages; i++)
     {
         if (!(page = shp->shm_pages[i]))
             continue;
         if (page & 1)
         {
-            free_page (page & PAGE_MASK);
+            free_page(page & PAGE_MASK);
             shm_rss--;
         }
         else
         {
-            swap_free (page);
+            swap_free(page);
             shm_swp--;
         }
     }
-    kfree_s (shp->shm_pages, numpages * sizeof (ulong));
+    kfree_s(shp->shm_pages, numpages * sizeof(ulong));
     shm_tot -= numpages;
-    kfree_s (shp, sizeof (*shp));
+    kfree_s(shp, sizeof(*shp));
     return;
 }
 
-int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
+int sys_shmctl(int shmid, int cmd, struct shmid_ds *buf)
 {
     struct shmid_ds *shp, tbuf;
     struct ipc_perm *ipcp;
@@ -215,13 +217,13 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
     {
         if (!buf)
             return -EFAULT;
-        err = verify_area (VERIFY_READ, buf, sizeof (*buf));
+        err = verify_area(VERIFY_READ, buf, sizeof(*buf));
         if (err)
             return err;
-        memcpy_fromfs (&tbuf, buf, sizeof (*buf));
+        memcpy_fromfs(&tbuf, buf, sizeof(*buf));
     }
 
-    switch (cmd)   /* replace with proc interface ? */
+    switch (cmd) /* replace with proc interface ? */
     {
     case IPC_INFO:
     {
@@ -233,10 +235,10 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
         shminfo.shmmin = SHMMIN;
         shminfo.shmall = SHMALL;
         shminfo.shmseg = SHMSEG;
-        err = verify_area (VERIFY_WRITE, buf, sizeof (struct shminfo));
+        err = verify_area(VERIFY_WRITE, buf, sizeof(struct shminfo));
         if (err)
             return err;
-        memcpy_tofs (buf, &shminfo, sizeof(struct shminfo));
+        memcpy_tofs(buf, &shminfo, sizeof(struct shminfo));
         return max_shmid;
     }
     case SHM_INFO:
@@ -244,7 +246,7 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
         struct shm_info shm_info;
         if (!buf)
             return -EFAULT;
-        err = verify_area (VERIFY_WRITE, buf, sizeof (shm_info));
+        err = verify_area(VERIFY_WRITE, buf, sizeof(shm_info));
         if (err)
             return err;
         shm_info.used_ids = used_segs;
@@ -253,13 +255,13 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
         shm_info.shm_swp = shm_swp;
         shm_info.swap_attempts = swap_attempts;
         shm_info.swap_successes = swap_successes;
-        memcpy_tofs (buf, &shm_info, sizeof(shm_info));
+        memcpy_tofs(buf, &shm_info, sizeof(shm_info));
         return max_shmid;
     }
     case SHM_STAT:
         if (!buf)
             return -EFAULT;
-        err = verify_area (VERIFY_WRITE, buf, sizeof (*shp));
+        err = verify_area(VERIFY_WRITE, buf, sizeof(*shp));
         if (err)
             return err;
         if (shmid > max_shmid)
@@ -267,10 +269,10 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
         shp = shm_segs[shmid];
         if (shp == IPC_UNUSED || shp == IPC_NOID)
             return -EINVAL;
-        if (ipcperms (&shp->shm_perm, S_IRUGO))
+        if (ipcperms(&shp->shm_perm, S_IRUGO))
             return -EACCES;
         id = shmid + shp->shm_perm.seq * SHMMNI;
-        memcpy_tofs (buf, shp, sizeof(*shp));
+        memcpy_tofs(buf, shp, sizeof(*shp));
         return id;
     }
 
@@ -301,34 +303,33 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
         ipcp->mode |= SHM_LOCKED;
         break;
     case IPC_STAT:
-        if (ipcperms (ipcp, S_IRUGO))
+        if (ipcperms(ipcp, S_IRUGO))
             return -EACCES;
         if (!buf)
             return -EFAULT;
-        err = verify_area (VERIFY_WRITE, buf, sizeof (*shp));
+        err = verify_area(VERIFY_WRITE, buf, sizeof(*shp));
         if (err)
             return err;
-        memcpy_tofs (buf, shp, sizeof(*shp));
+        memcpy_tofs(buf, shp, sizeof(*shp));
         break;
     case IPC_SET:
         if (suser() || current->euid == shp->shm_perm.uid ||
-                current->euid == shp->shm_perm.cuid)
+            current->euid == shp->shm_perm.cuid)
         {
             ipcp->uid = tbuf.shm_perm.uid;
             ipcp->gid = tbuf.shm_perm.gid;
-            ipcp->mode = (ipcp->mode & ~S_IRWXUGO)
-                         | (tbuf.shm_perm.mode & S_IRWXUGO);
+            ipcp->mode = (ipcp->mode & ~S_IRWXUGO) | (tbuf.shm_perm.mode & S_IRWXUGO);
             shp->shm_ctime = CURRENT_TIME;
             break;
         }
         return -EPERM;
     case IPC_RMID:
         if (suser() || current->euid == shp->shm_perm.uid ||
-                current->euid == shp->shm_perm.cuid)
+            current->euid == shp->shm_perm.cuid)
         {
             shp->shm_perm.mode |= SHM_DEST;
             if (shp->shm_nattch <= 0)
-                killseg (id);
+                killseg(id);
             break;
         }
         return -EPERM;
@@ -343,7 +344,7 @@ int sys_shmctl (int shmid, int cmd, struct shmid_ds *buf)
  * mark page table entries with shm_sgn.
  * if remap != 0 the range is remapped.
  */
-static int shm_map (struct shm_desc *shmd, int remap)
+static int shm_map(struct shm_desc *shmd, int remap)
 {
     unsigned long invalid = 0;
     unsigned long *page_table;
@@ -356,7 +357,7 @@ static int shm_map (struct shm_desc *shmd, int remap)
         page_table = PAGE_DIR_OFFSET(page_dir, tmp);
         if (*page_table & PAGE_PRESENT)
         {
-            page_table = (ulong *) (PAGE_MASK & *page_table);
+            page_table = (ulong *)(PAGE_MASK & *page_table);
             page_table += ((tmp >> PAGE_SHIFT) & (PTRS_PER_PAGE - 1));
             if (*page_table)
             {
@@ -365,17 +366,17 @@ static int shm_map (struct shm_desc *shmd, int remap)
                 if (*page_table & PAGE_PRESENT)
                 {
                     --current->rss;
-                    free_page (*page_table & PAGE_MASK);
+                    free_page(*page_table & PAGE_MASK);
                 }
                 else
-                    swap_free (*page_table);
+                    swap_free(*page_table);
                 invalid++;
             }
             continue;
         }
         {
             unsigned long new_pt;
-            if(!(new_pt = get_free_page(GFP_KERNEL)))	/* clearing needed?  SRB. */
+            if (!(new_pt = get_free_page(GFP_KERNEL))) /* clearing needed?  SRB. */
                 return -ENOMEM;
             *page_table = new_pt | PAGE_TABLE;
             tmp |= ((PAGE_SIZE << 10) - PAGE_SIZE);
@@ -387,10 +388,10 @@ static int shm_map (struct shm_desc *shmd, int remap)
     /* map page range */
     shm_sgn = shmd->shm_sgn;
     for (tmp = shmd->start; tmp < shmd->end; tmp += PAGE_SIZE,
-            shm_sgn += (1 << SHM_IDX_SHIFT))
+        shm_sgn += (1 << SHM_IDX_SHIFT))
     {
         page_table = PAGE_DIR_OFFSET(page_dir, tmp);
-        page_table = (ulong *) (PAGE_MASK & *page_table);
+        page_table = (ulong *)(PAGE_MASK & *page_table);
         page_table += (tmp >> PAGE_SHIFT) & (PTRS_PER_PAGE - 1);
         *page_table = shm_sgn;
     }
@@ -402,7 +403,7 @@ static int shm_map (struct shm_desc *shmd, int remap)
  * raddr is needed to return addresses above 2Gig.
  * Specific attaches are allowed over the executable....
  */
-int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
+int sys_shmat(int shmid, char *shmaddr, int shmflg, ulong *raddr)
 {
     struct shmid_ds *shp;
     struct shm_desc *shmd;
@@ -424,7 +425,7 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
     if (shp == IPC_UNUSED || shp == IPC_NOID)
         return -EINVAL;
 
-    if (!(addr = (ulong) shmaddr))
+    if (!(addr = (ulong)shmaddr))
     {
         if (shmflg & SHM_REMAP)
             return -EINVAL;
@@ -442,7 +443,7 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
     else if (addr & (SHMLBA - 1))
     {
         if (shmflg & SHM_RND)
-            addr &= ~(SHMLBA - 1);     /* round down */
+            addr &= ~(SHMLBA - 1); /* round down */
         else
             return -EINVAL;
     }
@@ -454,7 +455,7 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
             if (addr >= shmd->start && addr < shmd->end)
                 return -EINVAL;
             if (addr + shp->shm_segsz >= shmd->start &&
-                    addr + shp->shm_segsz < shmd->end)
+                addr + shp->shm_segsz < shmd->end)
                 return -EINVAL;
         }
 
@@ -463,12 +464,12 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
     if (shp->shm_perm.seq != shmid / SHMMNI)
         return -EIDRM;
 
-    shmd = (struct shm_desc *) kmalloc (sizeof(*shmd), GFP_KERNEL);
+    shmd = (struct shm_desc *)kmalloc(sizeof(*shmd), GFP_KERNEL);
     if (!shmd)
         return -ENOMEM;
     if ((shp != shm_segs[id]) || (shp->shm_perm.seq != shmid / SHMMNI))
     {
-        kfree_s (shmd, sizeof (*shmd));
+        kfree_s(shmd, sizeof(*shmd));
         return -EIDRM;
     }
     shmd->shm_sgn = (SHM_SWP_TYPE << 1) | (id << SHM_ID_SHIFT) |
@@ -477,19 +478,19 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
     shmd->end = addr + shp->shm_npages * PAGE_SIZE;
     shmd->task = current;
 
-    shp->shm_nattch++;            /* prevent destruction */
+    shp->shm_nattch++; /* prevent destruction */
     if (addr < current->end_data)
     {
-        iput (current->executable);
+        iput(current->executable);
         current->executable = NULL;
         /*		current->end_data = current->end_code = 0; */
     }
 
-    if ((err = shm_map (shmd, shmflg & SHM_REMAP)))
+    if ((err = shm_map(shmd, shmflg & SHM_REMAP)))
     {
         if (--shp->shm_nattch <= 0 && shp->shm_perm.mode & SHM_DEST)
             killseg(id);
-        kfree_s (shmd, sizeof (*shmd));
+        kfree_s(shmd, sizeof(*shmd));
         return err;
     }
 
@@ -501,7 +502,7 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
     shp->shm_atime = CURRENT_TIME;
     if (!raddr)
         return addr;
-    put_fs_long (addr, raddr);
+    put_fs_long(addr, raddr);
     return 0;
 }
 
@@ -510,7 +511,7 @@ int sys_shmat (int shmid, char *shmaddr, int shmflg, ulong *raddr)
  * free memory for segment if it is marked destroyed.
  * The descriptor is detached before the sleep in unmap_page_range.
  */
-static void detach (struct shm_desc **shmdp)
+static void detach(struct shm_desc **shmdp)
 {
     struct shm_desc *shmd = *shmdp;
     struct shmid_ds *shp;
@@ -528,12 +529,12 @@ static void detach (struct shm_desc **shmdp)
     printk("detach: shm segment (id=%d) attach list inconsistent\n", id);
 
 found:
-    unmap_page_range (shmd->start, shp->shm_segsz); /* sleeps */
-    kfree_s (shmd, sizeof (*shmd));
+    unmap_page_range(shmd->start, shp->shm_segsz); /* sleeps */
+    kfree_s(shmd, sizeof(*shmd));
     shp->shm_lpid = current->pid;
     shp->shm_dtime = CURRENT_TIME;
     if (--shp->shm_nattch <= 0 && shp->shm_perm.mode & SHM_DEST)
-        killseg (id); /* sleeps */
+        killseg(id); /* sleeps */
     return;
 }
 
@@ -541,15 +542,15 @@ found:
  * detach and kill segment if marked destroyed.
  * The work is done in detach.
  */
-int sys_shmdt (char *shmaddr)
+int sys_shmdt(char *shmaddr)
 {
     struct shm_desc *shmd, **shmdp;
 
     for (shmdp = &current->shm; (shmd = *shmdp); shmdp = &shmd->task_next)
     {
-        if (shmd->start == (ulong) shmaddr)
+        if (shmd->start == (ulong)shmaddr)
         {
-            detach (shmdp);
+            detach(shmdp);
             return 0;
         }
     }
@@ -559,7 +560,7 @@ int sys_shmdt (char *shmaddr)
 /*
  * detach all attached segments.
  */
-void shm_exit (void)
+void shm_exit(void)
 {
     while (current->shm)
         detach(&current->shm);
@@ -571,7 +572,7 @@ void shm_exit (void)
  * parent is stuck in fork so an attach on each segment is assured.
  * copy_page_tables does the mapping.
  */
-int shm_fork (struct task_struct *p1, struct task_struct *p2)
+int shm_fork(struct task_struct *p1, struct task_struct *p2)
 {
     struct shm_desc *shmd, *new_desc = NULL, *tmp;
     struct shmid_ds *shp;
@@ -581,16 +582,16 @@ int shm_fork (struct task_struct *p1, struct task_struct *p2)
         return 0;
     for (shmd = p1->shm; shmd; shmd = shmd->task_next)
     {
-        tmp = (struct shm_desc *) kmalloc(sizeof(*tmp), GFP_KERNEL);
+        tmp = (struct shm_desc *)kmalloc(sizeof(*tmp), GFP_KERNEL);
         if (!tmp)
         {
             while (new_desc)
             {
                 tmp = new_desc->task_next;
-                kfree_s (new_desc, sizeof (*new_desc));
+                kfree_s(new_desc, sizeof(*new_desc));
                 new_desc = tmp;
             }
-            free_page_tables (p2);
+            free_page_tables(p2);
             return -ENOMEM;
         }
         *tmp = *shmd;
@@ -620,7 +621,7 @@ int shm_fork (struct task_struct *p1, struct task_struct *p2)
 /*
  * page not present ... go through shm_pages .. called from swap_in()
  */
-void shm_no_page (unsigned long *ptent)
+void shm_no_page(unsigned long *ptent)
 {
     unsigned long page;
     unsigned long code = *ptent;
@@ -630,25 +631,25 @@ void shm_no_page (unsigned long *ptent)
     id = (code >> SHM_ID_SHIFT) & SHM_ID_MASK;
     if (id > max_shmid)
     {
-        printk ("shm_no_page: id=%d too big. proc mem corruptedn", id);
+        printk("shm_no_page: id=%d too big. proc mem corruptedn", id);
         return;
     }
     shp = shm_segs[id];
     if (shp == IPC_UNUSED || shp == IPC_NOID)
     {
-        printk ("shm_no_page: id=%d invalid. Race.\n", id);
+        printk("shm_no_page: id=%d invalid. Race.\n", id);
         return;
     }
     idx = (code >> SHM_IDX_SHIFT) & SHM_IDX_MASK;
     if (idx >= shp->shm_npages)
     {
-        printk ("shm_no_page : too large page index. id=%d\n", id);
+        printk("shm_no_page : too large page index. id=%d\n", id);
         return;
     }
 
     if (!(shp->shm_pages[idx] & PAGE_PRESENT))
     {
-        if(!(page = get_free_page(GFP_KERNEL)))
+        if (!(page = get_free_page(GFP_KERNEL)))
         {
             oom(current);
             *ptent = BAD_PAGE | PAGE_ACCESSED | 7;
@@ -656,30 +657,30 @@ void shm_no_page (unsigned long *ptent)
         }
         if (shp->shm_pages[idx] & PAGE_PRESENT)
         {
-            free_page (page);
+            free_page(page);
             goto done;
         }
         if (shp->shm_pages[idx])
         {
-            read_swap_page (shp->shm_pages[idx], (char *) page);
+            read_swap_page(shp->shm_pages[idx], (char *)page);
             if (shp->shm_pages[idx] & PAGE_PRESENT)
             {
-                free_page (page);
+                free_page(page);
                 goto done;
             }
-            swap_free (shp->shm_pages[idx]);
+            swap_free(shp->shm_pages[idx]);
             shm_swp--;
         }
         shm_rss++;
         shp->shm_pages[idx] = page | (PAGE_SHARED | PAGE_DIRTY);
     }
     else
-        --current->maj_flt;  /* was incremented in do_no_page */
+        --current->maj_flt; /* was incremented in do_no_page */
 
 done:
     current->min_flt++;
     page = shp->shm_pages[idx];
-    if (code & SHM_READ_ONLY)           /* write-protect */
+    if (code & SHM_READ_ONLY) /* write-protect */
         page &= ~2;
     mem_map[MAP_NR(page)]++;
     *ptent = page;
@@ -689,10 +690,10 @@ done:
 /*
  * Goes through counter = (shm_rss << prio) present shm pages.
  */
-static unsigned long swap_id = 0; /* currently being swapped */
+static unsigned long swap_id = 0;  /* currently being swapped */
 static unsigned long swap_idx = 0; /* next to swap */
 
-int shm_swap (int prio)
+int shm_swap(int prio)
 {
     unsigned long page;
     struct shmid_ds *shp;
@@ -707,7 +708,7 @@ int shm_swap (int prio)
 
 check_id:
     shp = shm_segs[swap_id];
-    if (shp == IPC_UNUSED || shp == IPC_NOID || shp->shm_perm.mode & SHM_LOCKED )
+    if (shp == IPC_UNUSED || shp == IPC_NOID || shp->shm_perm.mode & SHM_LOCKED)
     {
         swap_idx = 0;
         if (++swap_id > max_shmid)
@@ -718,7 +719,7 @@ check_id:
 
 check_table:
     idx = swap_idx++;
-    if (idx  >= shp->shm_npages)
+    if (idx >= shp->shm_npages)
     {
         swap_idx = 0;
         if (++swap_id > max_shmid)
@@ -731,11 +732,11 @@ check_table:
         goto check_table;
     swap_attempts++;
 
-    if (--counter < 0)   /* failed */
+    if (--counter < 0) /* failed */
     {
         if (invalid)
             invalidate();
-        swap_free (swap_nr);
+        swap_free(swap_nr);
         return 0;
     }
     for (shmd = shp->attaches; shmd; shmd = shmd->seg_next)
@@ -743,13 +744,13 @@ check_table:
         unsigned long tmp, *pte;
         if ((shmd->shm_sgn >> SHM_ID_SHIFT & SHM_ID_MASK) != id)
         {
-            printk ("shm_swap: id=%ld does not match shmd\n", id);
+            printk("shm_swap: id=%ld does not match shmd\n", id);
             continue;
         }
         tmp = shmd->start + (idx << PAGE_SHIFT);
         if (tmp >= shmd->end)
         {
-            printk ("shm_swap: too large idx=%ld id=%ld PANIC\n", idx, id);
+            printk("shm_swap: too large idx=%ld id=%ld PANIC\n", idx, id);
             continue;
         }
         pte = PAGE_DIR_OFFSET(shmd->task->tss.cr3, tmp);
@@ -760,7 +761,7 @@ check_table:
             *pte = 0;
             continue;
         }
-        pte = (ulong *) (PAGE_MASK & *pte);
+        pte = (ulong *)(PAGE_MASK & *pte);
         pte += ((tmp >> PAGE_SHIFT) & (PTRS_PER_PAGE - 1));
         tmp = *pte;
         if (!(tmp & PAGE_PRESENT))
@@ -783,8 +784,8 @@ check_table:
     shp->shm_pages[idx] = swap_nr;
     if (invalid)
         invalidate();
-    write_swap_page (swap_nr, (char *) page);
-    free_page (page);
+    write_swap_page(swap_nr, (char *)page);
+    free_page(page);
     swap_successes++;
     shm_swp++;
     shm_rss--;

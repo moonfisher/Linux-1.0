@@ -7,7 +7,6 @@
 #include "linux/errno.h"
 #include "asm/dma.h"
 
-
 /* A note on resource allocation:
  *
  * All drivers needing DMA channels, should allocate and release them
@@ -23,18 +22,13 @@
  * in the kernel.
  */
 
-
-
 /* Channel n is busy iff dma_chan_busy[n] != 0.
  * DMA0 is reserved for DRAM refresh, I think.
  * DMA4 is reserved for cascading (?).
  */
 static volatile unsigned int dma_chan_busy[MAX_DMA_CHANNELS] =
-{
-    1, 0, 0, 0, 1, 0, 0, 0
-};
-
-
+    {
+        1, 0, 0, 0, 1, 0, 0, 0};
 
 /* Atomically swap memory location [32 bits] with `newval'.
  * This avoid the cli()/sti() junk and related problems.
@@ -53,14 +47,11 @@ static __inline__ unsigned int mutex_atomic_swap(volatile unsigned int *p, unsig
      * the swap may not be atomic.
      */
 
-    asm __volatile__ ("xchgl %2, %0\n"
-                      : /* outputs: semval   */ "=r" (semval)
-                      : /* inputs: newval, p */ "0" (semval), "m" (*p)
-                     );	/* p is a var, containing an address */
+    asm __volatile__("xchgl %2, %0\n"
+                     : /* outputs: semval   */ "=r"(semval)
+                     : /* inputs: newval, p */ "0"(semval), "m"(*p)); /* p is a var, containing an address */
     return semval;
 } /* mutex_atomic_swap */
-
-
 
 int request_dma(unsigned int dmanr)
 {
@@ -74,7 +65,6 @@ int request_dma(unsigned int dmanr)
         return 0;
 } /* request_dma */
 
-
 void free_dma(unsigned int dmanr)
 {
     if (dmanr >= MAX_DMA_CHANNELS)
@@ -86,4 +76,3 @@ void free_dma(unsigned int dmanr)
     if (mutex_atomic_swap(&dma_chan_busy[dmanr], 0) == 0)
         printk("Trying to free free DMA%d\n", dmanr);
 } /* free_dma */
-

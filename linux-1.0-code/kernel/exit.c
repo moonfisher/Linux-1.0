@@ -17,8 +17,8 @@
 #include "linux/malloc.h"
 
 #include "asm/segment.h"
-extern void shm_exit (void);
-extern void sem_exit (void);
+extern void shm_exit(void);
+extern void sem_exit(void);
 
 int getrusage(struct task_struct *, int, struct rusage *);
 
@@ -38,7 +38,7 @@ static int generate(unsigned long sig, struct task_struct *p)
         return 0;
     /* some signals are ignored by default.. (but SIGCONT already did its deed) */
     if ((sa->sa_handler == SIG_DFL) &&
-            (sig == SIGCONT || sig == SIGCHLD || sig == SIGWINCH))
+        (sig == SIGCONT || sig == SIGCHLD || sig == SIGWINCH))
         return 0;
     p->signal |= mask;
     return 1;
@@ -49,7 +49,7 @@ int send_sig(unsigned long sig, struct task_struct *p, int priv)
     if (!p || sig > 32)
         return -EINVAL;
     if (!priv && ((sig != SIGCONT) || (current->session != p->session)) &&
-            (current->euid != p->euid) && (current->uid != p->uid) && !suser())
+        (current->euid != p->euid) && (current->uid != p->uid) && !suser())
         return -EPERM;
     if (!sig)
         return 0;
@@ -58,8 +58,8 @@ int send_sig(unsigned long sig, struct task_struct *p, int priv)
         if (p->state == TASK_STOPPED)
             p->state = TASK_RUNNING;
         p->exit_code = 0;
-        p->signal &= ~( (1 << (SIGSTOP - 1)) | (1 << (SIGTSTP - 1)) |
-                        (1 << (SIGTTIN - 1)) | (1 << (SIGTTOU - 1)) );
+        p->signal &= ~((1 << (SIGSTOP - 1)) | (1 << (SIGTSTP - 1)) |
+                       (1 << (SIGTTIN - 1)) | (1 << (SIGTTOU - 1)));
     }
     /* Depends on order SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU */
     if ((sig >= SIGSTOP) && (sig <= SIGTTOU))
@@ -88,13 +88,13 @@ void release(struct task_struct *p)
         printk("task releasing itself\n");
         return;
     }
-    for (i = 1 ; i < NR_TASKS ; i++)
+    for (i = 1; i < NR_TASKS; i++)
         if (task[i] == p)
         {
             task[i] = NULL;
             REMOVE_LINKS(p);
             free_page(p->kernel_stack_page);
-            free_page((long) p);
+            free_page((long)p);
             return;
         }
     panic("trying to release non-existent task");
@@ -107,11 +107,11 @@ void release(struct task_struct *p)
  */
 int bad_task_ptr(struct task_struct *p)
 {
-    int 	i;
+    int i;
 
     if (!p)
         return 0;
-    for (i = 0 ; i < NR_TASKS ; i++)
+    for (i = 0; i < NR_TASKS; i++)
         if (task[i] == p)
             return 0;
     return 1;
@@ -128,9 +128,9 @@ int bad_task_ptr(struct task_struct *p)
  */
 void audit_ptree(void)
 {
-    int	i;
+    int i;
 
-    for (i = 1 ; i < NR_TASKS ; i++)
+    for (i = 1; i < NR_TASKS; i++)
     {
         if (!task[i])
             continue;
@@ -242,7 +242,7 @@ int kill_pg(int pgrp, int sig, int priv)
                 found++;
         }
     }
-    return(found ? 0 : retval);
+    return (found ? 0 : retval);
 }
 
 /*
@@ -268,7 +268,7 @@ int kill_sl(int sess, int sig, int priv)
                 found++;
         }
     }
-    return(found ? 0 : retval);
+    return (found ? 0 : retval);
 }
 
 int kill_proc(int pid, int sig, int priv)
@@ -282,7 +282,7 @@ int kill_proc(int pid, int sig, int priv)
         if (p && p->pid == pid)
             return send_sig(sig, p, priv);
     }
-    return(-ESRCH);
+    return (-ESRCH);
 }
 
 /*
@@ -294,7 +294,7 @@ asmlinkage int sys_kill(int pid, int sig)
     int err, retval = 0, count = 0;
 
     if (!pid)
-        return(kill_pg(current->pgrp, sig, 0));
+        return (kill_pg(current->pgrp, sig, 0));
     if (pid == -1)
     {
         struct task_struct *p;
@@ -307,12 +307,12 @@ asmlinkage int sys_kill(int pid, int sig)
                     retval = err;
             }
         }
-        return(count ? retval : -ESRCH);
+        return (count ? retval : -ESRCH);
     }
     if (pid < 0)
-        return(kill_pg(-pid, sig, 0));
+        return (kill_pg(-pid, sig, 0));
     /* Normal kill */
-    return(kill_proc(pid, sig, 0));
+    return (kill_proc(pid, sig, 0));
 }
 
 /*
@@ -330,14 +330,14 @@ int is_orphaned_pgrp(int pgrp)
     for_each_task(p)
     {
         if ((p->pgrp != pgrp) ||
-                (p->state == TASK_ZOMBIE) ||
-                (p->p_pptr->pid == 1))
+            (p->state == TASK_ZOMBIE) ||
+            (p->p_pptr->pid == 1))
             continue;
         if ((p->p_pptr->pgrp != pgrp) &&
-                (p->p_pptr->session == p->session))
+            (p->p_pptr->session == p->session))
             return 0;
     }
-    return(1);	/* (sighing) "Often!" */
+    return (1); /* (sighing) "Often!" */
 }
 
 static int has_stopped_jobs(int pgrp)
@@ -349,9 +349,9 @@ static int has_stopped_jobs(int pgrp)
         if (p->pgrp != pgrp)
             continue;
         if (p->state == TASK_STOPPED)
-            return(1);
+            return (1);
     }
-    return(0);
+    return (0);
 }
 
 static void forget_original_parent(struct task_struct *father)
@@ -379,7 +379,7 @@ fake_volatile:
     if (current->shm)
         shm_exit();
     free_page_tables(current);
-    for (i = 0 ; i < NR_OPEN ; i++)
+    for (i = 0; i < NR_OPEN; i++)
         if (current->filp[i])
             sys_close(i);
     forget_original_parent(current);
@@ -409,7 +409,7 @@ fake_volatile:
     {
         vfree(current->ldt);
         current->ldt = NULL;
-        for (i = 1 ; i < NR_TASKS ; i++)
+        for (i = 1; i < NR_TASKS; i++)
         {
             if (task[i] == current)
             {
@@ -432,9 +432,9 @@ fake_volatile:
      * is about to become orphaned.
      */
     if ((current->p_pptr->pgrp != current->pgrp) &&
-            (current->p_pptr->session == current->session) &&
-            is_orphaned_pgrp(current->pgrp) &&
-            has_stopped_jobs(current->pgrp))
+        (current->p_pptr->session == current->session) &&
+        is_orphaned_pgrp(current->pgrp) &&
+        has_stopped_jobs(current->pgrp))
     {
         kill_pg(current->pgrp, SIGHUP, 1);
         kill_pg(current->pgrp, SIGCONT, 1);
@@ -471,9 +471,9 @@ fake_volatile:
          * outside, so the child pgrp is now orphaned.
          */
         if ((p->pgrp != current->pgrp) &&
-                (p->session == current->session) &&
-                is_orphaned_pgrp(p->pgrp) &&
-                has_stopped_jobs(p->pgrp))
+            (p->session == current->session) &&
+            is_orphaned_pgrp(p->pgrp) &&
+            has_stopped_jobs(p->pgrp))
         {
             kill_pg(p->pgrp, SIGHUP, 1);
             kill_pg(p->pgrp, SIGCONT, 1);
@@ -511,7 +511,7 @@ asmlinkage int sys_exit(int error_code)
 asmlinkage int sys_wait4(pid_t pid, unsigned long *stat_addr, int options, struct rusage *ru)
 {
     int flag, retval;
-    struct wait_queue wait = { current, NULL };
+    struct wait_queue wait = {current, NULL};
     struct task_struct *p;
 
     if (stat_addr)
@@ -523,7 +523,7 @@ asmlinkage int sys_wait4(pid_t pid, unsigned long *stat_addr, int options, struc
     add_wait_queue(&current->wait_chldexit, &wait);
 repeat:
     flag = 0;
-    for (p = current->p_cptr ; p ; p = p->p_osptr)
+    for (p = current->p_cptr; p; p = p->p_osptr)
     {
         if (pid > 0)
         {

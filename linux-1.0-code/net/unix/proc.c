@@ -33,7 +33,6 @@
 #include "linux/param.h"
 #include "unix.h"
 
-
 /* Called from PROCfs. */
 int unix_get_info(char *buffer)
 {
@@ -43,7 +42,7 @@ int unix_get_info(char *buffer)
     pos = buffer;
     pos += sprintf(pos, "Num RefCount Protocol Flags    Type St Path\n");
 
-    for(i = 0; i < NSOCKETS; i++)
+    for (i = 0; i < NSOCKETS; i++)
     {
         if (unix_datas[i].refcnt > 0)
         {
@@ -52,16 +51,15 @@ int unix_get_info(char *buffer)
                            unix_datas[i].protocol,
                            unix_datas[i].socket->flags,
                            unix_datas[i].socket->type,
-                           unix_datas[i].socket->state
-                          );
+                           unix_datas[i].socket->state);
 
             /* If socket is bound to a filename, we'll print it. */
-            if(unix_datas[i].sockaddr_len > 0)
+            if (unix_datas[i].sockaddr_len > 0)
             {
                 pos += sprintf(pos, " %s\n",
                                unix_datas[i].sockaddr_un.sun_path);
             }
-            else     /* just add a newline */
+            else /* just add a newline */
             {
                 *pos = '\n';
                 pos++;
@@ -76,9 +74,9 @@ int unix_get_info(char *buffer)
             if (pos > buffer + PAGE_SIZE - 80 - PATH_MAX)
             {
                 printk("UNIX: netinfo: oops, too many sockets.\n");
-                return(pos - buffer);
+                return (pos - buffer);
             }
         }
     }
-    return(pos - buffer);
+    return (pos - buffer);
 }

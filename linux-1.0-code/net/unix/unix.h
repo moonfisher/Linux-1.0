@@ -24,47 +24,42 @@
  *		2 of the License, or (at your option) any later version.
  */
 
-
 #ifdef _LINUX_UN_H
-
 
 struct unix_proto_data
 {
-    int		refcnt;		/* cnt of reference 0=free	*/
+    int refcnt; /* cnt of reference 0=free	*/
     /* -1=not initialised	-bgm	*/
-    struct socket	*socket;	/* socket we're bound to	*/
-    int		protocol;
-    struct sockaddr_un	sockaddr_un;
-    short		sockaddr_len;	/* >0 if name bound		*/
-    char		*buf;
-    int		bp_head, bp_tail;
-    struct inode	*inode;
-    struct unix_proto_data	*peerupd;
-    struct wait_queue *wait;	/* Lock across page faults (FvK) */
-    int		lock_flag;
+    struct socket *socket; /* socket we're bound to	*/
+    int protocol;
+    struct sockaddr_un sockaddr_un;
+    short sockaddr_len; /* >0 if name bound		*/
+    char *buf;
+    int bp_head, bp_tail;
+    struct inode *inode;
+    struct unix_proto_data *peerupd;
+    struct wait_queue *wait; /* Lock across page faults (FvK) */
+    int lock_flag;
 };
 
 extern struct unix_proto_data unix_datas[NSOCKETS];
 
+#define last_unix_data (unix_datas + NSOCKETS - 1)
 
-#define last_unix_data		(unix_datas + NSOCKETS - 1)
-
-
-#define UN_DATA(SOCK) 		((struct unix_proto_data *)(SOCK)->data)
-#define UN_PATH_OFFSET		((unsigned long)((struct sockaddr_un *)0) \
-							->sun_path)
+#define UN_DATA(SOCK) ((struct unix_proto_data *)(SOCK)->data)
+#define UN_PATH_OFFSET ((unsigned long)((struct sockaddr_un *)0) \
+                            ->sun_path)
 
 /*
  * Buffer size must be power of 2. buffer mgmt inspired by pipe code.
  * note that buffer contents can wraparound, and we can write one byte less
  * than full size to discern full vs empty.
  */
-#define BUF_SIZE		PAGE_SIZE
-#define UN_BUF_AVAIL(UPD)	(((UPD)->bp_head - (UPD)->bp_tail) & \
-								(BUF_SIZE-1))
-#define UN_BUF_SPACE(UPD)	((BUF_SIZE-1) - UN_BUF_AVAIL(UPD))
+#define BUF_SIZE PAGE_SIZE
+#define UN_BUF_AVAIL(UPD) (((UPD)->bp_head - (UPD)->bp_tail) & \
+                           (BUF_SIZE - 1))
+#define UN_BUF_SPACE(UPD) ((BUF_SIZE - 1) - UN_BUF_AVAIL(UPD))
 
-#endif	/* _LINUX_UN_H */
+#endif /* _LINUX_UN_H */
 
-
-extern void	unix_proto_init(struct ddi_proto *pro);
+extern void unix_proto_init(struct ddi_proto *pro);

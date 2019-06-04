@@ -24,27 +24,23 @@
 
 #include "linux/udp.h"
 
-
-#define UDP_NO_CHECK	0
-
+#define UDP_NO_CHECK 0
 
 extern struct proto udp_prot;
 
-
-extern void	udp_err(int err, unsigned char *header, unsigned long daddr,
+extern void udp_err(int err, unsigned char *header, unsigned long daddr,
                     unsigned long saddr, struct inet_protocol *protocol);
-extern int	udp_recvfrom(struct sock *sk, unsigned char *to,
-                         int len, int noblock, unsigned flags,
-                         struct sockaddr_in *sin, int *addr_len);
-extern int	udp_read(struct sock *sk, unsigned char *buff,
-                     int len, int noblock, unsigned flags);
-extern int	udp_connect(struct sock *sk,
-                        struct sockaddr_in *usin, int addr_len);
-extern int	udp_rcv(struct sk_buff *skb, struct device *dev,
-                    struct options *opt, unsigned long daddr,
-                    unsigned short len, unsigned long saddr, int redo,
-                    struct inet_protocol *protocol);
-extern int	udp_ioctl(struct sock *sk, int cmd, unsigned long arg);
+extern int udp_recvfrom(struct sock *sk, unsigned char *to,
+                        int len, int noblock, unsigned flags,
+                        struct sockaddr_in *sin, int *addr_len);
+extern int udp_read(struct sock *sk, unsigned char *buff,
+                    int len, int noblock, unsigned flags);
+extern int udp_connect(struct sock *sk,
+                       struct sockaddr_in *usin, int addr_len);
+extern int udp_rcv(struct sk_buff *skb, struct device *dev,
+                   struct options *opt, unsigned long daddr,
+                   unsigned short len, unsigned long saddr, int redo,
+                   struct inet_protocol *protocol);
+extern int udp_ioctl(struct sock *sk, int cmd, unsigned long arg);
 
-
-#endif	/* _UDP_H */
+#endif /* _UDP_H */

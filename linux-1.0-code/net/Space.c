@@ -13,9 +13,7 @@
 #include "linux/kernel.h"
 #include "linux/ddi.h"
 
-
-#define CONFIG_UNIX		YES		/* always present...	*/
-
+#define CONFIG_UNIX YES /* always present...	*/
 
 /*
  * Section A:	Networking Protocol Handlers.
@@ -23,10 +21,10 @@
  *		linked into the SOCKET layer of the Linux kernel.
  *		Currently, these are AF_UNIX (always) and AF_INET.
  */
-#ifdef	CONFIG_UNIX
-#  include "unix/unix.h"
+#ifdef CONFIG_UNIX
+#include "unix/unix.h"
 #endif
-#  include "inet/inet.h"
+#include "inet/inet.h"
 #ifdef CONFIG_IPX
 #include "inet/ipxcall.h"
 #endif
@@ -35,20 +33,18 @@
 #endif
 
 struct ddi_proto protocols[] =
-{
-#ifdef	CONFIG_UNIX
-    { "UNIX",	unix_proto_init	},
+    {
+#ifdef CONFIG_UNIX
+        {"UNIX", unix_proto_init},
 #endif
-#ifdef  CONFIG_IPX
-    { "IPX",	ipx_proto_init },
+#ifdef CONFIG_IPX
+        {"IPX", ipx_proto_init},
 #endif
 #ifdef CONFIG_AX25
-    { "AX.25",	ax25_proto_init },
+        {"AX.25", ax25_proto_init},
 #endif
-    { "INET",	inet_proto_init	},
-    { NULL,	NULL		}
-};
-
+        {"INET", inet_proto_init},
+        {NULL, NULL}};
 
 /*
  * Section B:	Device Driver Modules.
@@ -63,41 +59,80 @@ struct ddi_proto protocols[] =
 /*#include "drv/dp8390/dp8390.h"	Donald Becker's DP8390 kit	*/
 /*#inclde "drv/slip/slip.h"		Laurence Culhane's SLIP kit	*/
 
-
 struct ddi_device devices[] =
-{
-#if CONF_WE8003
     {
-        "WD80x3[EBT]",
-        "",	0,	1,	we8003_init,	NULL,
-        19,	0,	DDI_FCHRDEV,
-        { 0x280,	0,	15,	0,	32768,	0xD0000		}
-    },
+#if CONF_WE8003
+        {"WD80x3[EBT]",
+         "",
+         0,
+         1,
+         we8003_init,
+         NULL,
+         19,
+         0,
+         DDI_FCHRDEV,
+         {0x280, 0, 15, 0, 32768, 0xD0000}},
 #endif
 #if CONF_DP8390
-    {
-        "DP8390/WD80x3",
-        "",	0,	1,	dpwd8003_init,	NULL,
-        20,	0,	DDI_FCHRDEV,
-        {	0,	0,	0,	0,	0,	0,		}
-    },
-    {
-        "DP8390/NE-x000",
-        "",	0,	1,	dpne2000_init,	NULL,
-        20,	8,	DDI_FCHRDEV,
-        {	0,	0,	0,	0,	0,	0,		}
-    },
-    {
-        "DP8390/3C50x",
-        "",	0,	1,	dpec503_init,	NULL,
-        20,	16,	DDI_FCHRDEV,
-        {	0,	0,	0,	0,	0,	0,		}
-    },
+        {"DP8390/WD80x3",
+         "",
+         0,
+         1,
+         dpwd8003_init,
+         NULL,
+         20,
+         0,
+         DDI_FCHRDEV,
+         {
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+         }},
+        {"DP8390/NE-x000",
+         "",
+         0,
+         1,
+         dpne2000_init,
+         NULL,
+         20,
+         8,
+         DDI_FCHRDEV,
+         {
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+         }},
+        {"DP8390/3C50x",
+         "",
+         0,
+         1,
+         dpec503_init,
+         NULL,
+         20,
+         16,
+         DDI_FCHRDEV,
+         {
+             0,
+             0,
+             0,
+             0,
+             0,
+             0,
+         }},
 #endif
-    {
-        NULL,
-        "",	0,	0,	NULL,		NULL,
-        0,	0,	0,
-        {	0,	0,	0,	0,	0,	0		}
-    }
-};
+        {NULL,
+         "",
+         0,
+         0,
+         NULL,
+         NULL,
+         0,
+         0,
+         0,
+         {0, 0, 0, 0, 0, 0}}};

@@ -13,7 +13,7 @@
 #include "linux/kernel.h"
 #include "linux/sched.h"
 
-asmlinkage void sys_sync(void);	/* it's really int */
+asmlinkage void sys_sync(void); /* it's really int */
 
 extern int vsprintf(char *buf, const char *fmt, va_list args);
 
@@ -30,5 +30,6 @@ NORET_TYPE void panic(const char *fmt, ...)
         printk(KERN_EMERG "In swapper task - not syncing\n");
     else
         sys_sync();
-    for(;;);
+    for (;;)
+        ;
 }

@@ -64,11 +64,11 @@ static int write_ldt(void *ptr, unsigned long bytecount)
 
     if (!current->ldt)
     {
-        for (i = 1 ; i < NR_TASKS ; i++)
+        for (i = 1; i < NR_TASKS; i++)
         {
             if (task[i] == current)
             {
-                if (!(current->ldt = (struct desc_struct *) vmalloc(LDT_ENTRIES * LDT_ENTRY_SIZE)))
+                if (!(current->ldt = (struct desc_struct *)vmalloc(LDT_ENTRIES * LDT_ENTRY_SIZE)))
                     return -ENOMEM;
                 set_ldt_desc(gdt + (i << 1) + FIRST_LDT_ENTRY, current->ldt, LDT_ENTRIES);
                 load_ldt(i);
@@ -76,7 +76,7 @@ static int write_ldt(void *ptr, unsigned long bytecount)
         }
     }
 
-    lp = (unsigned long *) &current->ldt[ldt_info.entry_number];
+    lp = (unsigned long *)&current->ldt[ldt_info.entry_number];
     /* Allow LDTs to be cleared by the user. */
     if (ldt_info.base_addr == 0 && ldt_info.limit == 0)
     {
