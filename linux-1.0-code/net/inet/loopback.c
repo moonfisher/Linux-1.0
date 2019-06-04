@@ -73,7 +73,7 @@ loopback_xmit(struct sk_buff *skb, struct device *dev)
 
     dev->tbusy = 0;
 
-#if 1
+#if ASM_NO_64
     __asm__("cmpl $0,_intr_count\n\t"
             "jne 1f\n\t"
             "movl _bh_active,%%eax\n\t"

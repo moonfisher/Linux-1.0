@@ -14,6 +14,7 @@
 #include "linux/errno.h"
 #include "linux/types.h"
 #include "linux/malloc.h"
+#include "linux/page.h"
 #include "asm/segment.h"
 
 struct vm_struct

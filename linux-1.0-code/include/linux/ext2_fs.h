@@ -325,7 +325,6 @@ struct ext2_dir_entry
 #define EXT2_DIR_REC_LEN(name_len)	(((name_len) + 8 + EXT2_DIR_ROUND) & \
 					 ~EXT2_DIR_ROUND)
 
-#ifdef __KERNEL__
 /*
  * Function prototypes
  */
@@ -447,7 +446,5 @@ extern struct inode_operations ext2_file_inode_operations;
 
 /* symlink.c */
 extern struct inode_operations ext2_symlink_inode_operations;
-
-#endif	/* __KERNEL__ */
 
 #endif	/* _LINUX_EXT2_FS_H */

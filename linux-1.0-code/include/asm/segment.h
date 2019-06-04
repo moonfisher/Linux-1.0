@@ -55,6 +55,7 @@ static inline void put_user_long(unsigned long val, int *addr)
 
 static inline void __generic_memcpy_tofs(void *to, const void *from, unsigned long n)
 {
+#if ASM_NO_64
     __asm__("cld\n\t"
             "push %%es\n\t"
             "push %%fs\n\t"
@@ -71,6 +72,7 @@ static inline void __generic_memcpy_tofs(void *to, const void *from, unsigned lo
             : /* no outputs */
             :"c" (n), "D" ((long) to), "S" ((long) from)
             :"cx", "di", "si");
+#endif
 }
 
 static inline void __constant_memcpy_tofs(void *to, const void *from, unsigned long n)
@@ -93,17 +95,22 @@ static inline void __constant_memcpy_tofs(void *to, const void *from, unsigned l
         put_user_long(*(const int *) from, (int *) to);
         return;
     }
-#define COMMON(x) \
-__asm__("cld\n\t" \
-	"push %%es\n\t" \
-	"push %%fs\n\t" \
-	"pop %%es\n\t" \
-	"rep ; movsl\n\t" \
-	x \
-	"pop %%es" \
-	: /* no outputs */ \
-	:"c" (n/4),"D" ((long) to),"S" ((long) from) \
-	:"cx","di","si")
+    
+#if ASM_NO_64
+    #define COMMON(x) \
+    __asm__("cld\n\t" \
+        "push %%es\n\t" \
+        "push %%fs\n\t" \
+        "pop %%es\n\t" \
+        "rep ; movsl\n\t" \
+        x \
+        "pop %%es" \
+        : /* no outputs */ \
+        :"c" (n/4),"D" ((long) to),"S" ((long) from) \
+        :"cx","di","si")
+#else
+    #define COMMON(x)
+#endif
 
     switch (n % 4)
     {
@@ -125,6 +132,7 @@ __asm__("cld\n\t" \
 
 static inline void __generic_memcpy_fromfs(void *to, const void *from, unsigned long n)
 {
+#if ASM_NO_64
     __asm__("cld\n\t"
             "testb $1,%%cl\n\t"
             "je 1f\n\t"
@@ -137,6 +145,7 @@ static inline void __generic_memcpy_fromfs(void *to, const void *from, unsigned 
             : /* no outputs */
             :"c" (n), "D" ((long) to), "S" ((long) from)
             :"cx", "di", "si", "memory");
+#endif
 }
 
 static inline void __constant_memcpy_fromfs(void *to, const void *from, unsigned long n)
@@ -159,13 +168,18 @@ static inline void __constant_memcpy_fromfs(void *to, const void *from, unsigned
         *(int *) to = get_user_long((const int *) from);
         return;
     }
-#define COMMON(x) \
-__asm__("cld\n\t" \
-	"rep ; fs ; movsl\n\t" \
-	x \
-	: /* no outputs */ \
-	:"c" (n/4),"D" ((long) to),"S" ((long) from) \
-	:"cx","di","si","memory")
+    
+#if ASM_NO_64
+    #define COMMON(x) \
+    __asm__("cld\n\t" \
+        "rep ; fs ; movsl\n\t" \
+        x \
+        : /* no outputs */ \
+        :"c" (n/4),"D" ((long) to),"S" ((long) from) \
+        :"cx","di","si","memory")
+#else
+    #define COMMON(x)
+#endif
 
     switch (n % 4)
     {

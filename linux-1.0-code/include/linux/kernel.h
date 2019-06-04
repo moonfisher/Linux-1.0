@@ -5,8 +5,6 @@
  * 'kernel.h' contains some often-used function prototypes etc
  */
 
-#ifdef __KERNEL__
-
 #include "linux/linkage.h"
 
 #define INT_MAX		((int)(~0U>>1))
@@ -58,8 +56,6 @@ __attribute__ ((format (printf, 1, 2)));
  * permissions checks first, and check suser() last.
  */
 #define suser() (current->euid == 0)
-
-#endif /* __KERNEL__ */
 
 #define SI_LOAD_SHIFT	16
 struct sysinfo

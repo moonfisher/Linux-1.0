@@ -112,7 +112,6 @@ struct timex
 #define TIME_OOP	3	/* leap second in progress */
 #define TIME_BAD	4	/* clock not synchronized */
 
-#ifdef __KERNEL__
 /*
  * kernel variables
  */
@@ -136,6 +135,5 @@ extern long time_adj;		/* tick adjust (scaled 1 / HZ) */
 extern long time_reftime;	/* time at last adjustment (s) */
 
 extern long time_adjust;	/* The amount of adjtime left */
-#endif /* KERNEL */
 
 #endif /* LINUX_TIMEX_H */

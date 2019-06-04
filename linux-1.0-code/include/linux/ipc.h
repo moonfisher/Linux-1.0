@@ -32,8 +32,6 @@ struct ipc_perm
 #define IPC_STAT 2     /* get ipc_perm options */
 #define IPC_INFO 3     /* see ipcs */
 
-#ifdef __KERNEL__
-
 /* special shmsegs[id], msgque[id] or semary[id]  values */
 #define IPC_UNUSED	((void *) -1)
 #define IPC_NOID	((void *) -2)		/* being allocated/destroyed */
@@ -58,8 +56,6 @@ struct ipc_kludge
 #define SHMDT 		22
 #define SHMGET 		23
 #define SHMCTL 		24
-
-#endif /* __KERNEL__ */
 
 #endif /* _LINUX_IPC_H */
 

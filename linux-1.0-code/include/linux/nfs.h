@@ -18,8 +18,6 @@
 #define NFSMODE_SOCK 0140000
 #define NFSMODE_FIFO 0010000
 
-#ifdef __KERNEL__ /* user programs should get these from the rpc header files */
-
 #define RPC_VERSION 2
 
 enum rpc_auth_flavor
@@ -64,8 +62,6 @@ enum rpc_auth_stat
     RPC_AUTH_REJECTEDVERF = 4,
     RPC_AUTH_TOOWEAK = 5
 };
-
-#endif /* __KERNEL__ */
 
 enum nfs_stat
 {

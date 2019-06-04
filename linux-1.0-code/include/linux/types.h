@@ -1,6 +1,12 @@
 #ifndef _LINUX_TYPES_H
 #define _LINUX_TYPES_H
 
+#if DEBUG
+    #define ASM_NO_64    0
+#else
+    #define ASM_NO_64    1
+#endif
+
 #ifndef _SIZE_T
 #define _SIZE_T
 typedef unsigned int size_t;

@@ -5,8 +5,6 @@
 #define PAGE_SHIFT			12
 #define PAGE_SIZE			((unsigned long)1<<PAGE_SHIFT)
 
-#ifdef __KERNEL__
-
 /* number of bits that fit into a memory pointer */
 #define BITS_PER_PTR			(8*sizeof(unsigned long))
 /* to mask away the intra-page address bits */
@@ -28,7 +26,5 @@
   ((unsigned long)(address)>>(PAGE_SHIFT-SIZEOF_PTR_LOG2)&PTR_MASK&~PAGE_MASK)
 /* the no. of pointers that fit on a page */
 #define PTRS_PER_PAGE			(PAGE_SIZE/sizeof(void*))
-
-#endif /* __KERNEL__ */
 
 #endif /* _LINUX_PAGE_H */

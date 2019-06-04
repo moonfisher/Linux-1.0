@@ -72,8 +72,6 @@ struct	shminfo
 #define	SHMLBA 0x1000				/* attach addr a multiple of this */
 #define SHMSEG SHMMNI				/* max shared segs per process */
 
-#ifdef __KERNEL__
-
 /* shm_mode upper byte flags */
 #define	SHM_DEST	01000	/* segment will be destroyed on last detach */
 #define SHM_LOCKED      02000   /* segment will not be swapped */
@@ -105,8 +103,6 @@ struct	shm_desc
     struct shm_desc *task_next;   /* next attach for task */
     struct shm_desc *seg_next;    /* next attach for segment */
 };
-
-#endif /* __KERNEL__ */
 
 #endif /* _LINUX_SHM_H_ */
 

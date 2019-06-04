@@ -44,11 +44,19 @@ extern inline int tas(char *m)
     return res;
 }
 
-#define save_flags(x) \
-__asm__ __volatile__("pushfl ; popl %0":"=r" (x): /* no input */ :"memory")
+#if ASM_NO_64
+    #define save_flags(x) \
+    __asm__ __volatile__("pushfl ; popl %0":"=r" (x): /* no input */ :"memory")
+#else
+    #define save_flags(x) (x)
+#endif
 
-#define restore_flags(x) \
-__asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"r" (x):"memory")
+#if ASM_NO_64
+    #define restore_flags(x) \
+    __asm__ __volatile__("pushl %0 ; popfl": /* no output */ :"r" (x):"memory")
+#else
+    #define restore_flags(x) (x)
+#endif
 
 #define iret() __asm__ __volatile__ ("iret": : :"memory")
 

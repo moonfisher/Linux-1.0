@@ -67,12 +67,8 @@ struct msginfo
 #define __MSGSEG ((MSGPOOL*1024)/ MSGSSZ) /* max no. of segments */
 #define MSGSEG (__MSGSEG <= 0xffff ? __MSGSEG : 0xffff)
 
-#ifdef __KERNEL__
-
 /* ipcs ctl commands */
 #define MSG_STAT 11
 #define MSG_INFO 12
-
-#endif /* __KERNEL__ */
 
 #endif /* _LINUX_MSG_H */

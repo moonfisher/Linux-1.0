@@ -93,15 +93,11 @@ extern unsigned long avenrun[];		/* Load averages */
 #define NULL ((void *) 0)
 #endif
 
-#ifdef __KERNEL__
-
 extern void sched_init(void);
 extern void show_state(void);
 extern void trap_init(void);
 
 asmlinkage void schedule(void);
-
-#endif /* __KERNEL__ */
 
 struct i387_hard_struct
 {
@@ -416,8 +412,10 @@ extern inline void add_wait_queue(struct wait_queue **p, struct wait_queue *wait
     if (wait->next)
     {
         unsigned long pc;
+#if ASM_NO_64
         __asm__ __volatile__("call 1f\n"
                              "1:\tpopl %0":"=r" (pc));
+#endif
         printk("add_wait_queue (%08x): wait->next = %08x\n", pc, (unsigned long) wait->next);
     }
 #endif
@@ -474,7 +472,9 @@ extern inline void remove_wait_queue(struct wait_queue **p, struct wait_queue *w
     {
         printk("removed wait_queue not on list.\n");
         printk("list = %08x, queue = %08x\n", (unsigned long) p, (unsigned long) wait);
+#if ASM_NO_64
         __asm__("call 1f\n1:\tpopl %0":"=r" (ok));
+#endif
         printk("eip = %08x\n", ok);
     }
 #endif

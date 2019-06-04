@@ -81,7 +81,6 @@ struct  seminfo
 #define SEMMAP  SEMMNS          /* # of entries in semaphore map */
 #define SEMUSZ  20		/* sizeof struct sem_undo */
 
-#ifdef __KERNEL__
 /* ipcs ctl cmds */
 #define SEM_STAT 18
 #define SEM_INFO 19
@@ -96,7 +95,5 @@ struct sem_undo
     short  semadj; 		/* semval adjusted by exit */
     ushort sem_num; 		/* semaphore index in array semid */
 };
-
-#endif /* __KERNEL__ */
 
 #endif /* _LINUX_SEM_H */

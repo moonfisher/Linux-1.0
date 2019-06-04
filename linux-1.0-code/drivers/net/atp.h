@@ -4,9 +4,7 @@
 
 struct net_local
 {
-#ifdef __KERNEL__
     struct enet_statistics stats;
-#endif
     ushort saved_tx_size;
     unsigned char
     re_tx,			/* Number of packet retransmissions. */

@@ -93,6 +93,7 @@ extern unsigned long secondary_page_list;
 extern unsigned long __get_free_page(int priority);
 extern inline unsigned long get_free_page(int priority)
 {
+#if ASM_NO_64
     unsigned long page;
 
     page = __get_free_page(priority);
@@ -102,6 +103,9 @@ extern inline unsigned long get_free_page(int priority)
                              :"a" (0), "c" (1024), "D" (page)
                              :"di", "cx");
     return page;
+#else
+    return 0;
+#endif
 }
 
 /* memory.c */
@@ -159,8 +163,12 @@ extern int do_munmap(unsigned long, size_t);
 #define write_swap_page(nr,buf) \
 	rw_swap_page(WRITE,(nr),(buf))
 
-#define invalidate() \
-__asm__ __volatile__("movl %%cr3,%%eax\n\tmovl %%eax,%%cr3": : :"ax")
+#if ASM_NO_64
+    #define invalidate() \
+    __asm__ __volatile__("movl %%cr3,%%eax\n\tmovl %%eax,%%cr3": : :"ax")
+#else
+    #define invalidate()
+#endif
 
 extern unsigned long high_memory;
 

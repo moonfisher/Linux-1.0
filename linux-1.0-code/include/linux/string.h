@@ -21,6 +21,7 @@
 
 extern inline char *strcpy(char *dest, const char *src)
 {
+#if ASM_NO_64
     __asm__("cld\n"
             "1:\tlodsb\n\t"
             "stosb\n\t"
@@ -29,10 +30,14 @@ extern inline char *strcpy(char *dest, const char *src)
             : /* no output */
             :"S" (src), "D" (dest):"si", "di", "ax", "memory");
     return dest;
+#else
+    return NULL;
+#endif
 }
 
 extern inline char *strncpy(char *dest, const char *src, size_t count)
 {
+#if ASM_NO_64
     __asm__("cld\n"
             "1:\tdecl %2\n\t"
             "js 2f\n\t"
@@ -46,10 +51,14 @@ extern inline char *strncpy(char *dest, const char *src, size_t count)
             : /* no output */
             :"S" (src), "D" (dest), "c" (count):"si", "di", "ax", "cx", "memory");
     return dest;
+#else
+    return NULL;
+#endif
 }
 
 extern inline char *strcat(char *dest, const char *src)
 {
+#if ASM_NO_64
     __asm__("cld\n\t"
             "repne\n\t"
             "scasb\n\t"
@@ -61,10 +70,14 @@ extern inline char *strcat(char *dest, const char *src)
             : /* no output */
             :"S" (src), "D" (dest), "a" (0), "c" (0xffffffff):"si", "di", "ax", "cx");
     return dest;
+#else
+    return NULL;
+#endif
 }
 
 extern inline char *strncat(char *dest, const char *src, size_t count)
 {
+#if ASM_NO_64
     __asm__("cld\n\t"
             "repne\n\t"
             "scasb\n\t"
@@ -82,10 +95,14 @@ extern inline char *strncat(char *dest, const char *src, size_t count)
             :"S" (src), "D" (dest), "a" (0), "c" (0xffffffff), "g" (count)
             :"si", "di", "ax", "cx", "memory");
     return dest;
+#else
+    return NULL;
+#endif
 }
 
 extern inline int strcmp(const char *cs, const char *ct)
 {
+#if ASM_NO_64
     register int __res __asm__("ax");
     __asm__("cld\n"
             "1:\tlodsb\n\t"
@@ -101,10 +118,14 @@ extern inline int strcmp(const char *cs, const char *ct)
             "3:"
             :"=a" (__res):"D" (cs), "S" (ct):"si", "di");
     return __res;
+#else
+    return 0;
+#endif
 }
 
 extern inline int strncmp(const char *cs, const char *ct, size_t count)
 {
+#if ASM_NO_64
     register int __res __asm__("ax");
     __asm__("cld\n"
             "1:\tdecl %3\n\t"
@@ -122,10 +143,14 @@ extern inline int strncmp(const char *cs, const char *ct, size_t count)
             "4:"
             :"=a" (__res):"D" (cs), "S" (ct), "c" (count):"si", "di", "cx");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline char *strchr(const char *s, char c)
 {
+#if ASM_NO_64
     register char *__res __asm__("ax");
     __asm__("cld\n\t"
             "movb %%al,%%ah\n"
@@ -139,10 +164,14 @@ extern inline char *strchr(const char *s, char c)
             "decl %0"
             :"=a" (__res):"S" (s), "0" (c):"si");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline char *strrchr(const char *s, char c)
 {
+#if ASM_NO_64
     register char *__res __asm__("dx");
     __asm__("cld\n\t"
             "movb %%al,%%ah\n"
@@ -155,10 +184,14 @@ extern inline char *strrchr(const char *s, char c)
             "jne 1b"
             :"=d" (__res):"0" (0), "S" (s), "a" (c):"ax", "si");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline size_t strspn(const char *cs, const char *ct)
 {
+#if ASM_NO_64
     register char *__res __asm__("si");
     __asm__("cld\n\t"
             "movl %4,%%edi\n\t"
@@ -179,10 +212,14 @@ extern inline size_t strspn(const char *cs, const char *ct)
             :"=S" (__res):"a" (0), "c" (0xffffffff), "0" (cs), "g" (ct)
             :"ax", "cx", "dx", "di");
     return __res - cs;
+#else
+    return 0;
+#endif
 }
 
 extern inline size_t strcspn(const char *cs, const char *ct)
 {
+#if ASM_NO_64
     register char *__res __asm__("si");
     __asm__("cld\n\t"
             "movl %4,%%edi\n\t"
@@ -203,10 +240,14 @@ extern inline size_t strcspn(const char *cs, const char *ct)
             :"=S" (__res):"a" (0), "c" (0xffffffff), "0" (cs), "g" (ct)
             :"ax", "cx", "dx", "di");
     return __res - cs;
+#else
+    return 0;
+#endif
 }
 
 extern inline char *strpbrk(const char *cs, const char *ct)
 {
+#if ASM_NO_64
     register char *__res __asm__("si");
     __asm__("cld\n\t"
             "movl %4,%%edi\n\t"
@@ -230,10 +271,14 @@ extern inline char *strpbrk(const char *cs, const char *ct)
             :"=S" (__res):"a" (0), "c" (0xffffffff), "0" (cs), "g" (ct)
             :"ax", "cx", "dx", "di");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline char *strstr(const char *cs, const char *ct)
 {
+#if ASM_NO_64
     register char *__res __asm__("ax");
     __asm__("cld\n\t" \
             "movl %4,%%edi\n\t"
@@ -257,10 +302,14 @@ extern inline char *strstr(const char *cs, const char *ct)
             :"=a" (__res):"0" (0), "c" (0xffffffff), "S" (cs), "g" (ct)
             :"cx", "dx", "di", "si");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline size_t strlen(const char *s)
 {
+#if ASM_NO_64
     register int __res __asm__("cx");
     __asm__("cld\n\t"
             "repne\n\t"
@@ -269,12 +318,16 @@ extern inline size_t strlen(const char *s)
             "decl %0"
             :"=c" (__res):"D" (s), "a" (0), "0" (0xffffffff):"di");
     return __res;
+#else
+    return 0;
+#endif
 }
 
 extern char *___strtok;
 
 extern inline char *strtok(char *s, const char *ct)
 {
+#if ASM_NO_64
     register char *__res;
     __asm__("testl %1,%1\n\t"
             "jne 1f\n\t"
@@ -330,10 +383,14 @@ extern inline char *strtok(char *s, const char *ct)
             :"0" (___strtok), "1" (s), "g" (ct)
             :"ax", "cx", "dx", "di", "memory");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline void *memcpy(void *to, const void *from, size_t n)
 {
+#if ASM_NO_64
     __asm__("cld\n\t"
             "movl %%edx, %%ecx\n\t"
             "shrl $2,%%ecx\n\t"
@@ -349,10 +406,14 @@ extern inline void *memcpy(void *to, const void *from, size_t n)
             :"d" (n), "D" ((long) to), "S" ((long) from)
             : "cx", "di", "si", "memory");
     return (to);
+#else
+    return NULL;
+#endif
 }
 
 extern inline void *memmove(void *dest, const void *src, size_t n)
 {
+#if ASM_NO_64
     if (dest < src)
         __asm__("cld\n\t"
                 "rep\n\t"
@@ -371,10 +432,14 @@ extern inline void *memmove(void *dest, const void *src, size_t n)
                 "D" (n-1+(char *)dest)
                 :"cx", "si", "di", "memory");
     return dest;
+#else
+    return NULL;
+#endif
 }
 
 extern inline int memcmp(const void *cs, const void *ct, size_t count)
 {
+#if ASM_NO_64
     register int __res __asm__("ax");
     __asm__("cld\n\t"
             "repe\n\t"
@@ -387,10 +452,14 @@ extern inline int memcmp(const void *cs, const void *ct, size_t count)
             :"=a" (__res):"0" (0), "D" (cs), "S" (ct), "c" (count)
             :"si", "di", "cx");
     return __res;
+#else
+    return 0;
+#endif
 }
 
 extern inline void *memchr(const void *cs, char c, size_t count)
 {
+#if ASM_NO_64
     register void *__res __asm__("di");
     if (!count)
         return NULL;
@@ -403,10 +472,14 @@ extern inline void *memchr(const void *cs, char c, size_t count)
             :"=D" (__res):"a" (c), "D" (cs), "c" (count)
             :"cx");
     return __res;
+#else
+    return NULL;
+#endif
 }
 
 extern inline void *memset(void *s, char c, size_t count)
 {
+#if ASM_NO_64
     __asm__("cld\n\t"
             "rep\n\t"
             "stosb"
@@ -414,6 +487,9 @@ extern inline void *memset(void *s, char c, size_t count)
             :"a" (c), "D" (s), "c" (count)
             :"cx", "di", "memory");
     return s;
+#else
+    return NULL;
+#endif
 }
 
 #endif

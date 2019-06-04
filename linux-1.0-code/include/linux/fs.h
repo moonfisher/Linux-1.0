@@ -322,8 +322,6 @@ struct file_system_type
     int requires_dev;
 };
 
-#ifdef __KERNEL__
-
 asmlinkage int sys_open(const char *, int, int);
 asmlinkage int sys_close(unsigned int);		/* yes, it's really unsigned */
 
@@ -419,7 +417,5 @@ extern int generic_mmap(struct inode *, struct file *, unsigned long, size_t, in
 
 extern int block_fsync(struct inode *, struct file *);
 extern int file_fsync(struct inode *, struct file *);
-
-#endif /* __KERNEL__ */
 
 #endif
