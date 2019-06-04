@@ -15,8 +15,6 @@
 void ipc_init (void);
 asmlinkage int sys_ipc (uint call, int first, int second, int third, void *ptr);
 
-#ifdef CONFIG_SYSVIPC
-
 int ipcperms (struct ipc_perm *ipcp, short flag);
 extern void sem_init (void), msg_init (void), shm_init (void);
 extern int sys_semget (key_t key, int nsems, int semflg);
@@ -120,37 +118,3 @@ asmlinkage int sys_ipc (uint call, int first, int second, int third, void *ptr)
         }
     return -EINVAL;
 }
-
-#else /* not CONFIG_SYSVIPC */
-
-asmlinkage int sys_ipc (uint call, int first, int second, int third, void *ptr)
-{
-    return -ENOSYS;
-}
-
-int shm_fork (struct task_struct *p1, struct task_struct *p2)
-{
-    return 0;
-}
-
-void sem_exit (void)
-{
-    return;
-}
-
-void shm_exit (void)
-{
-    return;
-}
-
-int shm_swap (int prio)
-{
-    return 0;
-}
-
-void shm_no_page (unsigned long *ptent)
-{
-    return;
-}
-
-#endif /* CONFIG_SYSVIPC */

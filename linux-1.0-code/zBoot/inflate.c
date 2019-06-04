@@ -16,8 +16,8 @@ static char rcsid[] = "$Id: inflate.c,v 0.10 1993/02/04 13:21:06 jloup Exp $";
 #define slide window
 
 #if defined(STDC_HEADERS) || defined(HAVE_STDLIB_H)
-#  include <sys/types.h"
-#  include <stdlib.h"
+#  include "sys/types.h"
+#  include "stdlib.h"
 #endif
 
 struct huft

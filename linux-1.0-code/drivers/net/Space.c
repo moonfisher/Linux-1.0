@@ -70,9 +70,7 @@ ethif_probe(struct device *dev)
 #if defined(CONFIG_ULTRA)
             && ultra_probe(dev)
 #endif
-#if defined(CONFIG_WD80x3) || defined(WD80x3)
             && wd_probe(dev)
-#endif
 #if defined(CONFIG_EL2) || defined(EL2)	/* 3c503 */
             && el2_probe(dev)
 #endif

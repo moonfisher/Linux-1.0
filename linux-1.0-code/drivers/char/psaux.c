@@ -105,7 +105,6 @@ static int aux_busy = 0;
 static int aux_present = 0;
 static int poll_aux_status(void);
 
-#ifdef CONFIG_82C710_MOUSE
 static int qp_present = 0;
 static int qp_busy = 0;
 static int qp_data = QP_DATA;
@@ -113,7 +112,6 @@ static int qp_status = QP_STATUS;
 
 static int poll_qp_status(void);
 static int probe_qp(void);
-#endif
 
 
 /*
@@ -214,8 +212,6 @@ static void aux_interrupt(int cpl)
  * Interrupt handler for the 82C710 mouse port. A character
  * is waiting in the 82C710.
  */
-
-#ifdef CONFIG_82C710_MOUSE
 static void qp_interrupt(int cpl)
 {
     int head = queue->head;
@@ -231,8 +227,6 @@ static void qp_interrupt(int cpl)
     aux_ready = 1;
     wake_up_interruptible(&queue->proc_list);
 }
-#endif
-
 
 static void release_aux(struct inode *inode, struct file *file)
 {
@@ -245,7 +239,6 @@ static void release_aux(struct inode *inode, struct file *file)
     aux_busy = 0;
 }
 
-#ifdef CONFIG_82C710_MOUSE
 static void release_qp(struct inode *inode, struct file *file)
 {
     unsigned char status;
@@ -259,7 +252,6 @@ static void release_qp(struct inode *inode, struct file *file)
     free_irq(QP_IRQ);
     qp_busy = 0;
 }
-#endif
 
 /*
  * Install interrupt handler.
@@ -290,7 +282,6 @@ static int open_aux(struct inode *inode, struct file *file)
     return 0;
 }
 
-#ifdef CONFIG_82C710_MOUSE
 /*
  * Install interrupt handler.
  * Enable the device, enable interrupts. Set qp_busy
@@ -332,7 +323,6 @@ static int open_qp(struct inode *inode, struct file *file)
 
     return 0;
 }
-#endif
 
 /*
  * Write to the aux device.
@@ -355,8 +345,6 @@ static int write_aux(struct inode *inode, struct file *file, char *buffer, int c
     return count;
 }
 
-
-#ifdef CONFIG_82C710_MOUSE
 /*
  * Write to the 82C710 mouse device.
  */
@@ -374,8 +362,6 @@ static int write_qp(struct inode *inode, struct file *file, char *buffer, int co
     inode->i_mtime = CURRENT_TIME;
     return count;
 }
-#endif
-
 
 /*
  * Put bytes from input queue to buffer.
@@ -454,7 +440,6 @@ unsigned long psaux_init(unsigned long kmem_start)
 {
     int qp_found = 0;
 
-#ifdef CONFIG_82C710_MOUSE
     if ((qp_found = probe_qp()))
     {
         printk("82C710 type pointing device detected -- driver installed.\n");
@@ -466,7 +451,6 @@ unsigned long psaux_init(unsigned long kmem_start)
         poll_qp_status();
     }
     else
-#endif
         if (aux_device_present == 0xaa)
         {
             printk("PS/2 auxiliary pointing device detected -- driver installed.\n");
@@ -516,7 +500,6 @@ static int poll_aux_status(void)
     return !(retries == MAX_RETRIES);
 }
 
-#ifdef CONFIG_82C710_MOUSE
 /*
  * Wait for device to send output char and flush any input char.
  */
@@ -569,4 +552,3 @@ static int probe_qp(void)
     outb_p(0x0f, 0x391);			/* Close config mode */
     return 1;
 }
-#endif

@@ -37,15 +37,12 @@ static int proc_lookupnet(struct inode *, const char *, int, struct inode **);
 /* the get_*_info() functions are in the net code, and are configured
    in via the standard mechanism... */
 extern int unix_get_info(char *);
-#ifdef CONFIG_INET
 extern int tcp_get_info(char *);
 extern int udp_get_info(char *);
 extern int raw_get_info(char *);
 extern int arp_get_info(char *);
 extern int dev_get_info(char *);
 extern int rt_get_info(char *);
-#endif /* CONFIG_INET */
-
 
 static struct file_operations proc_net_operations =
 {
@@ -87,15 +84,13 @@ static struct proc_dir_entry net_dir[] =
 {
     { 1, 2, ".." },
     { 8, 1, "." },
-    { 128, 4, "unix" }
-#ifdef CONFIG_INET
-    , { 129, 3, "arp" },
+    { 128, 4, "unix" },
+    { 129, 3, "arp" },
     { 130, 5, "route" },
     { 131, 3, "dev" },
     { 132, 3, "raw" },
     { 133, 3, "tcp" },
     { 134, 3, "udp" }
-#endif	/* CONFIG_INET */
 };
 
 #define NR_NET_DIRENTRY ((sizeof (net_dir))/(sizeof (net_dir[0])))
@@ -176,7 +171,6 @@ static int proc_readnet(struct inode *inode, struct file *file,
     ino = inode->i_ino;
     switch (ino)
     {
-#ifdef CONFIG_INET
     case 128:
         length = unix_get_info(page);
         break;
@@ -198,7 +192,6 @@ static int proc_readnet(struct inode *inode, struct file *file,
     case 134:
         length = udp_get_info(page);
         break;
-#endif /* CONFIG_INET */
     default:
         free_page((unsigned long) page);
         return -EBADF;

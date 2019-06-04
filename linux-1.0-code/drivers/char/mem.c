@@ -416,11 +416,7 @@ long chr_dev_init(long mem_start, long mem_end)
 #ifdef CONFIG_PRINTER
     mem_start = lp_init(mem_start);
 #endif
-#if defined (CONFIG_BUSMOUSE) || defined (CONFIG_82C710_MOUSE) || \
-    defined (CONFIG_PSMOUSE) || defined (CONFIG_MS_BUSMOUSE) || \
-    defined (CONFIG_ATIXL_BUSMOUSE)
     mem_start = mouse_init(mem_start);
-#endif
 #ifdef CONFIG_SOUND
     mem_start = soundcard_init(mem_start);
 #endif

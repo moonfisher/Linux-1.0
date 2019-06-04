@@ -786,28 +786,20 @@ extern int load_aout_binary(struct linux_binprm *,
                             struct pt_regs *regs);
 extern int load_aout_library(int fd);
 
-#ifdef CONFIG_BINFMT_ELF
 extern int load_elf_binary(struct linux_binprm *,
                            struct pt_regs *regs);
 extern int load_elf_library(int fd);
-#endif
 
-#ifdef CONFIG_BINFMT_COFF
 extern int load_coff_binary(struct linux_binprm *,
                             struct pt_regs *regs);
 extern int load_coff_library(int fd);
-#endif
 
 /* Here are the actual binaries that will be accepted  */
 struct linux_binfmt formats[] =
 {
     {load_aout_binary, load_aout_library},
-#ifdef CONFIG_BINFMT_ELF
     {load_elf_binary, load_elf_library},
-#endif
-#ifdef CONFIG_BINFMT_COFF
     {load_coff_binary, load_coff_library},
-#endif
     {NULL, NULL}
 };
 

@@ -1058,11 +1058,9 @@ net_fioctl(struct inode *inode, struct file *file,
     case 0:		/* NET (SOCKET) */
         DPRINTF((net_debug, "NET: SOCKET level I/O control request.\n"));
         return(net_ioctl(cmd, arg));
-#ifdef CONFIG_INET
     case 1:		/* ARP */
         DPRINTF((net_debug, "NET: ARP level I/O control request.\n"));
         return(arp_ioctl(cmd, (void *) arg));
-#endif
     default:
         return(-ENODEV);
     }

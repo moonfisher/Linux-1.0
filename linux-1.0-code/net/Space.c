@@ -26,9 +26,7 @@
 #ifdef	CONFIG_UNIX
 #  include "unix/unix.h"
 #endif
-#ifdef	CONFIG_INET
 #  include "inet/inet.h"
-#endif
 #ifdef CONFIG_IPX
 #include "inet/ipxcall.h"
 #endif
@@ -47,9 +45,7 @@ struct ddi_proto protocols[] =
 #ifdef CONFIG_AX25
     { "AX.25",	ax25_proto_init },
 #endif
-#ifdef	CONFIG_INET
     { "INET",	inet_proto_init	},
-#endif
     { NULL,	NULL		}
 };
 

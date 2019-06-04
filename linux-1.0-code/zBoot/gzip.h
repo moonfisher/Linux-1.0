@@ -18,10 +18,10 @@ typedef char *voidp;
 
 /* I don't like nested includes, but the string functions are used too often */
 #if defined(HAVE_STRING_H) || defined(STDC_HEADERS)
-#  include <string.h"
+#  include "string.h"
 #  define memzero(s, n)     memset ((s), 0, (n))
 #else
-#  include <strings.h"
+#  include "strings.h"
 #  define strchr            index
 #  define strrchr           rindex
 #  define memcpy(d, s, n)   bcopy((s), (d), (n))
@@ -30,7 +30,7 @@ typedef char *voidp;
 #endif
 
 #if !defined(STDC_HEADERS) && defined(HAVE_MEMORY_H)
-#  include <memory.h"
+#  include "memory.h"
 #endif
 
 #ifndef RETSIGTYPE

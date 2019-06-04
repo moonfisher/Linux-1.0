@@ -95,9 +95,8 @@ extern void sound_setup(char *str, int *ints);
 extern void sbpcd_setup(char *str, int *ints);
 #endif CONFIG_SBPCD
 
-#ifdef CONFIG_SYSVIPC
 extern void ipc_init(void);
-#endif
+
 #ifdef CONFIG_SCSI
 extern unsigned long scsi_dev_init(unsigned long, unsigned long);
 #endif
@@ -176,12 +175,8 @@ struct
 } bootsetups[] =
 {
     { "reserve=", reserve_setup },
-#ifdef CONFIG_INET
     { "ether=", eth_setup },
-#endif
-#ifdef CONFIG_BLK_DEV_HD
     { "hd=", hd_setup },
-#endif
 #ifdef CONFIG_BUSMOUSE
     { "bmouse=", bmouse_setup },
 #endif
@@ -421,9 +416,7 @@ asmlinkage void start_kernel(void)
     memory_start = blk_dev_init(memory_start, memory_end);
     sti();
     calibrate_delay();
-#ifdef CONFIG_INET
     memory_start = net_dev_init(memory_start, memory_end);
-#endif
 #ifdef CONFIG_SCSI
     memory_start = scsi_dev_init(memory_start, memory_end);
 #endif
@@ -434,9 +427,7 @@ asmlinkage void start_kernel(void)
     time_init();
     floppy_init();
     sock_init();
-#ifdef CONFIG_SYSVIPC
     ipc_init();
-#endif
     sti();
 
     /*
