@@ -34,7 +34,7 @@
 #define ETH_P_PUP	0x0400		/* Xerox PUP packet		*/
 #define ETH_P_IP	0x0800		/* Internet Protocol packet	*/
 #define ETH_P_ARP	0x0806		/* Address Resolution packet	*/
-#define ETH_P_RARP      0x8035		/* Reverse Addr Res packet	*/
+#define ETH_P_RARP  0x8035		/* Reverse Addr Res packet	*/
 #define ETH_P_X25	0x0805		/* CCITT X.25			*/
 #define ETH_P_IPX	0x8137		/* IPX over DIX			*/
 #define ETH_P_802_3	0x0001		/* Dummy type for 802.3 frames  */
@@ -46,7 +46,7 @@ struct ethhdr
 {
     unsigned char		h_dest[ETH_ALEN];	/* destination eth addr	*/
     unsigned char		h_source[ETH_ALEN];	/* source ether addr	*/
-    unsigned short	h_proto;		/* packet type ID field	*/
+    unsigned short	    h_proto;		    /* packet type ID field	*/
 };
 
 /* Ethernet statistics collection data. */

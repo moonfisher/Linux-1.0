@@ -13,17 +13,13 @@
 #include "linux/kernel.h"
 #include "linux/ddi.h"
 
-#define CONFIG_UNIX YES /* always present...	*/
-
 /*
  * Section A:	Networking Protocol Handlers.
  *		This section defines which networking protocols get
  *		linked into the SOCKET layer of the Linux kernel.
  *		Currently, these are AF_UNIX (always) and AF_INET.
  */
-#ifdef CONFIG_UNIX
 #include "unix/unix.h"
-#endif
 #include "inet/inet.h"
 #ifdef CONFIG_IPX
 #include "inet/ipxcall.h"
@@ -33,18 +29,17 @@
 #endif
 
 struct ddi_proto protocols[] =
-    {
-#ifdef CONFIG_UNIX
-        {"UNIX", unix_proto_init},
-#endif
+{
+    {"UNIX", unix_proto_init},
 #ifdef CONFIG_IPX
-        {"IPX", ipx_proto_init},
+    {"IPX", ipx_proto_init},
 #endif
 #ifdef CONFIG_AX25
-        {"AX.25", ax25_proto_init},
+    {"AX.25", ax25_proto_init},
 #endif
-        {"INET", inet_proto_init},
-        {NULL, NULL}};
+    {"INET", inet_proto_init},
+    {NULL, NULL}
+};
 
 /*
  * Section B:	Device Driver Modules.

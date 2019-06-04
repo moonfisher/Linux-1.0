@@ -168,12 +168,9 @@ static inline void init_bucket_desc(unsigned long page)
  * verification.. LBT
  */
 #ifdef CONFIG_DEBUG_MALLOC
-void *
-deb_kmalloc(const char *deb_file, unsigned short deb_line,
-            unsigned int len, int priority)
+void *deb_kmalloc(const char *deb_file, unsigned short deb_line, unsigned int len, int priority)
 #else
-void *
-kmalloc(unsigned int len, int priority)
+void *kmalloc(unsigned int len, int priority)
 #endif
 {
     int i;

@@ -53,8 +53,7 @@ char *in_ntoa(unsigned long in)
 }
 
 /* Convert an ASCII string to binary IP. */
-unsigned long
-in_aton(char *str)
+unsigned long in_aton(char *str)
 {
     unsigned long l;
     unsigned int val;

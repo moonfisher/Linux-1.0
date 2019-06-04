@@ -319,11 +319,12 @@ static void math_error_irq(int cpl)
 static void no_action(int cpl) {}
 
 static struct sigaction ignore_IRQ =
-    {
-        no_action,
-        0,
-        SA_INTERRUPT,
-        NULL};
+{
+    no_action,
+    0,
+    SA_INTERRUPT,
+    NULL
+};
 
 void init_IRQ(void)
 {
@@ -331,8 +332,10 @@ void init_IRQ(void)
 
     for (i = 0; i < 16; i++)
         set_intr_gate(0x20 + i, bad_interrupt[i]);
+    
     if (irqaction(2, &ignore_IRQ))
         printk("Unable to get IRQ2 for cascade\n");
+    
     if (request_irq(13, math_error_irq))
         printk("Unable to get IRQ13 for math-error handler\n");
 

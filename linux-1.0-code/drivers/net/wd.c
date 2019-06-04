@@ -283,8 +283,7 @@ int wdprobe1(int ioaddr, struct device *dev)
     return dev->base_addr;
 }
 
-static int
-wd_open(struct device *dev)
+static int wd_open(struct device *dev)
 {
     int ioaddr = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
 
@@ -300,8 +299,7 @@ wd_open(struct device *dev)
     return ei_open(dev);
 }
 
-static void
-wd_reset_8390(struct device *dev)
+static void wd_reset_8390(struct device *dev)
 {
     int wd_cmd_port = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
 
@@ -325,8 +323,7 @@ wd_reset_8390(struct device *dev)
    The only complications are that the ring buffer wraps, and need to map
    switch between 8- and 16-bit modes. */
 
-static int
-wd_block_input(struct device *dev, int count, char *buf, int ring_offset)
+static int wd_block_input(struct device *dev, int count, char *buf, int ring_offset)
 {
     int wd_cmdreg = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
     long xfer_start = dev->mem_start + ring_offset - (WD_START_PG << 8);
@@ -359,9 +356,7 @@ wd_block_input(struct device *dev, int count, char *buf, int ring_offset)
     return 0;
 }
 
-static void
-wd_block_output(struct device *dev, int count, const unsigned char *buf,
-                int start_page)
+static void wd_block_output(struct device *dev, int count, const unsigned char *buf, int start_page)
 {
     int wd_cmdreg = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
     long shmem = dev->mem_start + ((start_page - WD_START_PG) << 8);
@@ -377,8 +372,7 @@ wd_block_output(struct device *dev, int count, const unsigned char *buf,
         memcpy((char *)shmem, buf, count);
 }
 
-static int
-wd_close_card(struct device *dev)
+static int wd_close_card(struct device *dev)
 {
     int wd_cmdreg = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
 

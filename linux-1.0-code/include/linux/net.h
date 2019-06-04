@@ -69,11 +69,11 @@ typedef enum
  */
 struct socket
 {
-    short			type;		/* SOCK_STREAM, ...		*/
-    socket_state		state;
-    long			flags;
+    short			    type;		/* SOCK_STREAM, ...		*/
+    socket_state        state;
+    long			    flags;
     struct proto_ops	*ops;		/* protocols do most everything	*/
-    void			*data;		/* protocol data		*/
+    void			    *data;		/* protocol data		*/
     struct socket		*conn;		/* server socket connected to	*/
     struct socket		*iconn;		/* incomplete client conn.s	*/
     struct socket		*next;

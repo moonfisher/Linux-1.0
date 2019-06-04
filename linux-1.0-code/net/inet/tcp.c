@@ -142,8 +142,7 @@ static inline void print_th(struct tcphdr *th)
 }
 
 /* This routine grabs the first thing off of a rcv queue. */
-static struct sk_buff *
-get_firstr(struct sock *sk)
+static struct sk_buff *get_firstr(struct sock *sk)
 {
     return skb_dequeue(&sk->rqueue);
 }
@@ -151,9 +150,7 @@ get_firstr(struct sock *sk)
 /*
  *	Difference between two values in tcp ack terms.
  */
-
-static long
-diff(unsigned long seq1, unsigned long seq2)
+static long diff(unsigned long seq1, unsigned long seq2)
 {
     long d;
 
@@ -537,9 +534,7 @@ int tcp_ioctl(struct sock *sk, int cmd, unsigned long arg)
 }
 
 /* This routine computes a TCP checksum. */
-unsigned short
-tcp_check(struct tcphdr *th, int len,
-          unsigned long saddr, unsigned long daddr)
+unsigned short tcp_check(struct tcphdr *th, int len, unsigned long saddr, unsigned long daddr)
 {
     unsigned long sum;
 
@@ -602,8 +597,7 @@ tcp_check(struct tcphdr *th, int len,
     return ((~sum) & 0xffff);
 }
 
-void tcp_send_check(struct tcphdr *th, unsigned long saddr,
-                    unsigned long daddr, int len, struct sock *sk)
+void tcp_send_check(struct tcphdr *th, unsigned long saddr, unsigned long daddr, int len, struct sock *sk)
 {
     th->check = 0;
     th->check = tcp_check(th, len, saddr, daddr);
@@ -3069,9 +3063,7 @@ static inline int tcp_urg(struct sock *sk, struct tcphdr *th,
 }
 
 /* This deals with incoming fins. 'Linus at 9 O'clock' 8-) */
-static int
-tcp_fin(struct sock *sk, struct tcphdr *th,
-        unsigned long saddr, struct device *dev)
+static int tcp_fin(struct sock *sk, struct tcphdr *th, unsigned long saddr, struct device *dev)
 {
     DPRINTF((DBG_TCP, "tcp_fin(sk=%X, th=%X, saddr=%X, dev=%X)\n",
              sk, th, saddr, dev));
@@ -3117,14 +3109,12 @@ tcp_fin(struct sock *sk, struct tcphdr *th,
 }
 
 /* This will accept the next outstanding connection. */
-static struct sock *
-tcp_accept(struct sock *sk, int flags)
+static struct sock *tcp_accept(struct sock *sk, int flags)
 {
     struct sock *newsk;
     struct sk_buff *skb;
 
-    DPRINTF((DBG_TCP, "tcp_accept(sk=%X, flags=%X, addr=%s)\n",
-             sk, flags, in_ntoa(sk->saddr)));
+    DPRINTF((DBG_TCP, "tcp_accept(sk=%X, flags=%X, addr=%s)\n", sk, flags, in_ntoa(sk->saddr)));
 
     /*
      * We need to make sure that this socket is listening,
@@ -3171,8 +3161,7 @@ tcp_accept(struct sock *sk, int flags)
 }
 
 /* This will initiate an outgoing connection. */
-static int
-tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
+static int tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
 {
     struct sk_buff *buff;
     struct sockaddr_in sin;
@@ -3184,6 +3173,7 @@ tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
 
     if (sk->state != TCP_CLOSE)
         return (-EISCONN);
+    
     if (addr_len < 8)
         return (-EINVAL);
 
@@ -3218,7 +3208,8 @@ tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
     sk->dummy_th.dest = sin.sin_port;
     release_sock(sk);
 
-    buff = sk->prot->wmalloc(sk, MAX_SYN_SIZE, 0, GFP_KERNEL);
+//    buff = sk->prot->wmalloc(sk, MAX_SYN_SIZE, 0, GFP_KERNEL);
+    buff = sock_wmalloc(sk, MAX_SYN_SIZE, 0, GFP_KERNEL);
     if (buff == NULL)
     {
         return (-ENOMEM);
@@ -3233,8 +3224,9 @@ tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
 
     /* Put in the IP header and routing stuff. */
     /* We need to build the routing stuff fromt the things saved in skb. */
-    tmp = sk->prot->build_header(buff, sk->saddr, sk->daddr, &dev,
-                                 IPPROTO_TCP, NULL, MAX_SYN_SIZE, sk->ip_tos, sk->ip_ttl);
+    
+//    tmp = sk->prot->build_header(buff, sk->saddr, sk->daddr, &dev, IPPROTO_TCP, NULL, MAX_SYN_SIZE, sk->ip_tos, sk->ip_ttl);
+    tmp = ip_build_header(buff, sk->saddr, sk->daddr, &dev, IPPROTO_TCP, NULL, MAX_SYN_SIZE, sk->ip_tos, sk->ip_ttl);
     if (tmp < 0)
     {
         sk->prot->wfree(sk, buff->mem_addr, buff->mem_len);
@@ -3282,8 +3274,7 @@ tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
     ptr[1] = 4;
     ptr[2] = (sk->mtu) >> 8;
     ptr[3] = (sk->mtu) & 0xff;
-    tcp_send_check(t1, sk->saddr, sk->daddr,
-                   sizeof(struct tcphdr) + 4, sk);
+    tcp_send_check(t1, sk->saddr, sk->daddr, sizeof(struct tcphdr) + 4, sk);
 
     /* This must go first otherwise a really quick response will get reset. */
     sk->state = TCP_SYN_SENT;
@@ -3291,16 +3282,15 @@ tcp_connect(struct sock *sk, struct sockaddr_in *usin, int addr_len)
     reset_timer(sk, TIME_WRITE, TCP_CONNECT_TIME); /* Timer for repeating the SYN until an answer */
     sk->retransmits = TCP_RETR2 - TCP_SYN_RETRIES;
 
-    sk->prot->queue_xmit(sk, dev, buff, 0);
+//    sk->prot->queue_xmit(sk, dev, buff, 0);
+    ip_queue_xmit(sk, dev, buff, 0);
 
     release_sock(sk);
     return (0);
 }
 
 /* This functions checks to see if the tcp header is actually acceptable. */
-static int
-tcp_sequence(struct sock *sk, struct tcphdr *th, short len,
-             struct options *opt, unsigned long saddr, struct device *dev)
+static int tcp_sequence(struct sock *sk, struct tcphdr *th, short len, struct options *opt, unsigned long saddr, struct device *dev)
 {
     unsigned long next_seq;
 
@@ -3353,9 +3343,7 @@ ignore_it:
     return 0;
 }
 
-int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
-            unsigned long daddr, unsigned short len,
-            unsigned long saddr, int redo, struct inet_protocol *protocol)
+int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt, unsigned long daddr, unsigned short len, unsigned long saddr, int redo, struct inet_protocol *protocol)
 {
     struct tcphdr *th;
     struct sock *sk;
@@ -3365,18 +3353,7 @@ int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
         DPRINTF((DBG_TCP, "tcp.c: tcp_rcv skb = NULL\n"));
         return (0);
     }
-#if 0 /* FIXME: it's ok for protocol to be NULL */
-    if (!protocol)
-    {
-        DPRINTF((DBG_TCP, "tcp.c: tcp_rcv protocol = NULL\n"));
-        return(0);
-    }
 
-    if (!opt)  	/* FIXME: it's ok for opt to be NULL */
-    {
-        DPRINTF((DBG_TCP, "tcp.c: tcp_rcv opt = NULL\n"));
-    }
-#endif
     if (!dev)
     {
         DPRINTF((DBG_TCP, "tcp.c: tcp_rcv dev = NULL\n"));
@@ -3554,12 +3531,8 @@ int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
             release_sock(sk);
             return (0);
         }
-        if (
-#if 0
-            if ((opt && (opt->security != 0 ||
-                             opt->compartment != 0)) ||
-#endif
-            th->syn)
+        
+        if (th->syn)
         {
             sk->err = ECONNRESET;
             sk->state = TCP_CLOSE;
@@ -3642,15 +3615,6 @@ int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
 
         if (th->syn)
         {
-#if 0
-        if (opt->security != 0 || opt->compartment != 0)
-            {
-                tcp_reset(daddr, saddr, th, prot, opt, dev);
-                release_sock(sk);
-                return(0);
-            }
-#endif
-
             /*
              * Now we just put the whole thing including
              * the header and saddr, and protocol pointer
@@ -3689,22 +3653,7 @@ int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
             release_sock(sk);
             return (0);
         }
-#if 0
-        if (opt->security != 0 || opt->compartment != 0)
-    {
-        sk->err = ECONNRESET;
-        sk->state = TCP_CLOSE;
-        sk->shutdown = SHUTDOWN_MASK;
-        tcp_reset(daddr, saddr,  th, sk->prot, opt, dev);
-            if (!sk->dead)
-            {
-                wake_up_interruptible(sk->sleep);
-            }
-            kfree_skb(skb, FREE_READ);
-            release_sock(sk);
-            return(0);
-        }
-#endif
+
         if (!th->ack)
         {
             if (th->syn)
@@ -3839,8 +3788,7 @@ int tcp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
   * This routine sends a packet with an out of date sequence
   * number. It assumes the other end will try to ack it.
   */
-static void
-tcp_write_wakeup(struct sock *sk)
+static void tcp_write_wakeup(struct sock *sk)
 {
     struct sk_buff *buff;
     struct tcphdr *t1;
@@ -3967,14 +3915,14 @@ int tcp_getsockopt(struct sock *sk, int level, int optname, char *optval, int *o
 
     switch (optname)
     {
-    case TCP_MAXSEG:
-        val = sk->user_mss;
-        break;
-    case TCP_NODELAY:
-        val = sk->nonagle; /* Until Johannes stuff is in */
-        break;
-    default:
-        return (-ENOPROTOOPT);
+        case TCP_MAXSEG:
+            val = sk->user_mss;
+            break;
+        case TCP_NODELAY:
+            val = sk->nonagle; /* Until Johannes stuff is in */
+            break;
+        default:
+            return (-ENOPROTOOPT);
     }
     err = verify_area(VERIFY_WRITE, optlen, sizeof(int));
     if (err)
@@ -3990,35 +3938,36 @@ int tcp_getsockopt(struct sock *sk, int level, int optname, char *optval, int *o
 }
 
 struct proto tcp_prot =
+{
+    sock_wmalloc,
+    sock_rmalloc,
+    sock_wfree,
+    sock_rfree,
+    sock_rspace,
+    sock_wspace,
+    tcp_close,
+    tcp_read,
+    tcp_write,
+    tcp_sendto,
+    tcp_recvfrom,
+    ip_build_header,
+    tcp_connect,
+    tcp_accept,
+    ip_queue_xmit,
+    tcp_retransmit,
+    tcp_write_wakeup,
+    tcp_read_wakeup,
+    tcp_rcv,
+    tcp_select,
+    tcp_ioctl,
+    NULL,
+    tcp_shutdown,
+    tcp_setsockopt,
+    tcp_getsockopt,
+    128,
+    0,
     {
-        sock_wmalloc,
-        sock_rmalloc,
-        sock_wfree,
-        sock_rfree,
-        sock_rspace,
-        sock_wspace,
-        tcp_close,
-        tcp_read,
-        tcp_write,
-        tcp_sendto,
-        tcp_recvfrom,
-        ip_build_header,
-        tcp_connect,
-        tcp_accept,
-        ip_queue_xmit,
-        tcp_retransmit,
-        tcp_write_wakeup,
-        tcp_read_wakeup,
-        tcp_rcv,
-        tcp_select,
-        tcp_ioctl,
         NULL,
-        tcp_shutdown,
-        tcp_setsockopt,
-        tcp_getsockopt,
-        128,
-        0,
-        {
-            NULL,
-        },
-        "TCP"};
+    },
+    "TCP"
+};

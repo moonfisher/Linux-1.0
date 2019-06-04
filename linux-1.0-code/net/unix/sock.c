@@ -305,8 +305,7 @@ unix_data_deref(struct unix_proto_data *upd)
  * Upon a create, we allocate an empty protocol data,
  * and grab a page to buffer writes.
  */
-static int
-unix_proto_create(struct socket *sock, int protocol)
+static int unix_proto_create(struct socket *sock, int protocol)
 {
     struct unix_proto_data *upd;
 
@@ -335,16 +334,14 @@ unix_proto_create(struct socket *sock, int protocol)
     return (0);
 }
 
-static int
-unix_proto_dup(struct socket *newsock, struct socket *oldsock)
+static int unix_proto_dup(struct socket *newsock, struct socket *oldsock)
 {
     struct unix_proto_data *upd = UN_DATA(oldsock);
 
     return (unix_proto_create(newsock, upd->protocol));
 }
 
-static int
-unix_proto_release(struct socket *sock, struct socket *peer)
+static int unix_proto_release(struct socket *sock, struct socket *peer)
 {
     struct unix_proto_data *upd = UN_DATA(sock);
 
@@ -439,9 +436,7 @@ unix_proto_bind(struct socket *sock, struct sockaddr *umyaddr,
  * (I can't for the life of me find an application where that
  * wouldn't be the case!)
  */
-static int
-unix_proto_connect(struct socket *sock, struct sockaddr *uservaddr,
-                   int sockaddr_len, int flags)
+static int unix_proto_connect(struct socket *sock, struct sockaddr *uservaddr, int sockaddr_len, int flags)
 {
     char fname[sizeof(((struct sockaddr_un *)0)->sun_path) + 1];
     struct sockaddr_un sockun;
@@ -533,8 +528,7 @@ unix_proto_socketpair(struct socket *sock1, struct socket *sock2)
 }
 
 /* On accept, we ref the peer's data for safe writes. */
-static int
-unix_proto_accept(struct socket *sock, struct socket *newsock, int flags)
+static int unix_proto_accept(struct socket *sock, struct socket *newsock, int flags)
 {
     struct socket *clientsock;
 
@@ -879,8 +873,7 @@ unix_proto_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     return (0);
 }
 
-static int
-unix_open(struct inode *inode, struct file *file)
+static int unix_open(struct inode *inode, struct file *file)
 {
     int minor;
 
@@ -892,15 +885,12 @@ unix_open(struct inode *inode, struct file *file)
     return (0);
 }
 
-static void
-unix_close(struct inode *inode, struct file *file)
+static void unix_close(struct inode *inode, struct file *file)
 {
     dprintf(1, "UNIX: close\n");
 }
 
-static int
-unix_ioctl(struct inode *inode, struct file *file,
-           unsigned int cmd, unsigned long arg)
+static int unix_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
 {
     int minor, ret;
     int er;
@@ -913,63 +903,74 @@ unix_ioctl(struct inode *inode, struct file *file,
     ret = -EINVAL;
     switch (cmd)
     {
-    case DDIOCSDBG:
-        er = verify_area(VERIFY_READ, (void *)arg, sizeof(int));
-        if (er)
-            return er;
-        unix_debug = get_fs_long((int *)arg);
-        if (unix_debug != 0 && unix_debug != 1)
-        {
-            unix_debug = 0;
-            return (-EINVAL);
-        }
-        return (0);
-    case SIOCSIFLINK:
-        printk("UNIX: cannot link streams!\n");
-        break;
-    default:
-        break;
+        case DDIOCSDBG:
+            er = verify_area(VERIFY_READ, (void *)arg, sizeof(int));
+            if (er)
+                return er;
+            unix_debug = get_fs_long((int *)arg);
+            if (unix_debug != 0 && unix_debug != 1)
+            {
+                unix_debug = 0;
+                return (-EINVAL);
+            }
+            return (0);
+        case SIOCSIFLINK:
+            printk("UNIX: cannot link streams!\n");
+            break;
+        default:
+            break;
     }
     return (ret);
 }
 
 static struct file_operations unix_fops =
-    {
-        NULL,       /* LSEEK	*/
-        NULL,       /* READ		*/
-        NULL,       /* WRITE	*/
-        NULL,       /* READDIR	*/
-        NULL,       /* SELECT	*/
-        unix_ioctl, /* IOCTL	*/
-        NULL,       /* MMAP		*/
-        unix_open,  /* OPEN		*/
-        unix_close  /* CLOSE	*/
+{
+    NULL,       /* LSEEK	*/
+    NULL,       /* READ		*/
+    NULL,       /* WRITE	*/
+    NULL,       /* READDIR	*/
+    NULL,       /* SELECT	*/
+    unix_ioctl, /* IOCTL	*/
+    NULL,       /* MMAP		*/
+    unix_open,  /* OPEN		*/
+    unix_close  /* CLOSE	*/
 };
 
+/*
+ AF_UNIX 域 socket 通信过程
+ 典型的本地 IPC，类似于管道，依赖路径名标识发送方和接收方。即发送数据时，指定接收方绑定的路径名，
+ 操作系统根据该路径名可以直接找到对应的接收方，并将原始数据直接拷贝到接收方的内核缓冲区中，并上报
+ 给接收方进程进行处理。同样的接收方可以从收到的数据包中获取到发送方的路径名，并通过此路径名向其发
+ 送数据。
+ 
+ 操作系统提供的接口 socket(), bind(), connect(), accept(), send(), recv()，以及用来对其
+ 进行多路复用事件检测的 select(), poll(), epoll() 都是完全相同的。收发数据的过程中，上层应用感
+ 知不到底层的差别。
+*/
 static struct proto_ops unix_proto_ops =
-    {
-        AF_UNIX,
-        unix_proto_create,
-        unix_proto_dup,
-        unix_proto_release,
-        unix_proto_bind,
-        unix_proto_connect,
-        unix_proto_socketpair,
-        unix_proto_accept,
-        unix_proto_getname,
-        unix_proto_read,
-        unix_proto_write,
-        unix_proto_select,
-        unix_proto_ioctl,
-        unix_proto_listen,
-        unix_proto_send,
-        unix_proto_recv,
-        unix_proto_sendto,
-        unix_proto_recvfrom,
-        unix_proto_shutdown,
-        unix_proto_setsockopt,
-        unix_proto_getsockopt,
-        NULL /* unix_proto_fcntl	*/
+{
+    AF_UNIX,
+    unix_proto_create,
+    unix_proto_dup,
+    unix_proto_release,
+    unix_proto_bind,
+    unix_proto_connect,
+    unix_proto_socketpair,
+    unix_proto_accept,
+    unix_proto_getname,
+    unix_proto_read,
+    unix_proto_write,
+    unix_proto_select,
+    unix_proto_ioctl,
+    unix_proto_listen,
+    unix_proto_send,
+    unix_proto_recv,
+    unix_proto_sendto,
+    unix_proto_recvfrom,
+    unix_proto_shutdown,
+    unix_proto_setsockopt,
+    unix_proto_getsockopt,
+    NULL /* unix_proto_fcntl	*/
 };
 
 void unix_proto_init(struct ddi_proto *pro)
@@ -979,8 +980,7 @@ void unix_proto_init(struct ddi_proto *pro)
     dprintf(1, "%s: init: initializing...\n", pro->name);
     if (register_chrdev(AF_UNIX_MAJOR, "af_unix", &unix_fops) < 0)
     {
-        printk("%s: cannot register major device %d!\n",
-               pro->name, AF_UNIX_MAJOR);
+        printk("%s: cannot register major device %d!\n", pro->name, AF_UNIX_MAJOR);
         return;
     }
 

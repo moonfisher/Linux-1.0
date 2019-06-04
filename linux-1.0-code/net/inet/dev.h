@@ -43,7 +43,6 @@
  */
 struct device
 {
-
     /*
      * This is the first field of the "visible" part of this structure
      * (i.e. as seen by users in the "Space.c" file).  It is the name
@@ -60,9 +59,9 @@ struct device
     unsigned char irq;        /* device IRQ number	*/
 
     /* Low-level status flags. */
-    volatile unsigned char start, /* start an operation	*/
-        tbusy,                    /* transmitter busy	*/
-        interrupt;                /* interrupt arrived	*/
+    volatile unsigned char start; /* start an operation	*/
+    volatile unsigned char tbusy;   /* transmitter busy	*/
+    volatile unsigned char interrupt;   /* interrupt arrived	*/
 
     /*
      * Another mistake.
@@ -116,25 +115,14 @@ struct device
     /* Pointers to interface service routines. */
     int (*open)(struct device *dev);
     int (*stop)(struct device *dev);
-    int (*hard_start_xmit)(struct sk_buff *skb,
-                           struct device *dev);
-    int (*hard_header)(unsigned char *buff,
-                       struct device *dev,
-                       unsigned short type,
-                       unsigned long daddr,
-                       unsigned long saddr,
-                       unsigned len);
-    void (*add_arp)(unsigned long addr,
-                    struct sk_buff *skb,
-                    struct device *dev);
-    void (*queue_xmit)(struct sk_buff *skb,
-                       struct device *dev, int pri);
+    int (*hard_start_xmit)(struct sk_buff *skb, struct device *dev);
+    int (*hard_header)(unsigned char *buff, struct device *dev, unsigned short type, unsigned long daddr, unsigned long saddr, unsigned len);
+    void (*add_arp)(unsigned long addr, struct sk_buff *skb, struct device *dev);
+    void (*queue_xmit)(struct sk_buff *skb, struct device *dev, int pri);
     int (*rebuild_header)(void *eth, struct device *dev);
-    unsigned short (*type_trans)(struct sk_buff *skb,
-                                 struct device *dev);
+    unsigned short (*type_trans)(struct sk_buff *skb, struct device *dev);
 #define HAVE_MULTICAST
-    void (*set_multicast_list)(struct device *dev,
-                               int num_addrs, void *addrs);
+    void (*set_multicast_list)(struct device *dev, int num_addrs, void *addrs);
 #define HAVE_SET_MAC_ADDR
     int (*set_mac_address)(struct device *dev, void *addr);
 };
@@ -146,8 +134,7 @@ struct packet_type
 				 * appropriately.
 				 */
     unsigned short copy : 1;
-    int (*func)(struct sk_buff *, struct device *,
-                struct packet_type *);
+    int (*func)(struct sk_buff *, struct device *, struct packet_type *);
     void *data;
     struct packet_type *next;
 };

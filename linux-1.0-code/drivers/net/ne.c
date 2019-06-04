@@ -43,10 +43,8 @@ int ne_probe(struct device *dev);
 static int neprobe1(int ioaddr, struct device *dev, int verbose);
 
 static void ne_reset_8390(struct device *dev);
-static int ne_block_input(struct device *dev, int count,
-                          char *buf, int ring_offset);
-static void ne_block_output(struct device *dev, const int count,
-                            const unsigned char *buf, const int start_page);
+static int ne_block_input(struct device *dev, int count, char *buf, int ring_offset);
+static void ne_block_output(struct device *dev, const int count, const unsigned char *buf, const int start_page);
 
 /*  Probe for various non-shared-memory ethercards.
 
@@ -253,8 +251,7 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
 #endif
 
     ethdev_init(dev);
-    printk("\n%s: %s found at %#x, using IRQ %d.\n",
-           dev->name, name, ioaddr, dev->irq);
+    printk("\n%s: %s found at %#x, using IRQ %d.\n", dev->name, name, ioaddr, dev->irq);
 
     if (ei_debug > 0)
         printk(version);
@@ -279,8 +276,7 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
 
 /* Hard reset the card.  This used to pause for the same period that a
    8390 reset command required, but that shouldn't be necessary. */
-static void
-ne_reset_8390(struct device *dev)
+static void ne_reset_8390(struct device *dev)
 {
     int tmp = inb_p(NE_BASE + NE_RESET);
     int reset_start_time = jiffies;
@@ -304,8 +300,7 @@ ne_reset_8390(struct device *dev)
    The NEx000 doesn't share it on-board packet memory -- you have to put
    the packet out through the "remote DMA" dataport using outb. */
 
-static int
-ne_block_input(struct device *dev, int count, char *buf, int ring_offset)
+static int ne_block_input(struct device *dev, int count, char *buf, int ring_offset)
 {
     int xfer_count = count;
     int nic_base = dev->base_addr;
@@ -362,9 +357,7 @@ ne_block_input(struct device *dev, int count, char *buf, int ring_offset)
     return ring_offset + count;
 }
 
-static void
-ne_block_output(struct device *dev, int count,
-                const unsigned char *buf, const int start_page)
+static void ne_block_output(struct device *dev, int count, const unsigned char *buf, const int start_page)
 {
     int retries = 0;
     int nic_base = NE_BASE;

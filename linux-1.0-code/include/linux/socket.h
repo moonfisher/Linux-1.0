@@ -3,7 +3,6 @@
 
 #include "linux/sockios.h"		/* the SIOCxxx I/O controls	*/
 
-
 struct sockaddr
 {
     unsigned short	sa_family;	/* address family, AF_xxx	*/

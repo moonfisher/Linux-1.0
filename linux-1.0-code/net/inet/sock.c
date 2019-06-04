@@ -143,8 +143,7 @@ void print_skb(struct sk_buff *skb)
     printk("  used = %d free = %d\n", skb->used, skb->free);
 }
 
-static int
-sk_inuse(struct proto *prot, int num)
+static int sk_inuse(struct proto *prot, int num)
 {
     struct sock *sk;
 
@@ -158,8 +157,7 @@ sk_inuse(struct proto *prot, int num)
     return (0);
 }
 
-unsigned short
-get_new_socknum(struct proto *prot, unsigned short base)
+unsigned short get_new_socknum(struct proto *prot, unsigned short base)
 {
     static int start = 0;
 
@@ -708,8 +706,7 @@ int sock_getsockopt(struct sock *sk, int level, int optname,
     return (0);
 }
 
-static int
-inet_listen(struct socket *sock, int backlog)
+static int inet_listen(struct socket *sock, int backlog)
 {
     struct sock *sk;
 
@@ -757,8 +754,7 @@ static void def_callback2(struct sock *sk, int len)
         wake_up_interruptible(sk->sleep);
 }
 
-static int
-inet_create(struct socket *sock, int protocol)
+static int inet_create(struct socket *sock, int protocol)
 {
     struct sock *sk;
     struct proto *prot;
@@ -771,71 +767,71 @@ inet_create(struct socket *sock, int protocol)
     sk->reuse = 0;
     switch (sock->type)
     {
-    case SOCK_STREAM:
-    case SOCK_SEQPACKET:
-        if (protocol && protocol != IPPROTO_TCP)
-        {
-            kfree_s((void *)sk, sizeof(*sk));
-            return (-EPROTONOSUPPORT);
-        }
-        protocol = IPPROTO_TCP;
-        sk->no_check = TCP_NO_CHECK;
-        prot = &tcp_prot;
-        break;
+        case SOCK_STREAM:
+        case SOCK_SEQPACKET:
+            if (protocol && protocol != IPPROTO_TCP)
+            {
+                kfree_s((void *)sk, sizeof(*sk));
+                return (-EPROTONOSUPPORT);
+            }
+            protocol = IPPROTO_TCP;
+            sk->no_check = TCP_NO_CHECK;
+            prot = &tcp_prot;
+            break;
 
-    case SOCK_DGRAM:
-        if (protocol && protocol != IPPROTO_UDP)
-        {
-            kfree_s((void *)sk, sizeof(*sk));
-            return (-EPROTONOSUPPORT);
-        }
-        protocol = IPPROTO_UDP;
-        sk->no_check = UDP_NO_CHECK;
-        prot = &udp_prot;
-        break;
+        case SOCK_DGRAM:
+            if (protocol && protocol != IPPROTO_UDP)
+            {
+                kfree_s((void *)sk, sizeof(*sk));
+                return (-EPROTONOSUPPORT);
+            }
+            protocol = IPPROTO_UDP;
+            sk->no_check = UDP_NO_CHECK;
+            prot = &udp_prot;
+            break;
 
-    case SOCK_RAW:
-        if (!suser())
-        {
-            kfree_s((void *)sk, sizeof(*sk));
-            return (-EPERM);
-        }
-        if (!protocol)
-        {
-            kfree_s((void *)sk, sizeof(*sk));
-            return (-EPROTONOSUPPORT);
-        }
-        prot = &raw_prot;
-        sk->reuse = 1;
-        sk->no_check = 0; /*
-					 * Doesn't matter no checksum is
-					 * preformed anyway.
-					 */
-        sk->num = protocol;
-        break;
+        case SOCK_RAW:
+            if (!suser())
+            {
+                kfree_s((void *)sk, sizeof(*sk));
+                return (-EPERM);
+            }
+            if (!protocol)
+            {
+                kfree_s((void *)sk, sizeof(*sk));
+                return (-EPROTONOSUPPORT);
+            }
+            prot = &raw_prot;
+            sk->reuse = 1;
+            sk->no_check = 0; /*
+                         * Doesn't matter no checksum is
+                         * preformed anyway.
+                         */
+            sk->num = protocol;
+            break;
 
-    case SOCK_PACKET:
-        if (!suser())
-        {
-            kfree_s((void *)sk, sizeof(*sk));
-            return (-EPERM);
-        }
-        if (!protocol)
-        {
-            kfree_s((void *)sk, sizeof(*sk));
-            return (-EPROTONOSUPPORT);
-        }
-        prot = &packet_prot;
-        sk->reuse = 1;
-        sk->no_check = 0; /* Doesn't matter no checksum is
-					 * preformed anyway.
-					 */
-        sk->num = protocol;
-        break;
+        case SOCK_PACKET:
+            if (!suser())
+            {
+                kfree_s((void *)sk, sizeof(*sk));
+                return (-EPERM);
+            }
+            if (!protocol)
+            {
+                kfree_s((void *)sk, sizeof(*sk));
+                return (-EPROTONOSUPPORT);
+            }
+            prot = &packet_prot;
+            sk->reuse = 1;
+            sk->no_check = 0; /* Doesn't matter no checksum is
+                         * preformed anyway.
+                         */
+            sk->num = protocol;
+            break;
 
-    default:
-        kfree_s((void *)sk, sizeof(*sk));
-        return (-ESOCKTNOSUPPORT);
+        default:
+            kfree_s((void *)sk, sizeof(*sk));
+            return (-ESOCKTNOSUPPORT);
     }
     sk->socket = sock;
 #ifdef CONFIG_TCP_NAGLE_OFF
@@ -959,16 +955,13 @@ inet_create(struct socket *sock, int protocol)
     return (0);
 }
 
-static int
-inet_dup(struct socket *newsock, struct socket *oldsock)
+static int inet_dup(struct socket *newsock, struct socket *oldsock)
 {
-    return (inet_create(newsock,
-                        ((struct sock *)(oldsock->data))->protocol));
+    return (inet_create(newsock, ((struct sock *)(oldsock->data))->protocol));
 }
 
 /* The peer socket should always be NULL. */
-static int
-inet_release(struct socket *sock, struct socket *peer)
+static int inet_release(struct socket *sock, struct socket *peer)
 {
     struct sock *sk;
 
@@ -1003,12 +996,6 @@ inet_release(struct socket *sock, struct socket *peer)
             if (current->signal & ~current->blocked)
             {
                 break;
-#if 0
-                /* not working now - closes can't be restarted */
-                sti();
-                current->timeout = 0;
-                return(-ERESTARTSYS);
-#endif
             }
         }
         current->timeout = 0;
@@ -1027,10 +1014,7 @@ inet_release(struct socket *sock, struct socket *peer)
 /* this needs to be changed to dissallow
    the rebinding of sockets.   What error
    should it return? */
-
-static int
-inet_bind(struct socket *sock, struct sockaddr *uaddr,
-          int addr_len)
+static int inet_bind(struct socket *sock, struct sockaddr *uaddr, int addr_len)
 {
     struct sockaddr_in addr;
     struct sock *sk, *sk2;
@@ -1121,9 +1105,7 @@ outside_loop:
     return (0);
 }
 
-static int
-inet_connect(struct socket *sock, struct sockaddr *uaddr,
-             int addr_len, int flags)
+static int inet_connect(struct socket *sock, struct sockaddr *uaddr, int addr_len, int flags)
 {
     struct sock *sk;
     int err;
@@ -1162,7 +1144,8 @@ inet_connect(struct socket *sock, struct sockaddr *uaddr,
         if (sk->prot->connect == NULL)
             return (-EOPNOTSUPP);
 
-        err = sk->prot->connect(sk, (struct sockaddr_in *)uaddr, addr_len);
+//        err = sk->prot->connect(sk, (struct sockaddr_in *)uaddr, addr_len);
+        err = tcp_connect(sk, (struct sockaddr_in *)uaddr, addr_len);
         if (err < 0)
             return (err);
 
@@ -1205,14 +1188,12 @@ inet_connect(struct socket *sock, struct sockaddr *uaddr,
     return (0);
 }
 
-static int
-inet_socketpair(struct socket *sock1, struct socket *sock2)
+static int inet_socketpair(struct socket *sock1, struct socket *sock2)
 {
     return (-EOPNOTSUPP);
 }
 
-static int
-inet_accept(struct socket *sock, struct socket *newsock, int flags)
+static int inet_accept(struct socket *sock, struct socket *newsock, int flags)
 {
     struct sock *sk1, *sk2;
     int err;
@@ -1244,7 +1225,8 @@ inet_accept(struct socket *sock, struct socket *newsock, int flags)
     }
     else
     {
-        sk2 = sk1->prot->accept(sk1, flags);
+//        sk2 = sk1->prot->accept(sk1, flags);
+        sk2 = tcp_accept(sk1, flags);
         if (sk2 == NULL)
         {
             if (sk1->err <= 0)
@@ -1277,7 +1259,6 @@ inet_accept(struct socket *sock, struct socket *newsock, int flags)
 
     if (sk2->state != TCP_ESTABLISHED && sk2->err > 0)
     {
-
         err = -sk2->err;
         sk2->err = 0;
         destroy_sock(sk2);
@@ -1567,8 +1548,7 @@ inet_select(struct socket *sock, int sel_type, select_table *wait)
     return (sk->prot->select(sk, sel_type, wait));
 }
 
-static int
-inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
+static int inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 {
     struct sock *sk;
     int err;
@@ -1601,11 +1581,6 @@ inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
             put_fs_long(sk->proc, (int *)arg);
         }
         return (0);
-#if 0 /* FIXME: */
-    case SIOCATMARK:
-        printk("AF_INET: ioctl(SIOCATMARK, 0x%08X)\n", (void *) arg);
-        return(-EINVAL);
-#endif
 
     case DDIOCSDBG:
         return (dbg_ioctl((void *)arg, DBG_INET));
@@ -1652,9 +1627,7 @@ inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
     return (0);
 }
 
-struct sk_buff *
-sock_wmalloc(struct sock *sk, unsigned long size, int force,
-             int priority)
+struct sk_buff *sock_wmalloc(struct sock *sk, unsigned long size, int force, int priority)
 {
     if (sk)
     {
@@ -1676,8 +1649,7 @@ sock_wmalloc(struct sock *sk, unsigned long size, int force,
     return (alloc_skb(size, priority));
 }
 
-struct sk_buff *
-sock_rmalloc(struct sock *sk, unsigned long size, int force, int priority)
+struct sk_buff *sock_rmalloc(struct sock *sk, unsigned long size, int force, int priority)
 {
     if (sk)
     {
@@ -1699,8 +1671,7 @@ sock_rmalloc(struct sock *sk, unsigned long size, int force, int priority)
     return (alloc_skb(size, priority));
 }
 
-unsigned long
-sock_rspace(struct sock *sk)
+unsigned long sock_rspace(struct sock *sk)
 {
     int amt;
 
@@ -1916,31 +1887,41 @@ static struct file_operations inet_fops =
         NULL         /* CLOSE	*/
 };
 
+/*
+ 典型的 TCP/IP 四层模型的通信过程。
+ 发送方、接收方依赖 IP:Port 来标识，即将本地的 socket 绑定到对应的 IP 端口上，发送数据时，
+ 指定对方的 IP 端口，经过 Internet，可以根据此 IP 端口最终找到接收方；接收数据时，可以从数据包中
+ 获取到发送方的 IP 端口。
+ 
+ 发送方通过系统调用 send() 将原始数据发送到操作系统内核缓冲区中。内核缓冲区从上到下依次经过 TCP 层、
+ IP 层、链路层的编码，分别添加对应的头部信息，经过网卡将一个数据包发送到网络中。经过网络路由到接收方
+ 的网卡。网卡通过系统中断将数据包通知到接收方的操作系统，再沿着发送方编码的反方向进行解码，即依次经过
+ 链路层、IP 层、TCP 层去除头部、检查校验等，最终将原始数据上报到接收方进程。
+*/
 static struct proto_ops inet_proto_ops =
-    {
-        AF_INET,
-
-        inet_create,
-        inet_dup,
-        inet_release,
-        inet_bind,
-        inet_connect,
-        inet_socketpair,
-        inet_accept,
-        inet_getname,
-        inet_read,
-        inet_write,
-        inet_select,
-        inet_ioctl,
-        inet_listen,
-        inet_send,
-        inet_recv,
-        inet_sendto,
-        inet_recvfrom,
-        inet_shutdown,
-        inet_setsockopt,
-        inet_getsockopt,
-        inet_fcntl,
+{
+    AF_INET,
+    inet_create,
+    inet_dup,
+    inet_release,
+    inet_bind,
+    inet_connect,
+    inet_socketpair,
+    inet_accept,
+    inet_getname,
+    inet_read,
+    inet_write,
+    inet_select,
+    inet_ioctl,
+    inet_listen,
+    inet_send,
+    inet_recv,
+    inet_sendto,
+    inet_recvfrom,
+    inet_shutdown,
+    inet_setsockopt,
+    inet_getsockopt,
+    inet_fcntl,
 };
 
 extern unsigned long seq_offset;
@@ -1955,8 +1936,7 @@ void inet_proto_init(struct ddi_proto *pro)
     /* Set up our UNIX VFS major device. */
     if (register_chrdev(AF_INET_MAJOR, "af_inet", &inet_fops) < 0)
     {
-        printk("%s: cannot register major device %d!\n",
-               pro->name, AF_INET_MAJOR);
+        printk("%s: cannot register major device %d!\n", pro->name, AF_INET_MAJOR);
         return;
     }
 

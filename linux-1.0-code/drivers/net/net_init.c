@@ -93,8 +93,7 @@ unsigned long net_dev_init(unsigned long mem_start, unsigned long mem_end)
    long.
  */
 
-struct device *init_etherdev(struct device *dev, int sizeof_private,
-                             unsigned long *mem_startp)
+struct device *init_etherdev(struct device *dev, int sizeof_private, unsigned long *mem_startp)
 {
     int i;
     int new_device = 0;

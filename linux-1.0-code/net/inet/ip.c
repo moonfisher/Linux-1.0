@@ -163,23 +163,8 @@ void ip_route_check(unsigned long daddr)
 {
 }
 
-#if 0
-/* this routine puts the options at the end of an ip header. */
-static int
-build_options(struct iphdr *iph, struct options *opt)
-{
-    unsigned char *ptr;
-    /* currently we don't support any options. */
-    ptr = (unsigned char *)(iph + 1);
-    *ptr = 0;
-    return (4);
-}
-#endif
-
 /* Take an skb, and fill in the MAC header. */
-static int
-ip_send(struct sk_buff *skb, unsigned long daddr, int len, struct device *dev,
-        unsigned long saddr)
+static int ip_send(struct sk_buff *skb, unsigned long daddr, int len, struct device *dev, unsigned long saddr)
 {
     unsigned char *ptr;
     int mac;
@@ -206,8 +191,7 @@ ip_send(struct sk_buff *skb, unsigned long daddr, int len, struct device *dev,
  * protocol knows what it's doing, otherwise it uses the
  * routing/ARP tables to select a device struct.
  */
-int ip_build_header(struct sk_buff *skb, unsigned long saddr, unsigned long daddr,
-                    struct device **dev, int type, struct options *opt, int len, int tos, int ttl)
+int ip_build_header(struct sk_buff *skb, unsigned long saddr, unsigned long daddr, struct device **dev, int type, struct options *opt, int len, int tos, int ttl)
 {
     static struct options optmem;
     struct iphdr *iph;
@@ -662,10 +646,6 @@ static void ip_expire(unsigned long arg)
     DPRINTF((DBG_IP, "IP: queue_expire: fragment queue 0x%X timed out!\n", qp));
 
     /* Send an ICMP "Fragment Reassembly Timeout" message. */
-#if 0
-    icmp_send(qp->iph->ip_src.s_addr, ICMP_TIME_EXCEEDED,
-              ICMP_EXC_FRAGTIME, qp->iph);
-#endif
     if (qp->fragments != NULL)
         icmp_send(qp->fragments->skb, ICMP_TIME_EXCEEDED,
                   ICMP_EXC_FRAGTIME, qp->dev);
@@ -1100,8 +1080,7 @@ void ip_fragment(struct sock *sk, struct sk_buff *skb, struct device *dev, int i
 #ifdef CONFIG_IP_FORWARD
 
 /* Forward an IP datagram to its next destination. */
-static void
-ip_forward(struct sk_buff *skb, struct device *dev, int is_frag)
+static void ip_forward(struct sk_buff *skb, struct device *dev, int is_frag)
 {
     struct device *dev2;
     struct iphdr *iph;
@@ -1323,8 +1302,7 @@ int ip_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
     skb->h.raw += iph->ihl * 4;
     hash = iph->protocol & (MAX_INET_PROTOS - 1);
     for (ipprot = (struct inet_protocol *)inet_protos[hash];
-         ipprot != NULL;
-         ipprot = (struct inet_protocol *)ipprot->next)
+         ipprot != NULL; ipprot = (struct inet_protocol *)ipprot->next)
     {
         struct sk_buff *skb2;
 
@@ -1345,12 +1323,8 @@ int ip_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
                 continue;
             memcpy(skb2, skb, skb->mem_len);
             skb2->mem_addr = skb2;
-            skb2->ip_hdr = (struct iphdr *)((unsigned long)skb2 +
-                                            (unsigned long)skb->ip_hdr -
-                                            (unsigned long)skb);
-            skb2->h.raw = (unsigned char *)((unsigned long)skb2 +
-                                            (unsigned long)skb->h.raw -
-                                            (unsigned long)skb);
+            skb2->ip_hdr = (struct iphdr *)((unsigned long)skb2 + (unsigned long)skb->ip_hdr - (unsigned long)skb);
+            skb2->h.raw = (unsigned char *)((unsigned long)skb2 + (unsigned long)skb->h.raw - (unsigned long)skb);
             skb2->free = 1;
         }
         else
@@ -1364,9 +1338,8 @@ int ip_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
         * based on the datagram protocol.  We should really
         * check the protocol handler's return values here...
         */
-        ipprot->handler(skb2, dev, opts_p ? &opt : 0, iph->daddr,
-                        (ntohs(iph->tot_len) - (iph->ihl * 4)),
-                        iph->saddr, 0, ipprot);
+//        ipprot->handler(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
+        raw_rcv(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
     }
 
     /*
@@ -1393,8 +1366,7 @@ int ip_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
  * This routine also needs to put in the total length, and
  * compute the checksum.
  */
-void ip_queue_xmit(struct sock *sk, struct device *dev,
-                   struct sk_buff *skb, int free)
+void ip_queue_xmit(struct sock *sk, struct device *dev, struct sk_buff *skb, int free)
 {
     struct iphdr *iph;
     unsigned char *ptr;
@@ -1470,7 +1442,8 @@ void ip_queue_xmit(struct sock *sk, struct device *dev,
     {
         if (sk != NULL)
         {
-            dev->queue_xmit(skb, dev, sk->priority);
+//            dev->queue_xmit(skb, dev, sk->priority);
+            dev_queue_xmit(skb, dev, sk->priority);
         }
         else
         {

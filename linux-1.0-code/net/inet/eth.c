@@ -94,8 +94,7 @@ void eth_dump(struct ethhdr *eth)
 }
 
 /* Create the Ethernet MAC header. */
-int eth_header(unsigned char *buff, struct device *dev, unsigned short type,
-               unsigned long daddr, unsigned long saddr, unsigned len)
+int eth_header(unsigned char *buff, struct device *dev, unsigned short type, unsigned long daddr, unsigned long saddr, unsigned len)
 {
     struct ethhdr *eth;
 
@@ -171,8 +170,7 @@ void eth_add_arp(unsigned long addr, struct sk_buff *skb, struct device *dev)
 }
 
 /* Determine the packet's protocol ID. */
-unsigned short
-eth_type_trans(struct sk_buff *skb, struct device *dev)
+unsigned short eth_type_trans(struct sk_buff *skb, struct device *dev)
 {
     struct ethhdr *eth;
 

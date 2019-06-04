@@ -551,9 +551,7 @@ udp_close(struct sock *sk, int timeout)
 }
 
 /* All we need to do is get the socket, and then do a checksum. */
-int udp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
-            unsigned long daddr, unsigned short len,
-            unsigned long saddr, int redo, struct inet_protocol *protocol)
+int udp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt, unsigned long daddr, unsigned short len, unsigned long saddr, int redo, struct inet_protocol *protocol)
 {
     struct sock *sk;
     struct udphdr *uh;
@@ -620,35 +618,36 @@ int udp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
 }
 
 struct proto udp_prot =
+{
+    sock_wmalloc,
+    sock_rmalloc,
+    sock_wfree,
+    sock_rfree,
+    sock_rspace,
+    sock_wspace,
+    udp_close,
+    udp_read,
+    udp_write,
+    udp_sendto,
+    udp_recvfrom,
+    ip_build_header,
+    udp_connect,
+    NULL,
+    ip_queue_xmit,
+    ip_retransmit,
+    NULL,
+    NULL,
+    udp_rcv,
+    datagram_select,
+    udp_ioctl,
+    NULL,
+    NULL,
+    ip_setsockopt,
+    ip_getsockopt,
+    128,
+    0,
     {
-        sock_wmalloc,
-        sock_rmalloc,
-        sock_wfree,
-        sock_rfree,
-        sock_rspace,
-        sock_wspace,
-        udp_close,
-        udp_read,
-        udp_write,
-        udp_sendto,
-        udp_recvfrom,
-        ip_build_header,
-        udp_connect,
         NULL,
-        ip_queue_xmit,
-        ip_retransmit,
-        NULL,
-        NULL,
-        udp_rcv,
-        datagram_select,
-        udp_ioctl,
-        NULL,
-        NULL,
-        ip_setsockopt,
-        ip_getsockopt,
-        128,
-        0,
-        {
-            NULL,
-        },
-        "UDP"};
+    },
+    "UDP"    
+};

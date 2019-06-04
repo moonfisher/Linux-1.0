@@ -113,9 +113,7 @@ static struct
 #define ARP_MAX_TYPE (sizeof(arp_types) / sizeof(arp_types[0]))
 
 struct arp_table *arp_tables[ARP_TABLE_SIZE] =
-    {
-        NULL,
-};
+{ NULL, };
 
 static int arp_proxies = 0; /* So we can avoid the proxy arp
 				   overhead with the usual case of
@@ -202,8 +200,7 @@ arp_print(struct arphdr *arp)
 }
 
 /* This will try to retransmit everything on the queue. */
-static void
-arp_send_q(void)
+static void arp_send_q(void)
 {
     struct sk_buff *skb;
     struct sk_buff *volatile work_q;
@@ -279,8 +276,7 @@ static void arp_queue_ticker(unsigned long data /*UNUSED*/)
 }
 
 /* Create and send our response to an ARP request. */
-static int
-arp_response(struct arphdr *arp1, struct device *dev, int addrtype)
+static int arp_response(struct arphdr *arp1, struct device *dev, int addrtype)
 {
     struct arphdr *arp2;
     struct sk_buff *skb;
@@ -362,8 +358,7 @@ arp_response(struct arphdr *arp1, struct device *dev, int addrtype)
 }
 
 /* This will find an entry in the ARP table by looking at the IP address. */
-static struct arp_table *
-arp_lookup(unsigned long paddr)
+static struct arp_table *arp_lookup(unsigned long paddr)
 {
     struct arp_table *apt;
     unsigned long hash;
@@ -476,8 +471,7 @@ void arp_destroy_maybe(unsigned long paddr)
 }
 
 /* Create an ARP entry.  The caller should check for duplicates! */
-static struct arp_table *
-arp_create(unsigned long paddr, unsigned char *addr, int hlen, int htype)
+static struct arp_table *arp_create(unsigned long paddr, unsigned char *addr, int hlen, int htype)
 {
     struct arp_table *apt;
     unsigned long hash;
@@ -691,8 +685,7 @@ void arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
 }
 
 /* Find an ARP mapping in the cache. If not found, post a REQUEST. */
-int arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
-             unsigned long saddr)
+int arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev, unsigned long saddr)
 {
     struct arp_table *apt;
 
@@ -702,12 +695,12 @@ int arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev,
 
     switch (chk_addr(paddr))
     {
-    case IS_MYADDR:
-        memcpy(haddr, dev->dev_addr, dev->addr_len);
-        return (0);
-    case IS_BROADCAST:
-        memcpy(haddr, dev->broadcast, dev->addr_len);
-        return (0);
+        case IS_MYADDR:
+            memcpy(haddr, dev->dev_addr, dev->addr_len);
+            return (0);
+        case IS_BROADCAST:
+            memcpy(haddr, dev->broadcast, dev->addr_len);
+            return (0);
     }
 
     apt = arp_lookup(paddr);
@@ -858,8 +851,7 @@ int arp_get_info(char *buffer)
 }
 
 /* Set (create) an ARP cache entry. */
-static int
-arp_req_set(struct arpreq *req)
+static int arp_req_set(struct arpreq *req)
 {
     struct arpreq r;
     struct arp_table *apt;
@@ -879,18 +871,18 @@ arp_req_set(struct arpreq *req)
     si = (struct sockaddr_in *)&r.arp_pa;
     switch (r.arp_ha.sa_family)
     {
-    case 0:
-    case ARPHRD_ETHER:
-        htype = ARPHRD_ETHER;
-        hlen = ETH_ALEN;
-        break;
-    case ARPHRD_AX25:
-        htype = ARPHRD_AX25;
-        hlen = 7;
-        break;
+        case 0:
+        case ARPHRD_ETHER:
+            htype = ARPHRD_ETHER;
+            hlen = ETH_ALEN;
+            break;
+        case ARPHRD_AX25:
+            htype = ARPHRD_AX25;
+            hlen = 7;
+            break;
 
-    default:
-        return (-EPFNOSUPPORT);
+        default:
+            return (-EPFNOSUPPORT);
     }
 
     /* Is there an existing entry for this address? */
@@ -976,29 +968,29 @@ int arp_ioctl(unsigned int cmd, void *arg)
     int err;
     switch (cmd)
     {
-    case DDIOCSDBG:
-        return (dbg_ioctl(arg, DBG_ARP));
-    case SIOCDARP:
-        if (!suser())
-            return (-EPERM);
-        err = verify_area(VERIFY_READ, arg, sizeof(struct arpreq));
-        if (err)
-            return err;
-        return (arp_req_del((struct arpreq *)arg));
-    case SIOCGARP:
-        err = verify_area(VERIFY_WRITE, arg, sizeof(struct arpreq));
-        if (err)
-            return err;
-        return (arp_req_get((struct arpreq *)arg));
-    case SIOCSARP:
-        if (!suser())
-            return (-EPERM);
-        err = verify_area(VERIFY_READ, arg, sizeof(struct arpreq));
-        if (err)
-            return err;
-        return (arp_req_set((struct arpreq *)arg));
-    default:
-        return (-EINVAL);
+        case DDIOCSDBG:
+            return (dbg_ioctl(arg, DBG_ARP));
+        case SIOCDARP:
+            if (!suser())
+                return (-EPERM);
+            err = verify_area(VERIFY_READ, arg, sizeof(struct arpreq));
+            if (err)
+                return err;
+            return (arp_req_del((struct arpreq *)arg));
+        case SIOCGARP:
+            err = verify_area(VERIFY_WRITE, arg, sizeof(struct arpreq));
+            if (err)
+                return err;
+            return (arp_req_get((struct arpreq *)arg));
+        case SIOCSARP:
+            if (!suser())
+                return (-EPERM);
+            err = verify_area(VERIFY_READ, arg, sizeof(struct arpreq));
+            if (err)
+                return err;
+            return (arp_req_set((struct arpreq *)arg));
+        default:
+            return (-EINVAL);
     }
     /*NOTREACHED*/
     return (0);

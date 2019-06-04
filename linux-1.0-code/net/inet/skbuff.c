@@ -142,7 +142,6 @@ void skb_queue_tail(struct sk_buff *volatile *list, struct sk_buff *newsk)
  *	Remove an sk_buff from a list. This routine is also interrupt safe
  *	so you can grab read and free buffers as another process adds them.
  */
-
 struct sk_buff *skb_dequeue(struct sk_buff *volatile *list)
 {
     long flags;

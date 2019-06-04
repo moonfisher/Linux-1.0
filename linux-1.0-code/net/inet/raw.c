@@ -91,9 +91,7 @@ void raw_err(int err, unsigned char *header, unsigned long daddr,
  * This should be the easiest of all, all we do is\
  * copy it into a buffer.
  */
-int raw_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
-            unsigned long daddr, unsigned short len, unsigned long saddr,
-            int redo, struct inet_protocol *protocol)
+int raw_rcv(struct sk_buff *skb, struct device *dev, struct options *opt, unsigned long daddr, unsigned short len, unsigned long saddr, int redo, struct inet_protocol *protocol)
 {
     struct sock *sk;
 
@@ -132,16 +130,14 @@ int raw_rcv(struct sk_buff *skb, struct device *dev, struct options *opt,
     }
     sk->rmem_alloc += skb->mem_len;
     skb_queue_tail(&sk->rqueue, skb);
-    sk->data_ready(sk, skb->len);
+//    sk->data_ready(sk, skb->len);
+    def_callback2(sk, skb->len);
     release_sock(sk);
     return (0);
 }
 
 /* This will do terrible things if len + ipheader + devheader > dev->mtu */
-static int
-raw_sendto(struct sock *sk, unsigned char *from, int len,
-           int noblock,
-           unsigned flags, struct sockaddr_in *usin, int addr_len)
+static int raw_sendto(struct sock *sk, unsigned char *from, int len, int noblock, unsigned flags, struct sockaddr_in *usin, int addr_len)
 {
     struct sk_buff *skb;
     struct device *dev = NULL;
@@ -276,15 +272,12 @@ raw_sendto(struct sock *sk, unsigned char *from, int len,
     return (len);
 }
 
-static int
-raw_write(struct sock *sk, unsigned char *buff, int len, int noblock,
-          unsigned flags)
+static int raw_write(struct sock *sk, unsigned char *buff, int len, int noblock, unsigned flags)
 {
     return (raw_sendto(sk, buff, len, noblock, flags, NULL, 0));
 }
 
-static void
-raw_close(struct sock *sk, int timeout)
+static void raw_close(struct sock *sk, int timeout)
 {
     sk->inuse = 1;
     sk->state = TCP_CLOSE;
@@ -299,8 +292,7 @@ raw_close(struct sock *sk, int timeout)
     release_sock(sk);
 }
 
-static int
-raw_init(struct sock *sk)
+static int raw_init(struct sock *sk)
 {
     struct inet_protocol *p;
 
@@ -328,9 +320,7 @@ raw_init(struct sock *sk)
  * This should be easy, if there is something there
  * we return it, otherwise we block.
  */
-int raw_recvfrom(struct sock *sk, unsigned char *to, int len,
-                 int noblock, unsigned flags, struct sockaddr_in *sin,
-                 int *addr_len)
+int raw_recvfrom(struct sock *sk, unsigned char *to, int len, int noblock, unsigned flags, struct sockaddr_in *sin, int *addr_len)
 {
     int copied = 0;
     struct sk_buff *skb;
@@ -395,35 +385,36 @@ int raw_read(struct sock *sk, unsigned char *buff, int len, int noblock,
 }
 
 struct proto raw_prot =
+{
+    sock_wmalloc,
+    sock_rmalloc,
+    sock_wfree,
+    sock_rfree,
+    sock_rspace,
+    sock_wspace,
+    raw_close,
+    raw_read,
+    raw_write,
+    raw_sendto,
+    raw_recvfrom,
+    ip_build_header,
+    udp_connect,
+    NULL,
+    ip_queue_xmit,
+    ip_retransmit,
+    NULL,
+    NULL,
+    raw_rcv,
+    datagram_select,
+    NULL,
+    raw_init,
+    NULL,
+    ip_setsockopt,
+    ip_getsockopt,
+    128,
+    0,
     {
-        sock_wmalloc,
-        sock_rmalloc,
-        sock_wfree,
-        sock_rfree,
-        sock_rspace,
-        sock_wspace,
-        raw_close,
-        raw_read,
-        raw_write,
-        raw_sendto,
-        raw_recvfrom,
-        ip_build_header,
-        udp_connect,
         NULL,
-        ip_queue_xmit,
-        ip_retransmit,
-        NULL,
-        NULL,
-        raw_rcv,
-        datagram_select,
-        NULL,
-        raw_init,
-        NULL,
-        ip_setsockopt,
-        ip_getsockopt,
-        128,
-        0,
-        {
-            NULL,
-        },
-        "RAW"};
+    },
+    "RAW"
+};

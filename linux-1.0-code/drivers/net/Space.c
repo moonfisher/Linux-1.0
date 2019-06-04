@@ -57,8 +57,7 @@ extern int e2100_probe(struct device *);
 extern int atp_init(struct device *);
 extern int d_link_init(struct device *);
 
-static int
-ethif_probe(struct device *dev)
+static int ethif_probe(struct device *dev)
 {
     short base_addr = dev->base_addr;
 
@@ -145,23 +144,29 @@ static struct device atp_dev =
 #ifndef ETH0_IRQ
 #define ETH0_IRQ 0
 #endif
+
 /* "eth0" defaults to autoprobe (== 0), other use a base of 0xffe0 (== -0x20),
    which means "don't probe".  These entries exist to only to provide empty
    slots which may be enabled at boot-time. */
-
 static struct device eth3_dev =
-    {
-        "eth3", 0, 0, 0, 0, 0xffe0 /* I/O base*/, 0, 0, 0, 0, NEXT_DEV, ethif_probe};
+{
+    "eth3", 0, 0, 0, 0, 0xffe0 /* I/O base*/, 0, 0, 0, 0, NEXT_DEV, ethif_probe
+};
+
 static struct device eth2_dev =
-    {
-        "eth2", 0, 0, 0, 0, 0xffe0 /* I/O base*/, 0, 0, 0, 0, &eth3_dev, ethif_probe};
+{
+    "eth2", 0, 0, 0, 0, 0xffe0 /* I/O base*/, 0, 0, 0, 0, &eth3_dev, ethif_probe
+};
+
 static struct device eth1_dev =
-    {
-        "eth1", 0, 0, 0, 0, 0xffe0 /* I/O base*/, 0, 0, 0, 0, &eth2_dev, ethif_probe};
+{
+    "eth1", 0, 0, 0, 0, 0xffe0 /* I/O base*/, 0, 0, 0, 0, &eth2_dev, ethif_probe
+};
 
 static struct device eth0_dev =
-    {
-        "eth0", 0, 0, 0, 0, ETH0_ADDR, ETH0_IRQ, 0, 0, 0, &eth1_dev, ethif_probe};
+{
+    "eth0", 0, 0, 0, 0, ETH0_ADDR, ETH0_IRQ, 0, 0, 0, &eth1_dev, ethif_probe
+};
 
 #undef NEXT_DEV
 #define NEXT_DEV (&eth0_dev)
@@ -169,49 +174,51 @@ static struct device eth0_dev =
 #if defined(PLIP) || defined(CONFIG_PLIP)
 extern int plip_init(struct device *);
 static struct device plip2_dev =
-    {
-        "plip2",
-        0,
-        0,
-        0,
-        0,
-        0x278,
-        2,
-        0,
-        0,
-        0,
-        NEXT_DEV,
-        plip_init,
+{
+    "plip2",
+    0,
+    0,
+    0,
+    0,
+    0x278,
+    2,
+    0,
+    0,
+    0,
+    NEXT_DEV,
+    plip_init,
 };
+
 static struct device plip1_dev =
-    {
-        "plip1",
-        0,
-        0,
-        0,
-        0,
-        0x378,
-        7,
-        0,
-        0,
-        0,
-        &plip2_dev,
-        plip_init,
+{
+    "plip1",
+    0,
+    0,
+    0,
+    0,
+    0x378,
+    7,
+    0,
+    0,
+    0,
+    &plip2_dev,
+    plip_init,
 };
+
 static struct device plip0_dev =
-    {
-        "plip0",
-        0,
-        0,
-        0,
-        0,
-        0x3BC,
-        5,
-        0,
-        0,
-        0,
-        &plip1_dev,
-        plip_init,
+{
+    "plip0",
+    0,
+    0,
+    0,
+    0,
+    0x3BC,
+    5,
+    0,
+    0,
+    0,
+    &plip1_dev,
+    plip_init,
 };
 #undef NEXT_DEV
 #define NEXT_DEV (&plip0_dev)
@@ -344,17 +351,17 @@ static struct device ppp0_dev =
 #ifdef LOOPBACK
 extern int loopback_init(struct device *dev);
 static struct device loopback_dev =
-    {
-        "lo",         /* Software Loopback interface		*/
-        0x0,          /* recv memory end			*/
-        0x0,          /* recv memory start			*/
-        0x0,          /* memory end				*/
-        0x0,          /* memory start				*/
-        0,            /* base I/O address			*/
-        0,            /* IRQ					*/
-        0, 0, 0,      /* flags				*/
-        NEXT_DEV,     /* next device				*/
-        loopback_init /* loopback_init should set up the rest	*/
+{
+    "lo",         /* Software Loopback interface		*/
+    0x0,          /* recv memory end			*/
+    0x0,          /* recv memory start			*/
+    0x0,          /* memory end				*/
+    0x0,          /* memory start				*/
+    0,            /* base I/O address			*/
+    0,            /* IRQ					*/
+    0, 0, 0,      /* flags				*/
+    NEXT_DEV,     /* next device				*/
+    loopback_init /* loopback_init should set up the rest	*/
 };
 #undef NEXT_DEV
 #define NEXT_DEV (&loopback_dev)

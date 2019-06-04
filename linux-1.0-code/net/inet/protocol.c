@@ -40,48 +40,45 @@
 #include "udp.h"
 
 static struct inet_protocol tcp_protocol =
-    {
-        tcp_rcv,     /* TCP handler		*/
-        NULL,        /* No fragment handler (and won't be for a long time) */
-        tcp_err,     /* TCP error control	*/
-        NULL,        /* next			*/
-        IPPROTO_TCP, /* protocol ID		*/
-        0,           /* copy			*/
-        NULL,        /* data			*/
-        "TCP"        /* name			*/
+{
+    tcp_rcv,     /* TCP handler		*/
+    NULL,        /* No fragment handler (and won't be for a long time) */
+    tcp_err,     /* TCP error control	*/
+    NULL,        /* next			*/
+    IPPROTO_TCP, /* protocol ID		*/
+    0,           /* copy			*/
+    NULL,        /* data			*/
+    "TCP"        /* name			*/
 };
 
 static struct inet_protocol udp_protocol =
-    {
-        udp_rcv,       /* UDP handler		*/
-        NULL,          /* Will be UDP fraglist handler */
-        udp_err,       /* UDP error control	*/
-        &tcp_protocol, /* next			*/
-        IPPROTO_UDP,   /* protocol ID		*/
-        0,             /* copy			*/
-        NULL,          /* data			*/
-        "UDP"          /* name			*/
+{
+    udp_rcv,       /* UDP handler		*/
+    NULL,          /* Will be UDP fraglist handler */
+    udp_err,       /* UDP error control	*/
+    &tcp_protocol, /* next			*/
+    IPPROTO_UDP,   /* protocol ID		*/
+    0,             /* copy			*/
+    NULL,          /* data			*/
+    "UDP"          /* name			*/
 };
 
 static struct inet_protocol icmp_protocol =
-    {
-        icmp_rcv,      /* ICMP handler		*/
-        NULL,          /* ICMP never fragments anyway */
-        NULL,          /* ICMP error control	*/
-        &udp_protocol, /* next			*/
-        IPPROTO_ICMP,  /* protocol ID		*/
-        0,             /* copy			*/
-        NULL,          /* data			*/
-        "ICMP"         /* name			*/
+{
+    icmp_rcv,      /* ICMP handler		*/
+    NULL,          /* ICMP never fragments anyway */
+    NULL,          /* ICMP error control	*/
+    &udp_protocol, /* next			*/
+    IPPROTO_ICMP,  /* protocol ID		*/
+    0,             /* copy			*/
+    NULL,          /* data			*/
+    "ICMP"         /* name			*/
 };
 
 struct inet_protocol *inet_protocol_base = &icmp_protocol;
-struct inet_protocol *inet_protos[MAX_INET_PROTOS] =
-    {
-        NULL};
+struct inet_protocol *inet_protos[MAX_INET_PROTOS] = { NULL };
 
-struct inet_protocol *
-inet_get_protocol(unsigned char prot)
+struct inet_protocol *inet_get_protocol(unsigned char prot)
 {
     unsigned char hash;
     struct inet_protocol *p;

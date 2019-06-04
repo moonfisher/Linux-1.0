@@ -102,33 +102,34 @@ static struct packet_type ax25_packet_type =
 #endif
 
 static struct packet_type arp_packet_type =
-    {
-        NET16(ETH_P_ARP),
-        0, /* copy */
-        arp_rcv,
-        NULL,
+{
+    NET16(ETH_P_ARP),
+    0, /* copy */
+    arp_rcv,
+    NULL,
 #ifdef CONFIG_IPX
 #ifndef CONFIG_AX25
-        &ipx_packet_type
+    &ipx_packet_type
 #else
-        &ax25_packet_type
+    &ax25_packet_type
 #endif
 #else
 #ifdef CONFIG_AX25
-        &ax25_packet_type
+    &ax25_packet_type
 #else
-        NULL /* next */
+    NULL /* next */
 #endif
 #endif
 };
 
 static struct packet_type ip_packet_type =
-    {
-        NET16(ETH_P_IP),
-        0, /* copy */
-        ip_rcv,
-        NULL,
-        &arp_packet_type};
+{
+    NET16(ETH_P_IP),
+    0, /* copy */
+    ip_rcv,
+    NULL,
+    &arp_packet_type
+};
 
 struct packet_type *ptype_base = &ip_packet_type;
 static struct sk_buff *volatile backlog = NULL;
@@ -246,8 +247,7 @@ int chk_addr(unsigned long addr)
  * al when it doesn't know which address to use (i.e. it does not
  * yet know from or to which interface to go...).
  */
-unsigned long
-my_addr(void)
+unsigned long my_addr(void)
 {
     struct device *dev;
 
@@ -340,8 +340,7 @@ void dev_remove_pack(struct packet_type *pt)
 }
 
 /* Find an interface in the list. This will change soon. */
-struct device *
-dev_get(char *name)
+struct device *dev_get(char *name)
 {
     struct device *dev;
 
@@ -429,8 +428,7 @@ void dev_queue_xmit(struct sk_buff *skb, struct device *dev, int pri)
     /* at the front or the back of the	*/
     /* queue.				*/
 
-    DPRINTF((DBG_DEV, "dev_queue_xmit(skb=%X, dev=%X, pri = %d)\n",
-             skb, dev, pri));
+    DPRINTF((DBG_DEV, "dev_queue_xmit(skb=%X, dev=%X, pri = %d)\n", skb, dev, pri));
 
     if (dev == NULL)
     {
@@ -460,7 +458,11 @@ void dev_queue_xmit(struct sk_buff *skb, struct device *dev, int pri)
         pri = 1;
     }
 
-    if (dev->hard_start_xmit(skb, dev) == 0)
+//    if (dev->hard_start_xmit(skb, dev) == 0)
+//    {
+//        return;
+//    }
+    if (ei_start_xmit(skb, dev) == 0)
     {
         return;
     }
@@ -637,7 +639,8 @@ void inet_bh(void *tmp)
         * SLIP and PLIP have no alternative but to force the type to be
         * IP or something like that.  Sigh- FvK
         */
-        type = skb->dev->type_trans(skb, skb->dev);
+//        type = skb->dev->type_trans(skb, skb->dev);
+        type = eth_type_trans(skb, skb->dev);
 
         /*
          * We got a packet ID.  Now loop over the "known protocols"
@@ -660,9 +663,7 @@ void inet_bh(void *tmp)
                         continue;
                     memcpy(skb2, (const void *)skb, skb->mem_len);
                     skb2->mem_addr = skb2;
-                    skb2->h.raw = (unsigned char *)((unsigned long)skb2 +
-                                                    (unsigned long)skb->h.raw -
-                                                    (unsigned long)skb);
+                    skb2->h.raw = (unsigned char *)((unsigned long)skb2 + (unsigned long)skb->h.raw - (unsigned long)skb);
                     skb2->free = 1;
                 }
                 else
@@ -677,7 +678,8 @@ void inet_bh(void *tmp)
                 flag = 1;
 
                 /* Kick the protocol handler. */
-                ptype->func(skb2, skb->dev, ptype);
+//                ptype->func(skb2, skb->dev, ptype);
+                ip_rcv(skb2, skb->dev, ptype);
             }
         }
 
@@ -727,8 +729,7 @@ void dev_tint(struct device *dev)
 }
 
 /* Perform a SIOCGIFCONF call. */
-static int
-dev_ifconf(char *arg)
+static int dev_ifconf(char *arg)
 {
     struct ifconf ifc;
     struct ifreq ifr;
@@ -1029,7 +1030,8 @@ void dev_init(void)
     dev2 = NULL;
     for (dev = dev_base; dev != NULL; dev = dev->next)
     {
-        if (dev->init && dev->init(dev))
+//        if (dev->init && dev->init(dev))
+        if (dev->init && ethif_probe(dev))
         {
             if (dev2 == NULL)
                 dev_base = dev->next;

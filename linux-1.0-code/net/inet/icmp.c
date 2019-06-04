@@ -199,8 +199,7 @@ icmp_unreach(struct icmphdr *icmph, struct sk_buff *skb)
 }
 
 /* Handle ICMP_REDIRECT. */
-static void
-icmp_redirect(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev)
+static void icmp_redirect(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev)
 {
     struct iphdr *iph;
     unsigned long ip;
@@ -233,10 +232,7 @@ icmp_redirect(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev)
 }
 
 /* Handle ICMP_ECHO ("ping") requests. */
-static void
-icmp_echo(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
-          unsigned long saddr, unsigned long daddr, int len,
-          struct options *opt)
+static void icmp_echo(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev, unsigned long saddr, unsigned long daddr, int len, struct options *opt)
 {
     struct icmphdr *icmphr;
     struct sk_buff *skb2;

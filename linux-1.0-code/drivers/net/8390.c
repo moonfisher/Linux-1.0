@@ -105,7 +105,8 @@ static void NS8390_trigger_send(struct device *dev, unsigned int length,
 static void set_multicast_list(struct device *dev, int num_addrs, void *addrs);
 #endif
 
-struct sigaction ei_sigaction = {
+struct sigaction ei_sigaction =
+{
     ei_interrupt,
     0,
     0,
@@ -179,7 +180,13 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
         return 0;
     }
     /* Fill in the ethernet header. */
-    if (!skb->arp && dev->rebuild_header(skb->data, dev))
+//    if (!skb->arp && dev->rebuild_header(skb->data, dev))
+//    {
+//        skb->dev = dev;
+//        arp_queue(skb);
+//        return 0;
+//    }
+    if (!skb->arp && eth_rebuild_header(skb->data, dev))
     {
         skb->dev = dev;
         arp_queue(skb);
@@ -473,8 +480,8 @@ static void ei_receive(struct device *dev)
             break;                    /* Done for now */
 
         current_offset = this_frame << 8;
-        ei_block_input(dev, sizeof(rx_frame), (char *)&rx_frame,
-                       current_offset);
+//        ei_block_input(dev, sizeof(rx_frame), (char *)&rx_frame, current_offset);
+        wd_block_input(dev, sizeof(rx_frame), (char *)&rx_frame, current_offset);
 
         pkt_len = rx_frame.count - sizeof(rx_frame);
 
@@ -520,8 +527,8 @@ static void ei_receive(struct device *dev)
                 skb->len = pkt_len;
                 skb->dev = dev;
 
-                ei_block_input(dev, pkt_len, (char *)skb->data,
-                               current_offset + sizeof(rx_frame));
+//                ei_block_input(dev, pkt_len, (char *)skb->data, current_offset + sizeof(rx_frame));
+                wd_block_input(dev, pkt_len, (char *)skb->data, current_offset + sizeof(rx_frame));
                 netif_rx(skb);
                 ei_local->stat.rx_packets++;
             }

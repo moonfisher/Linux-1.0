@@ -47,8 +47,7 @@ static struct rtable *rt_base = NULL;
 static struct rtable *rt_loopback = NULL;
 
 /* Dump the contents of a routing table entry. */
-static void
-rt_print(struct rtable *rt)
+static void rt_print(struct rtable *rt)
 {
     if (rt == NULL || inet_debug != DBG_RT)
         return;
@@ -166,8 +165,7 @@ static inline struct device *get_gw_dev(unsigned long gw)
 /*
  * rewrote rt_add(), as the old one was weird. Linus
  */
-void rt_add(short flags, unsigned long dst, unsigned long mask,
-            unsigned long gw, struct device *dev)
+void rt_add(short flags, unsigned long dst, unsigned long mask, unsigned long gw, struct device *dev)
 {
     struct rtable *r, *rt;
     struct rtable **rp;

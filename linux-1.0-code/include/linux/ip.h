@@ -17,7 +17,6 @@
 #ifndef _LINUX_IP_H
 #define _LINUX_IP_H
 
-
 #define IPOPT_END	0
 #define IPOPT_NOOP	1
 #define IPOPT_SEC	130
@@ -27,30 +26,27 @@
 #define IPOPT_SID	136
 #define IPOPT_TIMESTAMP	68
 
-
 struct timestamp
 {
-    unsigned char	len;
-    unsigned char ptr;
+    unsigned char	    len;
+    unsigned char       ptr;
     union
     {
-        unsigned char	flags: 4,
-                   overflow: 4;
+        unsigned char	flags: 4;
+        unsigned char   overflow: 4;
         unsigned char	full_char;
     } x;
-    unsigned long	data[9];
+    unsigned long	    data[9];
 };
-
 
 #define MAX_ROUTE	16
 
 struct route
 {
-    char		route_size;
-    char		pointer;
-    unsigned long route[MAX_ROUTE];
+    char		    route_size;
+    char		    pointer;
+    unsigned long   route[MAX_ROUTE];
 };
-
 
 struct options
 {
@@ -58,29 +54,27 @@ struct options
     struct route		loose_route;
     struct route		strict_route;
     struct timestamp	tstamp;
-    unsigned short	security;
-    unsigned short	compartment;
-    unsigned short	handling;
-    unsigned short	stream;
-    unsigned		tcc;
+    unsigned short	    security;
+    unsigned short	    compartment;
+    unsigned short	    handling;
+    unsigned short	    stream;
+    unsigned		    tcc;
 };
-
 
 struct iphdr
 {
-    unsigned char		ihl: 4,
-                  version: 4;
+    unsigned char		ihl: 4;
+    unsigned char       version: 4;
     unsigned char		tos;
-    unsigned short	tot_len;
-    unsigned short	id;
-    unsigned short	frag_off;
+    unsigned short	    tot_len;
+    unsigned short	    id;
+    unsigned short	    frag_off;
     unsigned char		ttl;
     unsigned char		protocol;
-    unsigned short	check;
+    unsigned short	    check;
     unsigned long		saddr;
     unsigned long		daddr;
     /*The options start here. */
 };
-
 
 #endif	/* _LINUX_IP_H */
