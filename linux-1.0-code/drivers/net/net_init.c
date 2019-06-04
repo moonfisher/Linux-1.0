@@ -45,17 +45,17 @@ static int next_ethdev_number = 0;
 
 #ifdef NET_MAJOR_NUM
 static struct file_operations netcard_fops =
-{
-    NULL,		/* lseek */
-    NULL,		/* read */
-    NULL,		/* write */
-    NULL,		/* readdir */
-    NULL,		/* select */
-    NULL,		/* ioctl */
-    NULL,		/* mmap */
-    NULL,		/* open */
-    NULL,		/* release */
-    NULL		/* fsync */
+    {
+        NULL, /* lseek */
+        NULL, /* read */
+        NULL, /* write */
+        NULL, /* readdir */
+        NULL, /* select */
+        NULL, /* ioctl */
+        NULL, /* mmap */
+        NULL, /* open */
+        NULL, /* release */
+        NULL  /* fsync */
 };
 #endif
 
@@ -67,7 +67,7 @@ unsigned long lance_init(unsigned long mem_start, unsigned long mem_end);
   and returns the new start of free memory.
   */
 
-unsigned long net_dev_init (unsigned long mem_start, unsigned long mem_end)
+unsigned long net_dev_init(unsigned long mem_start, unsigned long mem_end)
 {
 
 #ifdef NET_MAJOR_NUM
@@ -76,7 +76,7 @@ unsigned long net_dev_init (unsigned long mem_start, unsigned long mem_end)
                NET_MAJOR_NUM);
 #endif
 
-#if defined(CONFIG_LANCE)			/* Note this is _not_ CONFIG_AT1500. */
+#if defined(CONFIG_LANCE) /* Note this is _not_ CONFIG_AT1500. */
     mem_start = lance_init(mem_start, mem_end);
 #endif
 
@@ -101,9 +101,8 @@ struct device *init_etherdev(struct device *dev, int sizeof_private,
 
     if (dev == NULL)
     {
-        int alloc_size = sizeof(struct device) + sizeof("eth%d ")
-                         + sizeof_private;
-        if (mem_startp && *mem_startp )
+        int alloc_size = sizeof(struct device) + sizeof("eth%d ") + sizeof_private;
+        if (mem_startp && *mem_startp)
         {
             dev = (struct device *)*mem_startp;
             *mem_startp += alloc_size;
@@ -117,48 +116,47 @@ struct device *init_etherdev(struct device *dev, int sizeof_private,
         new_device = 1;
     }
 
-    if (dev->name  &&  dev->name[0] == '\0')
+    if (dev->name && dev->name[0] == '\0')
         sprintf(dev->name, "eth%d", next_ethdev_number++);
 
     for (i = 0; i < DEV_NUMBUFFS; i++)
         dev->buffs[i] = NULL;
 
-    dev->hard_header	= eth_header;
-    dev->add_arp		= eth_add_arp;
-    dev->queue_xmit		= dev_queue_xmit;
-    dev->rebuild_header	= eth_rebuild_header;
-    dev->type_trans		= eth_type_trans;
+    dev->hard_header = eth_header;
+    dev->add_arp = eth_add_arp;
+    dev->queue_xmit = dev_queue_xmit;
+    dev->rebuild_header = eth_rebuild_header;
+    dev->type_trans = eth_type_trans;
 
-    dev->type			= ARPHRD_ETHER;
+    dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
-    dev->mtu			= 1500; /* eth_mtu */
-    dev->addr_len		= ETH_ALEN;
+    dev->mtu = 1500; /* eth_mtu */
+    dev->addr_len = ETH_ALEN;
     for (i = 0; i < ETH_ALEN; i++)
     {
         dev->broadcast[i] = 0xff;
     }
 
     /* New-style flags. */
-    dev->flags			= IFF_BROADCAST;
-    dev->family			= AF_INET;
-    dev->pa_addr		= 0;
-    dev->pa_brdaddr		= 0;
-    dev->pa_mask		= 0;
-    dev->pa_alen		= sizeof(unsigned long);
+    dev->flags = IFF_BROADCAST;
+    dev->family = AF_INET;
+    dev->pa_addr = 0;
+    dev->pa_brdaddr = 0;
+    dev->pa_mask = 0;
+    dev->pa_alen = sizeof(unsigned long);
 
     if (new_device)
     {
         /* Append the device to the device queue. */
         struct device **old_devp = &dev_base;
         while ((*old_devp)->next)
-            old_devp = & (*old_devp)->next;
+            old_devp = &(*old_devp)->next;
         (*old_devp)->next = dev;
         dev->next = 0;
     }
     return dev;
 }
 
-
 /*
  * Local variables:
  *  compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c net_init.c"

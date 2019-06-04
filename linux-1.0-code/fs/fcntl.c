@@ -15,7 +15,7 @@
 
 extern int fcntl_getlk(unsigned int, struct flock *);
 extern int fcntl_setlk(unsigned int, unsigned int, struct flock *);
-extern int sock_fcntl (struct file *, unsigned int cmd, unsigned long arg);
+extern int sock_fcntl(struct file *, unsigned int cmd, unsigned long arg);
 
 static int dupfd(unsigned int fd, unsigned int arg)
 {
@@ -45,11 +45,11 @@ asmlinkage int sys_dup2(unsigned int oldfd, unsigned int newfd)
      * errno's for dup2() are slightly different than for fcntl(F_DUPFD)
      * for historical reasons.
      */
-    if (newfd > NR_OPEN)	/* historical botch - should have been >= */
-        return -EBADF;	/* dupfd() would return -EINVAL */
+    if (newfd > NR_OPEN) /* historical botch - should have been >= */
+        return -EBADF;   /* dupfd() would return -EINVAL */
 #if 1
     if (newfd == NR_OPEN)
-        return -EBADF;	/* dupfd() does return -EINVAL and that may
+        return -EBADF; /* dupfd() does return -EINVAL and that may
 				 * even be the standard!  But that is too
 				 * weird for now.
 				 */
@@ -88,16 +88,16 @@ asmlinkage int sys_fcntl(unsigned int fd, unsigned int cmd, unsigned long arg)
         filp->f_flags |= arg & (O_APPEND | O_NONBLOCK);
         return 0;
     case F_GETLK:
-        return fcntl_getlk(fd, (struct flock *) arg);
+        return fcntl_getlk(fd, (struct flock *)arg);
     case F_SETLK:
-        return fcntl_setlk(fd, cmd, (struct flock *) arg);
+        return fcntl_setlk(fd, cmd, (struct flock *)arg);
     case F_SETLKW:
-        return fcntl_setlk(fd, cmd, (struct flock *) arg);
+        return fcntl_setlk(fd, cmd, (struct flock *)arg);
     default:
         /* sockets need a few special fcntls. */
-        if (S_ISSOCK (filp->f_inode->i_mode))
+        if (S_ISSOCK(filp->f_inode->i_mode))
         {
-            return (sock_fcntl (filp, cmd, arg));
+            return (sock_fcntl(filp, cmd, arg));
         }
         return -EINVAL;
     }

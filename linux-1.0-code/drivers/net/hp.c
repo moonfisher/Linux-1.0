@@ -27,23 +27,27 @@ static char *version =
 #include "8390.h"
 
 #ifndef HAVE_PORTRESERVE
-#define check_region(ioaddr, size)				0
-#define snarf_region(ioaddr, size);				do ; while (0)
+#define check_region(ioaddr, size) 0
+#define snarf_region(ioaddr, size) \
+    ;                              \
+    do                             \
+        ;                          \
+    while (0)
 #endif
 
-#define HP_IO_EXTENT	32
+#define HP_IO_EXTENT 32
 
-#define HP_DATAPORT		0x0c	/* "Remote DMA" data port. */
-#define HP_ID			0x07
-#define HP_CONFIGURE	0x08	/* Configuration register. */
-#define	 HP_RUN			0x01	/* 1 == Run, 0 == reset. */
-#define	 HP_IRQ			0x0E	/* Mask for software-configured IRQ line. */
-#define	 HP_DATAON		0x10	/* Turn on dataport */
-#define NIC_OFFSET		0x10	/* Offset the 8390 registers. */
+#define HP_DATAPORT 0x0c /* "Remote DMA" data port. */
+#define HP_ID 0x07
+#define HP_CONFIGURE 0x08 /* Configuration register. */
+#define HP_RUN 0x01       /* 1 == Run, 0 == reset. */
+#define HP_IRQ 0x0E       /* Mask for software-configured IRQ line. */
+#define HP_DATAON 0x10    /* Turn on dataport */
+#define NIC_OFFSET 0x10   /* Offset the 8390 registers. */
 
-#define HP_START_PG		0x00	/* First page of TX buffer */
-#define HP_8BSTOP_PG	0x80	/* Last page +1 of RX ring */
-#define HP_16BSTOP_PG	0xFF	/* Same, for 16 bit cards. */
+#define HP_START_PG 0x00   /* First page of TX buffer */
+#define HP_8BSTOP_PG 0x80  /* Last page +1 of RX ring */
+#define HP_16BSTOP_PG 0xFF /* Same, for 16 bit cards. */
 
 int hp_probe(struct device *dev);
 int hpprobe1(struct device *dev, int ioaddr);
@@ -57,9 +61,8 @@ static void hp_init_card(struct device *dev);
 
 /* The map from IRQ number to HP_CONFIGURE register setting. */
 /* My default is IRQ5	   0  1	 2  3  4  5  6	7  8  9 10 11 */
-static char irqmap[16] = { 0, 0, 4, 6, 8, 10, 0, 14, 0, 4, 2, 12, 0, 0, 0, 0};
+static char irqmap[16] = {0, 0, 4, 6, 8, 10, 0, 14, 0, 4, 2, 12, 0, 0, 0, 0};
 
-
 /*	Probe for an HP LAN adaptor.
 	Also initialize the card and fill in STATION_ADDR with the station
 	address. */
@@ -69,9 +72,9 @@ int hp_probe(struct device *dev)
     int *port, ports[] = {0x300, 0x320, 0x340, 0x280, 0x2C0, 0x200, 0x240, 0};
     short ioaddr = dev->base_addr;
 
-    if (ioaddr > 0x1ff)			/* Check a single specified location. */
+    if (ioaddr > 0x1ff) /* Check a single specified location. */
         return hpprobe1(dev, ioaddr);
-    else if (ioaddr > 0)				/* Don't probe at all. */
+    else if (ioaddr > 0) /* Don't probe at all. */
         return ENXIO;
 
     for (port = &ports[0]; *port; port++)
@@ -95,10 +98,7 @@ int hpprobe1(struct device *dev, int ioaddr)
     /* Check for the HP physical address, 08 00 09 xx xx xx. */
     /* This really isn't good enough: we may pick up HP LANCE boards
        also!  Avoid the lance 0x5757 signature. */
-    if (inb(ioaddr) != 0x08
-            || inb(ioaddr + 1) != 0x00
-            || inb(ioaddr + 2) != 0x09
-            || inb(ioaddr + 14) == 0x57)
+    if (inb(ioaddr) != 0x08 || inb(ioaddr + 1) != 0x00 || inb(ioaddr + 2) != 0x09 || inb(ioaddr + 14) == 0x57)
         return ENODEV;
 
     /* Set up the parameters based on the board ID.
@@ -119,34 +119,33 @@ int hpprobe1(struct device *dev, int ioaddr)
 
     printk("%s: %s (ID %02x) at %#3x,", dev->name, name, board_id, ioaddr);
 
-    for(i = 0; i < ETHER_ADDR_LEN; i++)
+    for (i = 0; i < ETHER_ADDR_LEN; i++)
         printk(" %2.2x", station_addr[i] = inb(ioaddr + i));
 
     /* Snarf the interrupt now.  Someday this could be moved to open(). */
     if (dev->irq < 2)
     {
-        int irq_16list[] = { 11, 10, 5, 3, 4, 7, 9, 0};
-        int irq_8list[] = { 7, 5, 3, 4, 9, 0};
+        int irq_16list[] = {11, 10, 5, 3, 4, 7, 9, 0};
+        int irq_8list[] = {7, 5, 3, 4, 9, 0};
         int *irqp = wordmode ? irq_16list : irq_8list;
         do
         {
             int irq = *irqp;
-            if (request_irq (irq, NULL) != -EBUSY)
+            if (request_irq(irq, NULL) != -EBUSY)
             {
                 autoirq_setup(0);
                 /* Twinkle the interrupt, and check if it's seen. */
                 outb_p(irqmap[irq] | HP_RUN, ioaddr + HP_CONFIGURE);
-                outb_p( 0x00 | HP_RUN, ioaddr + HP_CONFIGURE);
-                if (irq == autoirq_report(0)		 /* It's a good IRQ line! */
-                        && request_irq (irq, &ei_interrupt) == 0)
+                outb_p(0x00 | HP_RUN, ioaddr + HP_CONFIGURE);
+                if (irq == autoirq_report(0) /* It's a good IRQ line! */
+                    && request_irq(irq, &ei_interrupt) == 0)
                 {
                     printk(" selecting IRQ %d.\n", irq);
                     dev->irq = *irqp;
                     break;
                 }
             }
-        }
-        while (*++irqp);
+        } while (*++irqp);
         if (*irqp == 0)
         {
             printk(" no free IRQ lines.\n");
@@ -159,7 +158,7 @@ int hpprobe1(struct device *dev, int ioaddr)
             dev->irq = 9;
         if (irqaction(dev->irq, &ei_sigaction))
         {
-            printk (" unable to get IRQ %d.\n", dev->irq);
+            printk(" unable to get IRQ %d.\n", dev->irq);
             return EBUSY;
         }
     }
@@ -192,7 +191,8 @@ hp_reset_8390(struct device *dev)
     int hp_base = dev->base_addr - NIC_OFFSET;
     int saved_config = inb_p(hp_base + HP_CONFIGURE);
 
-    if (ei_debug > 1) printk("resetting the 8390 time=%ld...", jiffies);
+    if (ei_debug > 1)
+        printk("resetting the 8390 time=%ld...", jiffies);
     outb_p(0x00, hp_base + HP_CONFIGURE);
     ei_status.txing = 0;
     /* Pause just a few cycles for the hardware reset to take place. */
@@ -206,7 +206,8 @@ hp_reset_8390(struct device *dev)
     if ((inb_p(hp_base + NIC_OFFSET + EN0_ISR) & ENISR_RESET) == 0)
         printk("%s: hp_reset_8390() did not complete.\n", dev->name);
 
-    if (ei_debug > 1) printk("8390 reset done (%ld).", jiffies);
+    if (ei_debug > 1)
+        printk("8390 reset done (%ld).", jiffies);
     return;
 }
 
@@ -240,7 +241,7 @@ hp_block_input(struct device *dev, int count, char *buf, int ring_offset)
         insb(nic_base - NIC_OFFSET + HP_DATAPORT, buf, count);
     }
     /* This is for the ALPHA version only, remove for later releases. */
-    if (ei_debug > 0)  			/* DMA termination address check... */
+    if (ei_debug > 0) /* DMA termination address check... */
     {
         int high = inb_p(nic_base + EN0_RSARHI);
         int low = inb_p(nic_base + EN0_RSARLO);
@@ -274,7 +275,7 @@ hp_block_output(struct device *dev, int count,
     /* Handle the read-before-write bug the same way as the
        Crynwr packet driver -- the NatSemi method doesn't work. */
     outb_p(0x42, nic_base + EN0_RCNTLO);
-    outb_p(0,	nic_base + EN0_RCNTHI);
+    outb_p(0, nic_base + EN0_RCNTHI);
     outb_p(0xff, nic_base + EN0_RSARLO);
     outb_p(0x00, nic_base + EN0_RSARHI);
     outb_p(E8390_RREAD + E8390_START, EN_CMD);
@@ -284,7 +285,7 @@ hp_block_output(struct device *dev, int count,
 #endif
 
     outb_p(count & 0xff, nic_base + EN0_RCNTLO);
-    outb_p(count >> 8,	 nic_base + EN0_RCNTHI);
+    outb_p(count >> 8, nic_base + EN0_RCNTHI);
     outb_p(0x00, nic_base + EN0_RSARLO);
     outb_p(start_page, nic_base + EN0_RSARHI);
 
@@ -302,10 +303,10 @@ hp_block_output(struct device *dev, int count,
     /* DON'T check for 'inb_p(EN0_ISR) & ENISR_RDC' here -- it's broken! */
 
     /* This is for the ALPHA version only, remove for later releases. */
-    if (ei_debug > 0)  			/* DMA termination address check... */
+    if (ei_debug > 0) /* DMA termination address check... */
     {
         int high = inb_p(nic_base + EN0_RSARHI);
-        int low  = inb_p(nic_base + EN0_RSARLO);
+        int low = inb_p(nic_base + EN0_RSARLO);
         int addr = (high << 8) + low;
         if ((start_page << 8) + count != addr)
             printk("%s: TX Transfer address mismatch, %#4.4x vs. %#4.4x.\n",
@@ -326,7 +327,6 @@ hp_init_card(struct device *dev)
     return;
 }
 
-
 /*
  * Local variables:
  * compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c hp.c"

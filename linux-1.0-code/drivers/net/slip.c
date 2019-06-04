@@ -55,24 +55,22 @@
 #include "slip.h"
 #include "slhc.h"
 
-#define	SLIP_VERSION	"0.7.5"
+#define SLIP_VERSION "0.7.5"
 
 /* Define some IP layer stuff.  Not all systems have it. */
 #ifdef SL_DUMP
-#   define	IP_VERSION	4	/* version# of our IP software	*/
-#   define	IPF_F_OFFSET	0x1fff	/* Offset field			*/
-#   define	IPF_DF		0x4000	/* Don't fragment flag		*/
-#   define	IPF_MF		0x2000	/* More Fragments flag		*/
-#   define	IP_OF_COPIED	0x80	/* Copied-on-fragmentation flag	*/
-#   define	IP_OF_CLASS	0x60	/* Option class			*/
-#   define	IP_OF_NUMBER	0x1f	/* Option number		*/
+#define IP_VERSION 4        /* version# of our IP software	*/
+#define IPF_F_OFFSET 0x1fff /* Offset field			*/
+#define IPF_DF 0x4000       /* Don't fragment flag		*/
+#define IPF_MF 0x2000       /* More Fragments flag		*/
+#define IP_OF_COPIED 0x80   /* Copied-on-fragmentation flag	*/
+#define IP_OF_CLASS 0x60    /* Option class			*/
+#define IP_OF_NUMBER 0x1f   /* Option number		*/
 #endif
 
-
-static struct slip	sl_ctrl[SL_NRUNIT];
-static struct tty_ldisc	sl_ldisc;
-static int		already = 0;
-
+static struct slip sl_ctrl[SL_NRUNIT];
+static struct tty_ldisc sl_ldisc;
+static int already = 0;
 
 /* Dump the contents of an IP datagram. */
 static void
@@ -83,10 +81,11 @@ ip_dump(unsigned char *ptr, int len)
     struct tcphdr *th;
     int dlen, doff;
 
-    if (inet_debug != DBG_SLIP) return;
+    if (inet_debug != DBG_SLIP)
+        return;
 
-    ip = (struct iphdr *) ptr;
-    th = (struct tcphdr *) (ptr + ip->ihl * 4);
+    ip = (struct iphdr *)ptr;
+    th = (struct tcphdr *)(ptr + ip->ihl * 4);
     printk("\r%s -> %s seq %lx ack %lx len %d\n",
            in_ntoa(ip->saddr), in_ntoa(ip->daddr),
            ntohl(th->seq), ntohl(th->ack_seq), ntohs(ip->tot_len));
@@ -94,22 +93,24 @@ ip_dump(unsigned char *ptr, int len)
 
     printk("\r*****\n");
     printk("%p %d\n", ptr, len);
-    ip = (struct iphdr *) ptr;
+    ip = (struct iphdr *)ptr;
     dlen = ntohs(ip->tot_len);
     doff = ((ntohs(ip->frag_off) & IPF_F_OFFSET) << 3);
-
 
     printk("SLIP: %s->", in_ntoa(ip->saddr));
     printk("%s\n", in_ntoa(ip->daddr));
     printk(" len %u ihl %u ver %u ttl %u prot %u",
            dlen, ip->ihl, ip->version, ip->ttl, ip->protocol);
 
-    if (ip->tos != 0) printk(" tos %u", ip->tos);
+    if (ip->tos != 0)
+        printk(" tos %u", ip->tos);
     if (doff != 0 || (ntohs(ip->frag_off) & IPF_MF))
         printk(" id %u offs %u", ntohs(ip->id), doff);
 
-    if (ntohs(ip->frag_off) & IPF_DF) printk(" DF");
-    if (ntohs(ip->frag_off) & IPF_MF) printk(" MF");
+    if (ntohs(ip->frag_off) & IPF_DF)
+        printk(" DF");
+    if (ntohs(ip->frag_off) & IPF_MF)
+        printk(" MF");
     printk("\n*****\n");
 #endif
 }
@@ -133,38 +134,37 @@ void clh_dump(unsigned char *cp, int len)
 static void
 sl_initialize(struct slip *sl, struct device *dev)
 {
-    sl->inuse		= 0;
-    sl->sending		= 0;
-    sl->escape		= 0;
-    sl->flags		= 0;
+    sl->inuse = 0;
+    sl->sending = 0;
+    sl->escape = 0;
+    sl->flags = 0;
 #ifdef SL_ADAPTIVE
-    sl->mode		= SL_MODE_ADAPTIVE;	/* automatic CSLIP recognition */
+    sl->mode = SL_MODE_ADAPTIVE; /* automatic CSLIP recognition */
 #else
 #ifdef SL_COMPRESSED
-    sl->mode		= SL_MODE_CSLIP | SL_MODE_ADAPTIVE;	/* Default */
+    sl->mode = SL_MODE_CSLIP | SL_MODE_ADAPTIVE; /* Default */
 #else
-    sl->mode		= SL_MODE_SLIP;		/* Default for non compressors */
+    sl->mode = SL_MODE_SLIP; /* Default for non compressors */
 #endif
 #endif
 
-    sl->line		= dev->base_addr;
-    sl->tty		= NULL;
-    sl->dev		= dev;
-    sl->slcomp		= NULL;
+    sl->line = dev->base_addr;
+    sl->tty = NULL;
+    sl->dev = dev;
+    sl->slcomp = NULL;
 
     /* Clear all pointers. */
-    sl->rbuff		= NULL;
-    sl->xbuff		= NULL;
-    sl->cbuff		= NULL;
+    sl->rbuff = NULL;
+    sl->xbuff = NULL;
+    sl->cbuff = NULL;
 
-    sl->rhead		= NULL;
-    sl->rend		= NULL;
-    dev->rmem_end		= (unsigned long) NULL;
-    dev->rmem_start	= (unsigned long) NULL;
-    dev->mem_end		= (unsigned long) NULL;
-    dev->mem_start	= (unsigned long) NULL;
+    sl->rhead = NULL;
+    sl->rend = NULL;
+    dev->rmem_end = (unsigned long)NULL;
+    dev->rmem_start = (unsigned long)NULL;
+    dev->mem_end = (unsigned long)NULL;
+    dev->mem_start = (unsigned long)NULL;
 }
-
 
 /* Find a SLIP channel from its `tty' link. */
 static struct slip *
@@ -173,15 +173,16 @@ sl_find(struct tty_struct *tty)
     struct slip *sl;
     int i;
 
-    if (tty == NULL) return(NULL);
+    if (tty == NULL)
+        return (NULL);
     for (i = 0; i < SL_NRUNIT; i++)
     {
         sl = &sl_ctrl[i];
-        if (sl->tty == tty) return(sl);
+        if (sl->tty == tty)
+            return (sl);
     }
-    return(NULL);
+    return (NULL);
 }
-
 
 /* Find a free SLIP channel, and link in this `tty' line. */
 static inline struct slip *
@@ -191,7 +192,7 @@ sl_alloc(void)
     struct slip *sl;
     int i;
 
-    save_flags (flags);
+    save_flags(flags);
     cli();
     for (i = 0; i < SL_NRUNIT; i++)
     {
@@ -201,13 +202,12 @@ sl_alloc(void)
             sl->inuse = 1;
             sl->tty = NULL;
             restore_flags(flags);
-            return(sl);
+            return (sl);
         }
     }
     restore_flags(flags);
-    return(NULL);
+    return (NULL);
 }
-
 
 /* Free a SLIP channel. */
 static inline void
@@ -248,20 +248,20 @@ static void sl_changedmtu(struct slip *sl)
 
     DPRINTF((DBG_SLIP, "SLIP: mtu changed!\n"));
 
-    tb = (unsigned char *) kmalloc(l + 4, GFP_ATOMIC);
-    rb = (unsigned char *) kmalloc(l + 4, GFP_ATOMIC);
-    cb = (unsigned char *) kmalloc(l + 4, GFP_ATOMIC);
+    tb = (unsigned char *)kmalloc(l + 4, GFP_ATOMIC);
+    rb = (unsigned char *)kmalloc(l + 4, GFP_ATOMIC);
+    cb = (unsigned char *)kmalloc(l + 4, GFP_ATOMIC);
 
-    if(tb == NULL || rb == NULL || cb == NULL)
+    if (tb == NULL || rb == NULL || cb == NULL)
     {
         printk("Unable to grow slip buffers. MTU change cancelled.\n");
         sl->mtu = omtu;
         dev->mtu = omtu;
-        if(tb != NULL)
+        if (tb != NULL)
             kfree(tb);
-        if(rb != NULL)
+        if (rb != NULL)
             kfree(rb);
-        if(cb != NULL)
+        if (cb != NULL)
             kfree(cb);
         return;
     }
@@ -270,14 +270,14 @@ static void sl_changedmtu(struct slip *sl)
 
     tf = (unsigned char *)sl->dev->mem_start;
     sl->dev->mem_start = (unsigned long)tb;
-    sl->dev->mem_end = (unsigned long) (sl->dev->mem_start + l);
+    sl->dev->mem_end = (unsigned long)(sl->dev->mem_start + l);
     rf = (unsigned char *)sl->dev->rmem_start;
     sl->dev->rmem_start = (unsigned long)rb;
-    sl->dev->rmem_end = (unsigned long) (sl->dev->rmem_start + l);
+    sl->dev->rmem_end = (unsigned long)(sl->dev->rmem_start + l);
 
-    sl->xbuff = (unsigned char *) sl->dev->mem_start;
-    sl->rbuff = (unsigned char *) sl->dev->rmem_start;
-    sl->rend  = (unsigned char *) sl->dev->rmem_end;
+    sl->xbuff = (unsigned char *)sl->dev->mem_start;
+    sl->rbuff = (unsigned char *)sl->dev->rmem_start;
+    sl->rend = (unsigned char *)sl->dev->rmem_end;
     sl->rhead = sl->rbuff;
 
     cf = sl->cbuff;
@@ -289,14 +289,13 @@ static void sl_changedmtu(struct slip *sl)
 
     sti();
 
-    if(rf != NULL)
+    if (rf != NULL)
         kfree(rf);
-    if(tf != NULL)
+    if (tf != NULL)
         kfree(tf);
-    if(cf != NULL)
+    if (cf != NULL)
         kfree(cf);
 }
-
 
 /* Stuff one byte into a SLIP receiver buffer. */
 static inline void
@@ -312,7 +311,8 @@ sl_enqueue(struct slip *sl, unsigned char c)
         sl->rhead++;
         sl->rcount++;
     }
-    else sl->roverrun++;
+    else
+        sl->roverrun++;
     restore_flags(flags);
 }
 
@@ -332,7 +332,6 @@ sl_dequeue(struct slip *sl, int i)
     restore_flags(flags);
 }
 
-
 /* Set the "sending" flag.  This must be atomic, hence the ASM. */
 static inline void
 sl_lock(struct slip *sl)
@@ -346,7 +345,6 @@ sl_lock(struct slip *sl)
     restore_flags(flags);
 }
 
-
 /* Clear the "sending" flag.  This must be atomic, hence the ASM. */
 static inline void
 sl_unlock(struct slip *sl)
@@ -359,7 +357,6 @@ sl_unlock(struct slip *sl)
     sl->dev->tbusy = 0;
     restore_flags(flags);
 }
-
 
 /* Send one completely decapsulated IP datagram to the IP layer. */
 static void
@@ -398,7 +395,7 @@ sl_bump(struct slip *sl)
                 done = 0;
             }
             restore_flags(flags);
-            if (! done)  /* not enough space available */
+            if (!done) /* not enough space available */
                 return;
 
             count = slhc_uncompress(sl->slcomp, sl->rbuff, count);
@@ -435,13 +432,12 @@ sl_bump(struct slip *sl)
                  sl->rcount, sl->rbuff));
         /* clh_dump(sl->rbuff, count); */
         done = dev_rint(sl->rbuff, count, 0, sl->dev);
-        if (done == 0 || done == 1) break;
-    }
-    while(1);
+        if (done == 0 || done == 1)
+            break;
+    } while (1);
 
     sl->rpacket++;
 }
-
 
 /* TTY finished sending a datagram, so clean up. */
 static void
@@ -451,7 +447,6 @@ sl_next(struct slip *sl)
     sl_unlock(sl);
     dev_tint(sl->dev);
 }
-
 
 /* Encapsulate one IP datagram and stuff into a TTY queue. */
 static void
@@ -465,17 +460,17 @@ sl_encaps(struct slip *sl, unsigned char *icp, int len)
 
     ip_dump(icp, len);
 
-    if(sl->mtu != sl->dev->mtu)	/* Someone has been ifconfigging */
+    if (sl->mtu != sl->dev->mtu) /* Someone has been ifconfigging */
         sl_changedmtu(sl);
 
-    if(len > sl->mtu)		/* Sigh, shouldn't occur BUT ... */
+    if (len > sl->mtu) /* Sigh, shouldn't occur BUT ... */
     {
         len = sl->mtu;
         printk("slip: truncating oversized transmit packet!\n");
     }
 
     p = icp;
-    if(sl->mode & SL_MODE_CSLIP)
+    if (sl->mode & SL_MODE_CSLIP)
         len = slhc_compress(sl->slcomp, p, len, sl->cbuff, &p, 1);
 
 #ifdef OLD
@@ -492,10 +487,10 @@ sl_encaps(struct slip *sl, unsigned char *icp, int len)
      * For each byte in the packet, send the appropriate
      * character sequence, according to the SLIP protocol.
      */
-    while(len-- > 0)
+    while (len-- > 0)
     {
         c = *p++;
-        switch(c)
+        switch (c)
         {
         case END:
             *bp++ = ESC;
@@ -515,7 +510,7 @@ sl_encaps(struct slip *sl, unsigned char *icp, int len)
     *bp++ = END;
     count++;
 #else
-    if(sl->mode & SL_MODE_SLIP6)
+    if (sl->mode & SL_MODE_SLIP6)
         count = slip_esc6(p, (unsigned char *)sl->xbuff, len);
     else
         count = slip_esc(p, (unsigned char *)sl->xbuff, len);
@@ -525,8 +520,8 @@ sl_encaps(struct slip *sl, unsigned char *icp, int len)
 
     /* Tell TTY to send it on its way. */
     DPRINTF((DBG_SLIP, "SLIP: kicking TTY for %d bytes at 0x%X\n", count, bp));
-    if (tty_write_data(sl->tty, (char *) bp, count,
-                       (void (*)(void *))sl_next, (void *) sl) == 0)
+    if (tty_write_data(sl->tty, (char *)bp, count,
+                       (void (*)(void *))sl_next, (void *)sl) == 0)
     {
         DPRINTF((DBG_SLIP, "SLIP: TTY already done with %d bytes!\n", count));
         sl_next(sl);
@@ -572,16 +567,16 @@ sl_xmit(struct sk_buff *skb, struct device *dev)
     {
         DPRINTF((DBG_SLIP, "SLIP: sl_xmit: BUSY\r\n"));
         sl->sbusy++;
-        return(1);
+        return (1);
     }
 
     /* We were not, so we are now... :-) */
     if (skb != NULL)
     {
 #ifdef CONFIG_AX25
-        if(sl->mode & SL_MODE_AX25)
+        if (sl->mode & SL_MODE_AX25)
         {
-            if(!skb->arp && dev->rebuild_header(skb->data, dev))
+            if (!skb->arp && dev->rebuild_header(skb->data, dev))
             {
                 skb->dev = dev;
                 arp_queue(skb);
@@ -609,21 +604,20 @@ sl_xmit(struct sk_buff *skb, struct device *dev)
         if (skb->free)
             kfree_skb(skb, FREE_WRITE);
     }
-    return(0);
+    return (0);
 }
 
 /* Return the frame type ID.  This is normally IP but maybe be AX.25. */
 static unsigned short
-sl_type_trans (struct sk_buff *skb, struct device *dev)
+sl_type_trans(struct sk_buff *skb, struct device *dev)
 {
 #ifdef CONFIG_AX25
     struct slip *sl = &sl_ctrl[dev->base_addr];
-    if(sl->mode & SL_MODE_AX25)
-        return(NET16(ETH_P_AX25));
+    if (sl->mode & SL_MODE_AX25)
+        return (NET16(ETH_P_AX25));
 #endif
-    return(NET16(ETH_P_IP));
+    return (NET16(ETH_P_IP));
 }
-
 
 /* Fill in the MAC-level header. Not used by SLIP. */
 static int
@@ -632,13 +626,12 @@ sl_header(unsigned char *buff, struct device *dev, unsigned short type,
 {
 #ifdef CONFIG_AX25
     struct slip *sl = &sl_ctrl[dev->base_addr];
-    if((sl->mode & SL_MODE_AX25) && type != NET16(ETH_P_AX25))
+    if ((sl->mode & SL_MODE_AX25) && type != NET16(ETH_P_AX25))
         return ax25_encapsulate_ip(buff, dev, type, daddr, saddr, len);
 #endif
 
-    return(0);
+    return (0);
 }
-
 
 /* Add an ARP-entry for this device's broadcast address. Not used. */
 static void
@@ -647,11 +640,10 @@ sl_add_arp(unsigned long addr, struct sk_buff *skb, struct device *dev)
 #ifdef CONFIG_AX25
     struct slip *sl = &sl_ctrl[dev->base_addr];
 
-    if(sl->mode & SL_MODE_AX25)
-        arp_add(addr, ((char *) skb->data) + 8, dev);
+    if (sl->mode & SL_MODE_AX25)
+        arp_add(addr, ((char *)skb->data) + 8, dev);
 #endif
 }
-
 
 /* Rebuild the MAC-level header.  Not used by SLIP. */
 static int
@@ -660,12 +652,11 @@ sl_rebuild_header(void *buff, struct device *dev)
 #ifdef CONFIG_AX25
     struct slip *sl = &sl_ctrl[dev->base_addr];
 
-    if(sl->mode & SL_MODE_AX25)
+    if (sl->mode & SL_MODE_AX25)
         return ax25_rebuild_header(buff, dev);
 #endif
-    return(0);
+    return (0);
 }
-
 
 /* Open the low-level part of the SLIP channel. Easy! */
 static int
@@ -679,7 +670,7 @@ sl_open(struct device *dev)
     if (sl->tty == NULL)
     {
         DPRINTF((DBG_SLIP, "SLIP: channel %d not connected!\n", sl->line));
-        return(-ENXIO);
+        return (-ENXIO);
     }
     sl->dev = dev;
 
@@ -700,43 +691,43 @@ sl_open(struct device *dev)
     if (l < (576 * 2))
         l = 576 * 2;
 
-    p = (unsigned char *) kmalloc(l + 4, GFP_KERNEL);
+    p = (unsigned char *)kmalloc(l + 4, GFP_KERNEL);
     if (p == NULL)
     {
         DPRINTF((DBG_SLIP, "SLIP: no memory for SLIP XMIT buffer!\n"));
-        return(-ENOMEM);
+        return (-ENOMEM);
     }
 
-    sl->mtu		= dev->mtu;
-    sl->dev->mem_start	= (unsigned long) p;
-    sl->dev->mem_end	= (unsigned long) (sl->dev->mem_start + l);
+    sl->mtu = dev->mtu;
+    sl->dev->mem_start = (unsigned long)p;
+    sl->dev->mem_end = (unsigned long)(sl->dev->mem_start + l);
 
-    p = (unsigned char *) kmalloc(l + 4, GFP_KERNEL);
+    p = (unsigned char *)kmalloc(l + 4, GFP_KERNEL);
     if (p == NULL)
     {
         DPRINTF((DBG_SLIP, "SLIP: no memory for SLIP RECV buffer!\n"));
-        return(-ENOMEM);
+        return (-ENOMEM);
     }
-    sl->dev->rmem_start	= (unsigned long) p;
-    sl->dev->rmem_end	= (unsigned long) (sl->dev->rmem_start + l);
+    sl->dev->rmem_start = (unsigned long)p;
+    sl->dev->rmem_end = (unsigned long)(sl->dev->rmem_start + l);
 
-    sl->xbuff		= (unsigned char *) sl->dev->mem_start;
-    sl->rbuff		= (unsigned char *) sl->dev->rmem_start;
-    sl->rend		= (unsigned char *) sl->dev->rmem_end;
-    sl->rhead		= sl->rbuff;
+    sl->xbuff = (unsigned char *)sl->dev->mem_start;
+    sl->rbuff = (unsigned char *)sl->dev->rmem_start;
+    sl->rend = (unsigned char *)sl->dev->rmem_end;
+    sl->rhead = sl->rbuff;
 
-    sl->escape		= 0;
-    sl->sending		= 0;
-    sl->rcount		= 0;
+    sl->escape = 0;
+    sl->sending = 0;
+    sl->rcount = 0;
 
-    p = (unsigned char *) kmalloc(l + 4, GFP_KERNEL);
+    p = (unsigned char *)kmalloc(l + 4, GFP_KERNEL);
     if (p == NULL)
     {
         kfree((unsigned char *)sl->dev->mem_start);
         DPRINTF((DBG_SLIP, "SLIP: no memory for SLIP COMPRESS buffer!\n"));
-        return(-ENOMEM);
+        return (-ENOMEM);
     }
-    sl->cbuff		= p;
+    sl->cbuff = p;
 
     sl->slcomp = slhc_init(16, 16);
     if (sl->slcomp == NULL)
@@ -745,17 +736,16 @@ sl_open(struct device *dev)
         kfree((unsigned char *)sl->dev->rmem_start);
         kfree(sl->cbuff);
         DPRINTF((DBG_SLIP, "SLIP: no memory for SLCOMP!\n"));
-        return(-ENOMEM);
+        return (-ENOMEM);
     }
 
     dev->flags |= IFF_UP;
     /* Needed because address '0' is special */
-    if(dev->pa_addr == 0)
+    if (dev->pa_addr == 0)
         dev->pa_addr = ntohl(0xC0000001);
     DPRINTF((DBG_SLIP, "SLIP: channel %d opened.\n", sl->line));
-    return(0);
+    return (0);
 }
-
 
 /* Close the low-level part of the SLIP channel. Easy! */
 static int
@@ -767,7 +757,7 @@ sl_close(struct device *dev)
     if (sl->tty == NULL)
     {
         DPRINTF((DBG_SLIP, "SLIP: channel %d not connected!\n", sl->line));
-        return(-EBUSY);
+        return (-EBUSY);
     }
     sl_free(sl);
 
@@ -780,9 +770,8 @@ sl_close(struct device *dev)
     sl_initialize(sl, dev);
 
     DPRINTF((DBG_SLIP, "SLIP: channel %d closed.\n", sl->line));
-    return(0);
+    return (0);
 }
-
 
 /*
  * Handle the 'receiver data ready' interrupt.
@@ -799,9 +788,10 @@ slip_recv(struct tty_struct *tty)
     int count, error = 0;
 
     DPRINTF((DBG_SLIP, "SLIP: slip_recv(%d) called\n", tty->line));
-    if ((sl = sl_find(tty)) == NULL) return;	/* not connected */
+    if ((sl = sl_find(tty)) == NULL)
+        return; /* not connected */
 
-    if(sl->mtu != sl->dev->mtu)	/* Argh! mtu change time! - costs us the packet part received at the change */
+    if (sl->mtu != sl->dev->mtu) /* Argh! mtu change time! - costs us the packet part received at the change */
         sl_changedmtu(sl);
 
     /* Suck the bytes out of the TTY queues. */
@@ -810,8 +800,8 @@ slip_recv(struct tty_struct *tty)
         count = tty_read_raw_data(tty, buff, 128);
         if (count <= 0)
         {
-            count = - count;
-            if(count)
+            count = -count;
+            if (count)
                 error = 1;
             break;
         }
@@ -827,7 +817,7 @@ slip_recv(struct tty_struct *tty)
                 else if (c == ESC_END)
                     sl_enqueue(sl, END);
                 else
-                    printk ("SLIP: received wrong character\n");
+                    printk("SLIP: received wrong character\n");
                 sl->escape = 0;
             }
             else
@@ -836,24 +826,23 @@ slip_recv(struct tty_struct *tty)
                     sl->escape = 1;
                 else if (c == END)
                 {
-                    if (sl->rcount > 2) sl_bump(sl);
+                    if (sl->rcount > 2)
+                        sl_bump(sl);
                     sl_dequeue(sl, sl->rcount);
                     sl->rcount = 0;
                 }
-                else	sl_enqueue(sl, c);
+                else
+                    sl_enqueue(sl, c);
             }
         }
 #else
-        if(sl->mode & SL_MODE_SLIP6)
+        if (sl->mode & SL_MODE_SLIP6)
             slip_unesc6(sl, buff, count, error);
         else
             slip_unesc(sl, buff, count, error);
 #endif
-    }
-    while(1);
-
+    } while (1);
 }
-
 
 /*
  * Open the high-level part of the SLIP channel.
@@ -872,7 +861,7 @@ slip_open(struct tty_struct *tty)
     {
         DPRINTF((DBG_SLIP, "SLIP: TTY %d already connected to %s !\n",
                  tty->line, sl->dev->name));
-        return(-EEXIST);
+        return (-EEXIST);
     }
 
     /* OK.  Find a free SLIP channel to use. */
@@ -880,21 +869,20 @@ slip_open(struct tty_struct *tty)
     {
         DPRINTF((DBG_SLIP, "SLIP: TTY %d not connected: all channels in use!\n",
                  tty->line));
-        return(-ENFILE);
+        return (-ENFILE);
     }
     sl->tty = tty;
     tty_read_flush(tty);
     tty_write_flush(tty);
 
     /* Perform the low-level SLIP initialization. */
-    (void) sl_open(sl->dev);
+    (void)sl_open(sl->dev);
     DPRINTF((DBG_SLIP, "SLIP: TTY %d connected to %s.\n",
              tty->line, sl->dev->name));
 
     /* Done.  We have linked the TTY line to a channel. */
-    return(sl->line);
+    return (sl->line);
 }
-
 
 static struct enet_statistics *
 sl_get_stats(struct device *dev)
@@ -905,7 +893,7 @@ sl_get_stats(struct device *dev)
 
     /* Find the correct SLIP channel to use. */
     sl = &sl_ctrl[dev->base_addr];
-    if (! sl)
+    if (!sl)
         return NULL;
 
     memset(&stats, 0, sizeof(struct enet_statistics));
@@ -946,11 +934,10 @@ slip_close(struct tty_struct *tty)
         return;
     }
 
-    (void) dev_close(sl->dev);
+    (void)dev_close(sl->dev);
     DPRINTF((DBG_SLIP, "SLIP: TTY %d disconnected from %s.\n",
              tty->line, sl->dev->name));
 }
-
 
 /************************************************************************
  *			STANDARD SLIP ENCAPSULATION			*
@@ -958,8 +945,7 @@ slip_close(struct tty_struct *tty)
  *
  */
 
-int
-slip_esc(unsigned char *s, unsigned char *d, int len)
+int slip_esc(unsigned char *s, unsigned char *d, int len)
 {
     int count = 0;
 
@@ -976,9 +962,9 @@ slip_esc(unsigned char *s, unsigned char *d, int len)
      * character sequence, according to the SLIP protocol.
      */
 
-    while(len-- > 0)
+    while (len-- > 0)
     {
-        switch(*s)
+        switch (*s)
         {
         case END:
             d[count++] = ESC;
@@ -994,17 +980,16 @@ slip_esc(unsigned char *s, unsigned char *d, int len)
         ++s;
     }
     d[count++] = END;
-    return(count);
+    return (count);
 }
 
-void
-slip_unesc(struct slip *sl, unsigned char *s, int count, int error)
+void slip_unesc(struct slip *sl, unsigned char *s, int count, int error)
 {
     int i;
 
     for (i = 0; i < count; ++i, ++s)
     {
-        switch(*s)
+        switch (*s)
         {
         case ESC:
             sl->flags |= SLF_ESCAPE;
@@ -1045,8 +1030,7 @@ slip_unesc(struct slip *sl, unsigned char *s, int count, int error)
  *
  */
 
-int
-slip_esc6(unsigned char *s, unsigned char *d, int len)
+int slip_esc6(unsigned char *s, unsigned char *d, int len)
 {
     int count = 0;
     int i;
@@ -1086,11 +1070,10 @@ slip_esc6(unsigned char *s, unsigned char *d, int len)
         d[count++] = c;
     }
     d[count++] = 0x70;
-    return(count);
+    return (count);
 }
 
-void
-slip_unesc6(struct slip *sl, unsigned char *s, int count, int error)
+void slip_unesc6(struct slip *sl, unsigned char *s, int count, int error)
 {
     int i;
     unsigned char c;
@@ -1099,15 +1082,14 @@ slip_unesc6(struct slip *sl, unsigned char *s, int count, int error)
     {
         if (*s == 0x70)
         {
-            if (sl->rcount > 8)  	/* XXX must be 2 for compressed slip */
+            if (sl->rcount > 8) /* XXX must be 2 for compressed slip */
             {
 #ifdef NOTDEF
                 printk("rbuff %02x %02x %02x %02x\n",
                        sl->rbuff[0],
                        sl->rbuff[1],
                        sl->rbuff[2],
-                       sl->rbuff[3]
-                      );
+                       sl->rbuff[3]);
 #endif
                 sl_bump(sl);
             }
@@ -1126,26 +1108,23 @@ slip_unesc6(struct slip *sl, unsigned char *s, int count, int error)
                 c = (unsigned char)(sl->xdata >> sl->xbits);
                 sl_enqueue(sl, c);
             }
-
         }
     }
     if (error)
         sl->flags |= SLF_ERROR;
 }
 
-
 #ifdef CONFIG_AX25
 
 int sl_set_mac_address(struct device *dev, void *addr)
 {
     int err = verify_area(VERIFY_READ, addr, 7);
-    if(err)
+    if (err)
         return err;
-    memcpy_fromfs(dev->dev_addr, addr, 7);	/* addr is an AX.25 shifted ASCII mac address */
+    memcpy_fromfs(dev->dev_addr, addr, 7); /* addr is an AX.25 shifted ASCII mac address */
     return 0;
 }
 #endif
-
 
 /* Perform I/O control on an active SLIP channel. */
 static int
@@ -1158,54 +1137,52 @@ slip_ioctl(struct tty_struct *tty, void *file, int cmd, void *arg)
     if ((sl = sl_find(tty)) == NULL)
     {
         DPRINTF((DBG_SLIP, "SLIP: ioctl: TTY %d not connected !\n", tty->line));
-        return(-EINVAL);
+        return (-EINVAL);
     }
 
     DPRINTF((DBG_SLIP, "SLIP: ioctl(%d, 0x%X, 0x%X)\n", tty->line, cmd, arg));
-    switch(cmd)
+    switch (cmd)
     {
     case SIOCGIFNAME:
         err = verify_area(VERIFY_WRITE, arg, 16);
-        if(err)
+        if (err)
             return -err;
         memcpy_tofs(arg, sl->dev->name, strlen(sl->dev->name) + 1);
-        return(0);
+        return (0);
     case SIOCGIFENCAP:
         err = verify_area(VERIFY_WRITE, arg, sizeof(long));
         put_fs_long(sl->mode, (long *)arg);
-        return(0);
+        return (0);
     case SIOCSIFENCAP:
         err = verify_area(VERIFY_READ, arg, sizeof(long));
         sl->mode = get_fs_long((long *)arg);
 #ifdef CONFIG_AX25
-        if(sl->mode & SL_MODE_AX25)
+        if (sl->mode & SL_MODE_AX25)
         {
-            sl->dev->addr_len = 7;	/* sizeof an AX.25 addr */
-            sl->dev->hard_header_len = 17;	/* We don't do digipeaters */
-            sl->dev->type = 3;		/* AF_AX25 not an AF_INET device */
+            sl->dev->addr_len = 7;         /* sizeof an AX.25 addr */
+            sl->dev->hard_header_len = 17; /* We don't do digipeaters */
+            sl->dev->type = 3;             /* AF_AX25 not an AF_INET device */
         }
         else
         {
-            sl->dev->addr_len = 0;	/* No mac addr in slip mode */
+            sl->dev->addr_len = 0; /* No mac addr in slip mode */
             sl->dev->hard_header_len = 0;
             sl->dev->type = 0;
         }
 #endif
-        return(0);
+        return (0);
     case SIOCSIFHWADDR:
 #ifdef CONFIG_AX25
         return sl_set_mac_address(sl->dev, arg);
 #endif
     default:
-        return(-EINVAL);
+        return (-EINVAL);
     }
-    return(-EINVAL);
+    return (-EINVAL);
 }
 
-
 /* Initialize the SLIP driver.  Called by DDI. */
-int
-slip_init(struct device *dev)
+int slip_init(struct device *dev)
 {
     struct slip *sl;
     int i;
@@ -1225,13 +1202,13 @@ slip_init(struct device *dev)
         printk("AX25: KISS encapsulation enabled\n");
 #endif
         /* Fill in our LDISC request block. */
-        sl_ldisc.flags	= 0;
-        sl_ldisc.open	= slip_open;
-        sl_ldisc.close	= slip_close;
-        sl_ldisc.read	= NULL;
-        sl_ldisc.write	= NULL;
-        sl_ldisc.ioctl	= (int (*)(struct tty_struct *, struct file *,
-                                   unsigned int, unsigned long)) slip_ioctl;
+        sl_ldisc.flags = 0;
+        sl_ldisc.open = slip_open;
+        sl_ldisc.close = slip_close;
+        sl_ldisc.read = NULL;
+        sl_ldisc.write = NULL;
+        sl_ldisc.ioctl = (int (*)(struct tty_struct *, struct file *,
+                                  unsigned int, unsigned long))slip_ioctl;
         sl_ldisc.select = NULL;
         sl_ldisc.handler = slip_recv;
         if ((i = tty_register_ldisc(N_SLIP, &sl_ldisc)) != 0)
@@ -1242,46 +1219,46 @@ slip_init(struct device *dev)
     sl_initialize(sl, dev);
 
     /* Clear all statistics. */
-    sl->rcount		= 0;			/* SLIP receiver count	*/
-    sl->rpacket		= 0;			/* #frames received	*/
-    sl->roverrun		= 0;			/* "overrun" counter	*/
-    sl->spacket		= 0;			/* #frames sent out	*/
-    sl->sbusy		= 0;			/* "xmit busy" counter	*/
-    sl->errors		= 0;			/* not used at present	*/
+    sl->rcount = 0;   /* SLIP receiver count	*/
+    sl->rpacket = 0;  /* #frames received	*/
+    sl->roverrun = 0; /* "overrun" counter	*/
+    sl->spacket = 0;  /* #frames sent out	*/
+    sl->sbusy = 0;    /* "xmit busy" counter	*/
+    sl->errors = 0;   /* not used at present	*/
 
     /* Finish setting up the DEVICE info. */
-    dev->mtu		= SL_MTU;
-    dev->hard_start_xmit	= sl_xmit;
-    dev->open		= sl_open;
-    dev->stop		= sl_close;
-    dev->hard_header	= sl_header;
-    dev->add_arp		= sl_add_arp;
-    dev->type_trans	= sl_type_trans;
-    dev->get_stats	= sl_get_stats;
+    dev->mtu = SL_MTU;
+    dev->hard_start_xmit = sl_xmit;
+    dev->open = sl_open;
+    dev->stop = sl_close;
+    dev->hard_header = sl_header;
+    dev->add_arp = sl_add_arp;
+    dev->type_trans = sl_type_trans;
+    dev->get_stats = sl_get_stats;
 #ifdef HAVE_SET_MAC_ADDR
 #ifdef CONFIG_AX25
-    dev->set_mac_address  = sl_set_mac_address;
+    dev->set_mac_address = sl_set_mac_address;
 #endif
 #endif
-    dev->hard_header_len	= 0;
-    dev->addr_len		= 0;
-    dev->type		= 0;
+    dev->hard_header_len = 0;
+    dev->addr_len = 0;
+    dev->type = 0;
 #ifdef CONFIG_AX25
-    memcpy(dev->broadcast, ax25_bcast, 7);		/* Only activated in AX.25 mode */
-    memcpy(dev->dev_addr, ax25_test, 7);		/*    ""      ""       ""    "" */
+    memcpy(dev->broadcast, ax25_bcast, 7); /* Only activated in AX.25 mode */
+    memcpy(dev->dev_addr, ax25_test, 7);   /*    ""      ""       ""    "" */
 #endif
-    dev->queue_xmit	= dev_queue_xmit;
-    dev->rebuild_header	= sl_rebuild_header;
+    dev->queue_xmit = dev_queue_xmit;
+    dev->rebuild_header = sl_rebuild_header;
     for (i = 0; i < DEV_NUMBUFFS; i++)
         dev->buffs[i] = NULL;
 
     /* New-style flags. */
-    dev->flags		= 0;
-    dev->family		= AF_INET;
-    dev->pa_addr		= 0;
-    dev->pa_brdaddr	= 0;
-    dev->pa_mask		= 0;
-    dev->pa_alen		= sizeof(unsigned long);
+    dev->flags = 0;
+    dev->family = AF_INET;
+    dev->pa_addr = 0;
+    dev->pa_brdaddr = 0;
+    dev->pa_mask = 0;
+    dev->pa_alen = sizeof(unsigned long);
 
-    return(0);
+    return (0);
 }

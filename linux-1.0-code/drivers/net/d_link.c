@@ -40,7 +40,10 @@ static char *version =
  *
  **************************************************************/
 /* Add another "; SLOW_DOWN_IO" here if your adapter won't work OK: */
-#define D_LINK_SLOW_DOWN SLOW_DOWN_IO; SLOW_DOWN_IO; SLOW_DOWN_IO
+#define D_LINK_SLOW_DOWN \
+    SLOW_DOWN_IO;        \
+    SLOW_DOWN_IO;        \
+    SLOW_DOWN_IO
 
 /*
 * If you still have trouble reading/writing to the adapter,
@@ -56,13 +59,15 @@ static char *version =
 
 /* use 0 for production, 1 for verification, >2 for debug */
 #ifdef D_LINK_DEBUG
-#define PRINTK(x) if (d_link_debug >= 2) printk x
+#define PRINTK(x)          \
+    if (d_link_debug >= 2) \
+    printk x
 #else
 #define D_LINK_DEBUG 0
 #define PRINTK(x) /**/
 #endif
 static unsigned int d_link_debug = D_LINK_DEBUG;
-
+
 #include "linux/config.h"
 #include "linux/kernel.h"
 #include "linux/sched.h"
@@ -90,7 +95,7 @@ static unsigned int d_link_debug = D_LINK_DEBUG;
 #define netstats enet_statistics
 
 #ifndef HAVE_ALLOC_SKB
-#define alloc_skb(size,pri)	(struct sk_buff *)kmalloc(size,pri)
+#define alloc_skb(size, pri) (struct sk_buff *)kmalloc(size, pri)
 #endif
 
 /**************************************************
@@ -114,12 +119,12 @@ static unsigned int d_link_debug = D_LINK_DEBUG;
 #define D_LINK_IO 0x378
 #endif
 
-#define DATA_PORT	(D_LINK_IO)
-#define STATUS_PORT	(D_LINK_IO + 1)
-#define COMMAND_PORT	(D_LINK_IO + 2)
+#define DATA_PORT (D_LINK_IO)
+#define STATUS_PORT (D_LINK_IO + 1)
+#define COMMAND_PORT (D_LINK_IO + 2)
 
 #ifndef D_LINK_IRQ
-#define D_LINK_IRQ	7
+#define D_LINK_IRQ 7
 #endif
 /*
  * It really should look like this, and autoprobing as well...
@@ -133,18 +138,18 @@ static unsigned int d_link_debug = D_LINK_DEBUG;
 /*
  * D-Link COMMAND_PORT commands
  */
-#define SELECT_NIC	0x04 /* select Network Interface Card */
-#define SELECT_PRN	0x1c /* select Printer */
-#define NML_PRN		0xec /* normal Printer situation */
-#define IRQEN		0x10 /* enable IRQ line */
+#define SELECT_NIC 0x04 /* select Network Interface Card */
+#define SELECT_PRN 0x1c /* select Printer */
+#define NML_PRN 0xec    /* normal Printer situation */
+#define IRQEN 0x10      /* enable IRQ line */
 
 /*
  * D-Link STATUS_PORT
  */
-#define RX_BUSY		0x80
-#define RX_GOOD		0x40
-#define TX_FAILED16	0x10
-#define TX_BUSY		0x08
+#define RX_BUSY 0x80
+#define RX_GOOD 0x40
+#define TX_FAILED16 0x10
+#define TX_BUSY 0x08
 
 /*
  * D-Link DATA_PORT commands
@@ -152,37 +157,37 @@ static unsigned int d_link_debug = D_LINK_DEBUG;
  * data in high 4 bits
  * select current data nibble with HI_NIBBLE bit
  */
-#define WRITE_DATA	0x00 /* write memory */
-#define READ_DATA	0x01 /* read memory */
-#define STATUS		0x02 /* read  status register */
-#define COMMAND		0x03 /* write command register (see COMMAND below) */
-#define NULL_COMMAND	0x04 /* null command */
-#define RX_LEN		0x05 /* read  received packet length */
-#define TX_ADDR		0x06 /* set adapter transmit memory address */
-#define RW_ADDR		0x07 /* set adapter read/write memory address */
-#define HI_NIBBLE	0x08 /* read/write the high nibble of data,
-				or-ed with rest of command */
+#define WRITE_DATA 0x00   /* write memory */
+#define READ_DATA 0x01    /* read memory */
+#define STATUS 0x02       /* read  status register */
+#define COMMAND 0x03      /* write command register (see COMMAND below) */
+#define NULL_COMMAND 0x04 /* null command */
+#define RX_LEN 0x05       /* read  received packet length */
+#define TX_ADDR 0x06      /* set adapter transmit memory address */
+#define RW_ADDR 0x07      /* set adapter read/write memory address */
+#define HI_NIBBLE 0x08    /* read/write the high nibble of data, \
+                 or-ed with rest of command */
 
 /*
  * command register, accessed through DATA_PORT with low bits = COMMAND
  */
-#define RX_ALL		0x01 /* PROMISCIOUS */
-#define RX_BP		0x02 /* default: BROADCAST & PHYSICAL ADRESS */
-#define RX_MBP		0x03 /* MULTICAST, BROADCAST & PHYSICAL ADRESS */
+#define RX_ALL 0x01 /* PROMISCIOUS */
+#define RX_BP 0x02  /* default: BROADCAST & PHYSICAL ADRESS */
+#define RX_MBP 0x03 /* MULTICAST, BROADCAST & PHYSICAL ADRESS */
 
-#define TX_ENABLE	0x04 /* bit 2 */
-#define RX_ENABLE	0x08 /* bit 3 */
+#define TX_ENABLE 0x04 /* bit 2 */
+#define RX_ENABLE 0x08 /* bit 3 */
 
-#define RESET		0x80 /* set bit 7 high */
-#define STOP_RESET	0x00 /* set bit 7 low */
+#define RESET 0x80      /* set bit 7 high */
+#define STOP_RESET 0x00 /* set bit 7 low */
 
 /*
  * data to command register
  * (high 4 bits in write to DATA_PORT)
  */
-#define RX_PAGE2_SELECT	0x10 /* bit 4, only 2 pages to select */
-#define RX_BASE_PAGE	0x20 /* bit 5, always set when specifying RX_ADDR */
-#define FLIP_IRQ	0x40 /* bit 6 */
+#define RX_PAGE2_SELECT 0x10 /* bit 4, only 2 pages to select */
+#define RX_BASE_PAGE 0x20    /* bit 5, always set when specifying RX_ADDR */
+#define FLIP_IRQ 0x40        /* bit 6 */
 
 /*
  * D-Link adapter internal memory:
@@ -195,12 +200,12 @@ static unsigned int d_link_debug = D_LINK_DEBUG;
  *
  * 8K+	Adapter ROM (contains magic code and last 3 bytes of Ethernet address)
  */
-#define MEM_2K		0x0800 /* 2048 */
-#define MEM_4K		0x1000 /* 4096 */
-#define MEM_6K		0x1800 /* 6144 */
-#define NODE_ADDRESS	0x2000 /* 8192 */
+#define MEM_2K 0x0800       /* 2048 */
+#define MEM_4K 0x1000       /* 4096 */
+#define MEM_6K 0x1800       /* 6144 */
+#define NODE_ADDRESS 0x2000 /* 8192 */
 
-#define RUNT 60		/* Too small Ethernet packet */
+#define RUNT 60 /* Too small Ethernet packet */
 
 /**************************************************
  *                                                *
@@ -213,69 +218,73 @@ static unsigned int d_link_debug = D_LINK_DEBUG;
  */
 
 /* For tricking tcp.c to announce a small max window (max 2 fast packets please :-) */
-static unsigned long	d_link_rspace(struct sock *sk);
+static unsigned long d_link_rspace(struct sock *sk);
 
 /* Routines used internally. (See "convenience macros") */
-static int		d_link_read_status(struct device *dev);
-static unsigned	char	d_link_read_byte(unsigned char type, struct device *dev);
+static int d_link_read_status(struct device *dev);
+static unsigned char d_link_read_byte(unsigned char type, struct device *dev);
 
 /* Put in the device structure. */
-static int	d_link_open(struct device *dev);
-static int	d_link_close(struct device *dev);
+static int d_link_open(struct device *dev);
+static int d_link_close(struct device *dev);
 static struct netstats *get_stats(struct device *dev);
-static int	d_link_start_xmit(struct sk_buff *skb, struct device *dev);
+static int d_link_start_xmit(struct sk_buff *skb, struct device *dev);
 
 /* Dispatch from interrupts. */
-static void	d_link_interrupt(int reg_ptr);
-static int	d_link_tx_intr(struct device *dev, int irq_status);
-static void	d_link_rx_intr(struct device *dev);
+static void d_link_interrupt(int reg_ptr);
+static int d_link_tx_intr(struct device *dev, int irq_status);
+static void d_link_rx_intr(struct device *dev);
 
 /* Initialization */
-static void	trigger_interrupt(struct device *dev);
-int		d_link_init(struct device *dev);
-static void	adapter_init(struct device *dev);
+static void trigger_interrupt(struct device *dev);
+int d_link_init(struct device *dev);
+static void adapter_init(struct device *dev);
 
 /*
  * D-Link driver variables:
  */
-extern struct device		*irq2dev_map[16];
-static volatile int		rx_page		= 0;
+extern struct device *irq2dev_map[16];
+static volatile int rx_page = 0;
 
 #define TX_PAGES 2
-static volatile int		tx_fifo[TX_PAGES];
-static volatile int		tx_fifo_in = 0;
-static volatile int		tx_fifo_out = 0;
-static volatile int		free_tx_pages = TX_PAGES;
+static volatile int tx_fifo[TX_PAGES];
+static volatile int tx_fifo_in = 0;
+static volatile int tx_fifo_out = 0;
+static volatile int free_tx_pages = TX_PAGES;
 
 /*
  * Convenience macros/functions for D-Link adapter
  */
 
-#define select_prn() outb_p(SELECT_PRN, COMMAND_PORT); D_LINK_SLOW_DOWN
-#define select_nic() outb_p(SELECT_NIC, COMMAND_PORT); D_LINK_SLOW_DOWN
+#define select_prn()                  \
+    outb_p(SELECT_PRN, COMMAND_PORT); \
+    D_LINK_SLOW_DOWN
+#define select_nic()                  \
+    outb_p(SELECT_NIC, COMMAND_PORT); \
+    D_LINK_SLOW_DOWN
 
 /* Thanks for hints from Mark Burton <markb@ordern.demon.co.uk> */
-#define d_link_put_byte(data) ( \
-	outb_p(((data) << 4)   | WRITE_DATA            , DATA_PORT), \
-	outb_p(((data) & 0xf0) | WRITE_DATA | HI_NIBBLE, DATA_PORT))
+#define d_link_put_byte(data) (                    \
+    outb_p(((data) << 4) | WRITE_DATA, DATA_PORT), \
+    outb_p(((data)&0xf0) | WRITE_DATA | HI_NIBBLE, DATA_PORT))
 
 /*
  * The first two outb_p()'s below could perhaps be deleted if there
  * would be more delay in the last two. Not certain about it yet...
  */
-#define d_link_put_command(cmd) ( \
-	outb_p(( rx_page        << 4)   | COMMAND            , DATA_PORT), \
-	outb_p(( rx_page        & 0xf0) | COMMAND | HI_NIBBLE, DATA_PORT), \
-	outb_p(((rx_page | cmd) << 4)   | COMMAND            , DATA_PORT), \
-	outb_p(((rx_page | cmd) & 0xf0) | COMMAND | HI_NIBBLE, DATA_PORT))
+#define d_link_put_command(cmd) (                              \
+    outb_p((rx_page << 4) | COMMAND, DATA_PORT),               \
+    outb_p((rx_page & 0xf0) | COMMAND | HI_NIBBLE, DATA_PORT), \
+    outb_p(((rx_page | cmd) << 4) | COMMAND, DATA_PORT),       \
+    outb_p(((rx_page | cmd) & 0xf0) | COMMAND | HI_NIBBLE, DATA_PORT))
 
-#define d_link_setup_address(addr,type) ( \
-	outb_p((((addr) << 4) & 0xf0) | type            , DATA_PORT), \
-	outb_p(( (addr)       & 0xf0) | type | HI_NIBBLE, DATA_PORT), \
-	outb_p((((addr) >> 4) & 0xf0) | type            , DATA_PORT), \
-	outb_p((((addr) >> 8) & 0xf0) | type | HI_NIBBLE, DATA_PORT))
+#define d_link_setup_address(addr, type) (               \
+    outb_p((((addr) << 4) & 0xf0) | type, DATA_PORT),    \
+    outb_p(((addr)&0xf0) | type | HI_NIBBLE, DATA_PORT), \
+    outb_p((((addr) >> 4) & 0xf0) | type, DATA_PORT),    \
+    outb_p((((addr) >> 8) & 0xf0) | type | HI_NIBBLE, DATA_PORT))
 
-#define rx_page_adr() ((rx_page & RX_PAGE2_SELECT)?(MEM_6K):(MEM_4K))
+#define rx_page_adr() ((rx_page & RX_PAGE2_SELECT) ? (MEM_6K) : (MEM_4K))
 
 /* Flip bit, only 2 pages */
 #define next_rx_page() (rx_page ^= RX_PAGE2_SELECT)
@@ -285,7 +294,7 @@ static volatile int		free_tx_pages = TX_PAGES;
 static inline int
 d_link_read_status(struct device *dev)
 {
-    int	status;
+    int status;
 
     outb_p(STATUS, DATA_PORT);
     status = inb(STATUS_PORT);
@@ -295,16 +304,16 @@ d_link_read_status(struct device *dev)
 }
 
 static inline unsigned char
-d_link_read_byte(unsigned char type, struct device *dev)   /* dev used by macros */
+d_link_read_byte(unsigned char type, struct device *dev) /* dev used by macros */
 {
-    unsigned char	lo;
+    unsigned char lo;
 
     (void)outb_p((type), DATA_PORT);
     lo = ((unsigned char)inb(STATUS_PORT)) >> 4;
     (void)outb_p((type) | HI_NIBBLE, DATA_PORT);
     return ((unsigned char)inb(STATUS_PORT) & (unsigned char)0xf0) | lo;
 }
-
+
 /*
  * Open/initialize the board.  This is called (in the current kernel)
  * after booting when 'ifconfig <dev->name> $IP_ADDR' is run (in rc.inet1).
@@ -320,7 +329,7 @@ d_link_open(struct device *dev)
 
     if (request_irq(D_LINK_IRQ, d_link_interrupt))
     {
-        printk ("%s: unable to get IRQ %d\n", dev->name, D_LINK_IRQ);
+        printk("%s: unable to get IRQ %d\n", dev->name, D_LINK_IRQ);
         return 1;
     }
     irq2dev_map[D_LINK_IRQ] = dev;
@@ -385,10 +394,10 @@ trigger_interrupt(struct device *dev)
 static int
 d_link_start_xmit(struct sk_buff *skb, struct device *dev)
 {
-    int		transmit_from;
-    int		len;
-    int		tickssofar;
-    unsigned char	*buffer = skb->data;
+    int transmit_from;
+    int len;
+    int tickssofar;
+    unsigned char *buffer = skb->data;
 
     /*
      * If some higher layer thinks we've missed a
@@ -404,15 +413,15 @@ d_link_start_xmit(struct sk_buff *skb, struct device *dev)
 
     /* For ethernet, fill in the header (hardware addresses) with an arp. */
     if (!skb->arp)
-        if(dev->rebuild_header(skb->data, dev))
+        if (dev->rebuild_header(skb->data, dev))
         {
             skb->dev = dev;
-            arp_queue (skb);
+            arp_queue(skb);
             return 0;
         }
     skb->arp = 1;
 
-    if (free_tx_pages <= 0)  	/* Do timeouts, to avoid hangs. */
+    if (free_tx_pages <= 0) /* Do timeouts, to avoid hangs. */
     {
         tickssofar = jiffies - dev->trans_start;
 
@@ -423,8 +432,7 @@ d_link_start_xmit(struct sk_buff *skb, struct device *dev)
         printk("%s: transmit timed out (%d), %s?\n",
                dev->name,
                tickssofar,
-               "network cable problem"
-              );
+               "network cable problem");
         /* Restart the adapter. */
         adapter_init(dev);
     }
@@ -442,13 +450,13 @@ d_link_start_xmit(struct sk_buff *skb, struct device *dev)
     tx_fifo_in = (tx_fifo_in + 1) % TX_PAGES; /* Next free tx page */
 
     d_link_setup_address(transmit_from, RW_ADDR);
-    for ( ; len > 0; --len, ++buffer)
+    for (; len > 0; --len, ++buffer)
         d_link_put_byte(*buffer);
 
-    if (free_tx_pages-- == TX_PAGES)   /* No transmission going on */
+    if (free_tx_pages-- == TX_PAGES) /* No transmission going on */
     {
         dev->trans_start = jiffies;
-        dev->tbusy = 0;	/* allow more packets into adapter */
+        dev->tbusy = 0; /* allow more packets into adapter */
         /* Send page and generate an interrupt */
         d_link_setup_address(transmit_from, TX_ADDR);
         d_link_put_command(TX_ENABLE);
@@ -462,11 +470,11 @@ d_link_start_xmit(struct sk_buff *skb, struct device *dev)
     sti(); /* interrupts back on */
 
     if (skb->free)
-        kfree_skb (skb, FREE_WRITE);
+        kfree_skb(skb, FREE_WRITE);
 
     return 0;
 }
-
+
 /*
  * The typical workload of the driver:
  * Handle the network interface interrupts.
@@ -474,11 +482,11 @@ d_link_start_xmit(struct sk_buff *skb, struct device *dev)
 static void
 d_link_interrupt(int reg_ptr)
 {
-    int		irq = -(((struct pt_regs *)reg_ptr)->orig_eax + 2);
-    struct device	*dev = irq2dev_map[irq];
-    unsigned char	irq_status;
-    int		retrig = 0;
-    int		boguscount = 0;
+    int irq = -(((struct pt_regs *)reg_ptr)->orig_eax + 2);
+    struct device *dev = irq2dev_map[irq];
+    unsigned char irq_status;
+    int retrig = 0;
+    int boguscount = 0;
 
     /* This might just as well be deleted now, no crummy drivers present :-) */
     if ((dev == NULL) || (dev->start == 0) || (D_LINK_IRQ != irq))
@@ -507,8 +515,7 @@ d_link_interrupt(int reg_ptr)
             retrig = 0;
 
         irq_status = d_link_read_status(dev);
-    }
-    while ( (irq_status & RX_GOOD) || ((++boguscount < 10) && retrig) );
+    } while ((irq_status & RX_GOOD) || ((++boguscount < 10) && retrig));
     /*
      * Yeah, it _looks_ like busy waiting, smells like busy waiting
      * and I know it's not PC, but please, it will only occur once
@@ -567,18 +574,18 @@ d_link_tx_intr(struct device *dev, int irq_status)
 static void
 d_link_rx_intr(struct device *dev)
 {
-    struct sk_buff	*skb;
-    int		i;
-    int		read_from;
-    int		size;
-    int		sksize;
-    register unsigned char	*buffer;
+    struct sk_buff *skb;
+    int i;
+    int read_from;
+    int size;
+    int sksize;
+    register unsigned char *buffer;
 
     cli();
     /* Get size of received packet */
-    size = d_link_read_byte(RX_LEN, dev);	/* low byte */
-    size += (d_link_read_byte(RX_LEN, dev) << 8);	/* high byte */
-    size -= 4;	/* Ignore trailing 4 CRC-bytes */
+    size = d_link_read_byte(RX_LEN, dev);         /* low byte */
+    size += (d_link_read_byte(RX_LEN, dev) << 8); /* high byte */
+    size -= 4;                                    /* Ignore trailing 4 CRC-bytes */
 
     /* Tell adapter where to store next incoming packet, enable receiver */
     read_from = rx_page_adr();
@@ -586,7 +593,7 @@ d_link_rx_intr(struct device *dev)
     d_link_put_command(RX_ENABLE);
     sti();
 
-    if ((size < 32)  ||  (size > 1535))
+    if ((size < 32) || (size > 1535))
         printk("%s: Bogus packet size %d.\n", dev->name, size);
 
     sksize = sizeof(struct sk_buff) + size;
@@ -622,10 +629,9 @@ d_link_rx_intr(struct device *dev)
      */
 }
 
-int
-d_link_init(struct device *dev)
+int d_link_init(struct device *dev)
 {
-    int	i;
+    int i;
 
     printk("%s: D-Link DE-600 pocket adapter", dev->name);
     /* Alpha testers must have the version number to report bugs. */
@@ -700,7 +706,7 @@ d_link_init(struct device *dev)
     dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
     dev->mtu = 1500; /* eth_mtu */
-    dev->addr_len	= ETH_ALEN;
+    dev->addr_len = ETH_ALEN;
 
     /* New-style flags. */
     dev->flags = IFF_BROADCAST;
@@ -717,10 +723,10 @@ d_link_init(struct device *dev)
 static void
 adapter_init(struct device *dev)
 {
-    int	i;
+    int i;
 
     cli();
-    dev->tbusy = 0;		/* Transmit busy...  */
+    dev->tbusy = 0; /* Transmit busy...  */
     dev->interrupt = 0;
     dev->start = 1;
 
@@ -762,7 +768,7 @@ adapter_init(struct device *dev)
  * this is absolutely necessary for any TCP performance whatsoever!
  *
  */
-#define min(a,b)	((a)<(b)?(a):(b))
+#define min(a, b) ((a) < (b) ? (a) : (b))
 static unsigned long
 d_link_rspace(struct sock *sk)
 {
@@ -776,10 +782,12 @@ d_link_rspace(struct sock *sk)
          */
         sk->max_unacked = D_LINK_MAX_WINDOW - D_LINK_TCP_WINDOW_DIFF;
 
-        if (sk->rmem_alloc >= SK_RMEM_MAX - 2 * D_LINK_MIN_WINDOW) return(0);
+        if (sk->rmem_alloc >= SK_RMEM_MAX - 2 * D_LINK_MIN_WINDOW)
+            return (0);
         amt = min((SK_RMEM_MAX - sk->rmem_alloc) / 2 - D_LINK_MIN_WINDOW, D_LINK_MAX_WINDOW);
-        if (amt < 0) return(0);
-        return(amt);
+        if (amt < 0)
+            return (0);
+        return (amt);
     }
-    return(0);
+    return (0);
 }

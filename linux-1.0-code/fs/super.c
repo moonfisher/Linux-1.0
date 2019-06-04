@@ -19,7 +19,6 @@
 #include "asm/system.h"
 #include "asm/segment.h"
 
-
 /*
  * The definition of file_systems that used to be here is now in
  * filesystems.c.  Now super.c contains no fs specific code.  -- jrs
@@ -47,15 +46,15 @@ struct file_system_type *get_fs_type(char *name)
 
     if (!name)
         return &file_systems[0];
-    for(a = 0 ; file_systems[a].read_super ; a++)
+    for (a = 0; file_systems[a].read_super; a++)
         if (!strcmp(name, file_systems[a].name))
-            return(&file_systems[a]);
+            return (&file_systems[a]);
     return NULL;
 }
 
 void __wait_on_super(struct super_block *sb)
 {
-    struct wait_queue wait = { current, NULL };
+    struct wait_queue wait = {current, NULL};
 
     add_wait_queue(&sb->s_wait, &wait);
 repeat:
@@ -73,7 +72,7 @@ void sync_supers(dev_t dev)
 {
     struct super_block *sb;
 
-    for (sb = super_blocks + 0 ; sb < super_blocks + NR_SUPER ; sb++)
+    for (sb = super_blocks + 0; sb < super_blocks + NR_SUPER; sb++)
     {
         if (!sb->s_dev)
             continue;
@@ -149,7 +148,7 @@ static struct super_block *read_super(dev_t dev, char *name, int flags,
                MAJOR(dev), MINOR(dev), name);
         return NULL;
     }
-    for (s = 0 + super_blocks ;; s++)
+    for (s = 0 + super_blocks;; s++)
     {
         if (s >= NR_SUPER + super_blocks)
             return NULL;
@@ -362,9 +361,8 @@ static int do_mount(dev_t dev, const char *dir, char *type, int flags, void *dat
     }
     sb->s_covered = dir_i;
     dir_i->i_mount = sb->s_mounted;
-    return 0;		/* we don't iput(dir_i) - see umount */
+    return 0; /* we don't iput(dir_i) - see umount */
 }
-
 
 /*
  * Alters the mount flags of a mounted file system. Only the mount point
@@ -409,7 +407,7 @@ static int do_remount(const char *dir, int flags, char *data)
     return retval;
 }
 
-static int copy_mount_options (const void *data, unsigned long *where)
+static int copy_mount_options(const void *data, unsigned long *where)
 {
     int i;
     unsigned long page;
@@ -419,25 +417,25 @@ static int copy_mount_options (const void *data, unsigned long *where)
     if (!data)
         return 0;
 
-    for (vma = current->mmap ; ; )
+    for (vma = current->mmap;;)
     {
         if (!vma ||
-                (unsigned long) data < vma->vm_start)
+            (unsigned long)data < vma->vm_start)
         {
             return -EFAULT;
         }
-        if ((unsigned long) data < vma->vm_end)
+        if ((unsigned long)data < vma->vm_end)
             break;
         vma = vma->vm_next;
     }
-    i = vma->vm_end - (unsigned long) data;
-    if (PAGE_SIZE <= (unsigned long) i)
+    i = vma->vm_end - (unsigned long)data;
+    if (PAGE_SIZE <= (unsigned long)i)
         i = PAGE_SIZE - 1;
     if (!(page = __get_free_page(GFP_KERNEL)))
     {
         return -ENOMEM;
     }
-    memcpy_fromfs((void *) page, data, i);
+    memcpy_fromfs((void *)page, data, i);
     *where = page;
     return 0;
 }
@@ -471,21 +469,21 @@ asmlinkage int sys_mount(char *dev_name, char *dir_name, char *type,
     if (!suser())
         return -EPERM;
     if ((new_flags &
-            (MS_MGC_MSK | MS_REMOUNT)) == (MS_MGC_VAL | MS_REMOUNT))
+         (MS_MGC_MSK | MS_REMOUNT)) == (MS_MGC_VAL | MS_REMOUNT))
     {
-        retval = copy_mount_options (data, &page);
+        retval = copy_mount_options(data, &page);
         if (retval < 0)
             return retval;
         retval = do_remount(dir_name,
                             new_flags & ~MS_MGC_MSK & ~MS_REMOUNT,
-                            (char *) page);
+                            (char *)page);
         free_page(page);
         return retval;
     }
-    retval = copy_mount_options (type, &page);
+    retval = copy_mount_options(type, &page);
     if (retval < 0)
         return retval;
-    fstype = get_fs_type((char *) page);
+    fstype = get_fs_type((char *)page);
     free_page(page);
     if (!fstype)
         return -ENODEV;
@@ -539,7 +537,7 @@ asmlinkage int sys_mount(char *dev_name, char *dir_name, char *type,
             return retval;
         }
     }
-    retval = do_mount(dev, dir_name, t, flags, (void *) page);
+    retval = do_mount(dev, dir_name, t, flags, (void *)page);
     free_page(page);
     if (retval && fops && fops->release)
         fops->release(inode, NULL);
@@ -568,14 +566,14 @@ void mount_root(void)
         if (sb)
         {
             inode = sb->s_mounted;
-            inode->i_count += 3 ;	/* NOTE! it is logically used 4 times, not 1 */
+            inode->i_count += 3; /* NOTE! it is logically used 4 times, not 1 */
             sb->s_covered = inode;
             sb->s_flags = root_mountflags;
             current->pwd = inode;
             current->root = inode;
-            printk ("VFS: Mounted root (%s filesystem)%s.\n",
-                    fs_type->name,
-                    (sb->s_flags & MS_RDONLY) ? " readonly" : "");
+            printk("VFS: Mounted root (%s filesystem)%s.\n",
+                   fs_type->name,
+                   (sb->s_flags & MS_RDONLY) ? " readonly" : "");
             return;
         }
     }

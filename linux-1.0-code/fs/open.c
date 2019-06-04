@@ -138,14 +138,14 @@ asmlinkage int sys_utime(char *filename, struct utimbuf *times)
             iput(inode);
             return -EPERM;
         }
-        actime = get_fs_long((unsigned long *) &times->actime);
-        modtime = get_fs_long((unsigned long *) &times->modtime);
+        actime = get_fs_long((unsigned long *)&times->actime);
+        modtime = get_fs_long((unsigned long *)&times->modtime);
         inode->i_ctime = CURRENT_TIME;
     }
     else
     {
         if ((current->euid != inode->i_uid) &&
-                !permission(inode, MAY_WRITE))
+            !permission(inode, MAY_WRITE))
         {
             iput(inode);
             return -EACCES;
@@ -169,7 +169,7 @@ asmlinkage int sys_access(const char *filename, int mode)
     struct inode *inode;
     int res, i_mode;
 
-    if (mode != (mode & S_IRWXO))	/* where's F_OK, X_OK, W_OK, R_OK? */
+    if (mode != (mode & S_IRWXO)) /* where's F_OK, X_OK, W_OK, R_OK? */
         return -EINVAL;
     res = namei(filename, &inode);
     if (res)
@@ -177,9 +177,9 @@ asmlinkage int sys_access(const char *filename, int mode)
     i_mode = inode->i_mode;
     res = i_mode & S_IRWXUGO;
     if (current->uid == inode->i_uid)
-        res >>= 6;		/* needs cleaning? */
+        res >>= 6; /* needs cleaning? */
     else if (in_group_p(inode->i_gid))
-        res >>= 3;		/* needs cleaning? */
+        res >>= 3; /* needs cleaning? */
     iput(inode);
     if ((res & mode) == mode)
         return 0;
@@ -193,7 +193,7 @@ asmlinkage int sys_access(const char *filename, int mode)
      * decomposing the path would be racy.
      */
     if ((!current->uid) &&
-            (S_ISDIR(i_mode) || !(mode & S_IXOTH) || (i_mode & S_IXUGO)))
+        (S_ISDIR(i_mode) || !(mode & S_IXOTH) || (i_mode & S_IXUGO)))
         return 0;
     return -EACCES;
 }
@@ -276,7 +276,7 @@ asmlinkage int sys_fchmod(unsigned int fd, mode_t mode)
         return -EPERM;
     if (IS_RDONLY(inode))
         return -EROFS;
-    if (mode == (mode_t) -1)
+    if (mode == (mode_t)-1)
         mode = inode->i_mode;
     inode->i_mode = (mode & S_IALLUGO) | (inode->i_mode & ~S_IALLUGO);
     if (!suser() && !in_group_p(inode->i_gid))
@@ -304,7 +304,7 @@ asmlinkage int sys_chmod(const char *filename, mode_t mode)
         iput(inode);
         return -EROFS;
     }
-    if (mode == (mode_t) -1)
+    if (mode == (mode_t)-1)
         mode = inode->i_mode;
     inode->i_mode = (mode & S_IALLUGO) | (inode->i_mode & ~S_IALLUGO);
     if (!suser() && !in_group_p(inode->i_gid))
@@ -327,13 +327,13 @@ asmlinkage int sys_fchown(unsigned int fd, uid_t user, gid_t group)
         return -ENOENT;
     if (IS_RDONLY(inode))
         return -EROFS;
-    if (user == (uid_t) -1)
+    if (user == (uid_t)-1)
         user = inode->i_uid;
-    if (group == (gid_t) -1)
+    if (group == (gid_t)-1)
         group = inode->i_gid;
     if ((current->euid == inode->i_uid && user == inode->i_uid &&
-            (in_group_p(group) || group == inode->i_gid)) ||
-            suser())
+         (in_group_p(group) || group == inode->i_gid)) ||
+        suser())
     {
         inode->i_uid = user;
         inode->i_gid = group;
@@ -357,13 +357,13 @@ asmlinkage int sys_chown(const char *filename, uid_t user, gid_t group)
         iput(inode);
         return -EROFS;
     }
-    if (user == (uid_t) -1)
+    if (user == (uid_t)-1)
         user = inode->i_uid;
-    if (group == (gid_t) -1)
+    if (group == (gid_t)-1)
         group = inode->i_gid;
     if ((current->euid == inode->i_uid && user == inode->i_uid &&
-            (in_group_p(group) || group == inode->i_gid)) ||
-            suser())
+         (in_group_p(group) || group == inode->i_gid)) ||
+        suser())
     {
         inode->i_uid = user;
         inode->i_gid = group;
@@ -397,7 +397,7 @@ int do_open(const char *filename, int flags, int mode)
     struct file *f;
     int flag, error, fd;
 
-    for(fd = 0 ; fd < NR_OPEN ; fd++)
+    for (fd = 0; fd < NR_OPEN; fd++)
         if (!current->filp[fd])
             break;
     if (fd >= NR_OPEN)
@@ -495,7 +495,7 @@ asmlinkage int sys_close(unsigned int fd)
     if (!(filp = current->filp[fd]))
         return -EBADF;
     current->filp[fd] = NULL;
-    return (close_fp (filp, fd));
+    return (close_fp(filp, fd));
 }
 
 /*

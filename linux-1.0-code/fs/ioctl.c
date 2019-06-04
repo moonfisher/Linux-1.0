@@ -25,35 +25,34 @@ static int file_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
             return -EBADF;
         if (filp->f_inode->i_op->bmap == NULL)
             return -EINVAL;
-        error = verify_area(VERIFY_WRITE, (void *) arg, 4);
+        error = verify_area(VERIFY_WRITE, (void *)arg, 4);
         if (error)
             return error;
-        block = get_fs_long((long *) arg);
+        block = get_fs_long((long *)arg);
         block = filp->f_inode->i_op->bmap(filp->f_inode, block);
-        put_fs_long(block, (long *) arg);
+        put_fs_long(block, (long *)arg);
         return 0;
     case FIGETBSZ:
         if (filp->f_inode->i_sb == NULL)
             return -EBADF;
-        error = verify_area(VERIFY_WRITE, (void *) arg, 4);
+        error = verify_area(VERIFY_WRITE, (void *)arg, 4);
         if (error)
             return error;
         put_fs_long(filp->f_inode->i_sb->s_blocksize,
-                    (long *) arg);
+                    (long *)arg);
         return 0;
     case FIONREAD:
-        error = verify_area(VERIFY_WRITE, (void *) arg, 4);
+        error = verify_area(VERIFY_WRITE, (void *)arg, 4);
         if (error)
             return error;
         put_fs_long(filp->f_inode->i_size - filp->f_pos,
-                    (long *) arg);
+                    (long *)arg);
         return 0;
     }
     if (filp->f_op && filp->f_op->ioctl)
         return filp->f_op->ioctl(filp->f_inode, filp, cmd, arg);
     return -EINVAL;
 }
-
 
 asmlinkage int sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
 {
@@ -73,7 +72,7 @@ asmlinkage int sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
         return 0;
 
     case FIONBIO:
-        on = get_fs_long((unsigned long *) arg);
+        on = get_fs_long((unsigned long *)arg);
         if (on)
             filp->f_flags |= O_NONBLOCK;
         else
@@ -82,7 +81,7 @@ asmlinkage int sys_ioctl(unsigned int fd, unsigned int cmd, unsigned long arg)
 
     case FIOASYNC: /* O_SYNC is not yet implemented,
 				  but it's here for completeness. */
-        on = get_fs_long ((unsigned long *) arg);
+        on = get_fs_long((unsigned long *)arg);
         if (on)
             filp->f_flags |= O_SYNC;
         else

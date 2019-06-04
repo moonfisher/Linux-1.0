@@ -71,13 +71,17 @@ extern struct device *irq2dev_map[16];
 #endif
 
 #ifndef HAVE_ALLOC_SKB
-#define alloc_skb(size, priority) (struct sk_buff *) kmalloc(size,priority)
-#define kfree_skbmem(addr, size) kfree_s(addr,size);
+#define alloc_skb(size, priority) (struct sk_buff *)kmalloc(size, priority)
+#define kfree_skbmem(addr, size) kfree_s(addr, size);
 #endif
 
 #ifndef HAVE_PORTRESERVE
-#define check_region(ioaddr, size) 		0
-#define	snarf_region(ioaddr, size);		do ; while (0)
+#define check_region(ioaddr, size) 0
+#define snarf_region(ioaddr, size) \
+    ;                              \
+    do                             \
+        ;                          \
+    while (0)
 #endif
 
 /* use 0 for production, 1 for verification, >2 for debug */
@@ -90,11 +94,11 @@ static unsigned int net_debug = NET_DEBUG;
 struct net_local
 {
     struct enet_statistics stats;
-    long open_time;				/* Useless example local info. */
+    long open_time; /* Useless example local info. */
 };
 
 /* The number of low I/O ports used by the ethercard. */
-#define ETHERCARD_TOTAL_SIZE	16
+#define ETHERCARD_TOTAL_SIZE 16
 
 /* The station (ethernet) address prefix, used for IDing the board. */
 #define SA_ADDR0 0x00
@@ -107,7 +111,7 @@ extern int netcard_probe(struct device *dev);
 
 static int netcard_probe1(struct device *dev, short ioaddr);
 static int net_open(struct device *dev);
-static int	net_send_packet(struct sk_buff *skb, struct device *dev);
+static int net_send_packet(struct sk_buff *skb, struct device *dev);
 static void net_interrupt(int reg_ptr);
 static void net_rx(struct device *dev);
 static int net_close(struct device *dev);
@@ -118,25 +122,23 @@ static void set_multicast_list(struct device *dev, int num_addrs, void *addrs);
 
 /* Example routines you must write ;->. */
 #define tx_done(dev) 1
-extern void	hardware_send_packet(short ioaddr, char *buf, int length);
+extern void hardware_send_packet(short ioaddr, char *buf, int length);
 extern void chipset_init(struct device *dev, int startp);
 
-
 /* Check for a network adaptor of this type, and return '0' iff one exists.
    If dev->base_addr == 0, probe all likely locations.
    If dev->base_addr == 1, always return failure.
    If dev->base_addr == 2, alloate space for the device and return success
    (detachable devices only).
    */
-int
-netcard_probe(struct device *dev)
+int netcard_probe(struct device *dev)
 {
     int *port, ports[] = {0x300, 0x280, 0};
     int base_addr = dev->base_addr;
 
-    if (base_addr > 0x1ff)		/* Check a single specified location. */
+    if (base_addr > 0x1ff) /* Check a single specified location. */
         return netcard_probe1(dev, base_addr);
-    else if (base_addr > 0)		/* Don't probe at all. */
+    else if (base_addr > 0) /* Don't probe at all. */
         return ENXIO;
 
     for (port = &ports[0]; *port; port++)
@@ -166,8 +168,7 @@ int netcard_probe1(struct device *dev, short ioaddr)
         station_addr[i] = inb(ioaddr + i);
     }
     /* Check the first three octets of the S.A. for the manufactor's code. */
-    if (station_addr[0] != SA_ADDR0
-            ||	 station_addr[1] != SA_ADDR1 || station_addr[2] != SA_ADDR2)
+    if (station_addr[0] != SA_ADDR0 || station_addr[1] != SA_ADDR1 || station_addr[2] != SA_ADDR2)
     {
         return ENODEV;
     }
@@ -181,8 +182,8 @@ int netcard_probe1(struct device *dev, short ioaddr)
        the interrupt, and this marks the 'irqaction' as busy. */
 
     if (dev->irq == -1)
-        ;			/* Do nothing: a user-level program will set it. */
-    else if (dev->irq < 2)  	/* "Auto-IRQ" */
+        ;                  /* Do nothing: a user-level program will set it. */
+    else if (dev->irq < 2) /* "Auto-IRQ" */
     {
         autoirq_setup(0);
         /* Trigger an interrupt here. */
@@ -200,12 +201,12 @@ int netcard_probe1(struct device *dev, short ioaddr)
         int irqval = request_irq(dev->irq, &net_interrupt);
         if (irqval)
         {
-            printk ("%s: unable to get IRQ %d (irqval=%d).\n", dev->name,
-                    dev->irq, irqval);
+            printk("%s: unable to get IRQ %d (irqval=%d).\n", dev->name,
+                   dev->irq, irqval);
             return EAGAIN;
         }
     }
-#endif	/* jumpered interrupt */
+#endif /* jumpered interrupt */
 
     /* Grab the region so we can find another board if autoIRQ fails. */
     snarf_region(ioaddr, ETHERCARD_TOTAL_SIZE);
@@ -217,10 +218,10 @@ int netcard_probe1(struct device *dev, short ioaddr)
     dev->priv = kmalloc(sizeof(struct net_local), GFP_KERNEL);
     memset(dev->priv, 0, sizeof(struct net_local));
 
-    dev->open		= net_open;
-    dev->stop		= net_close;
+    dev->open = net_open;
+    dev->stop = net_close;
     dev->hard_start_xmit = net_send_packet;
-    dev->get_stats	= net_get_stats;
+    dev->get_stats = net_get_stats;
 #ifdef HAVE_MULTICAST
     dev->set_multicast_list = &set_multicast_list;
 #endif
@@ -230,33 +231,32 @@ int netcard_probe1(struct device *dev, short ioaddr)
     for (i = 0; i < DEV_NUMBUFFS; i++)
         dev->buffs[i] = NULL;
 
-    dev->hard_header	= eth_header;
-    dev->add_arp		= eth_add_arp;
-    dev->queue_xmit		= dev_queue_xmit;
-    dev->rebuild_header	= eth_rebuild_header;
-    dev->type_trans		= eth_type_trans;
+    dev->hard_header = eth_header;
+    dev->add_arp = eth_add_arp;
+    dev->queue_xmit = dev_queue_xmit;
+    dev->rebuild_header = eth_rebuild_header;
+    dev->type_trans = eth_type_trans;
 
-    dev->type			= ARPHRD_ETHER;
+    dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
-    dev->mtu			= 1500; /* eth_mtu */
-    dev->addr_len		= ETH_ALEN;
+    dev->mtu = 1500; /* eth_mtu */
+    dev->addr_len = ETH_ALEN;
     for (i = 0; i < ETH_ALEN; i++)
     {
         dev->broadcast[i] = 0xff;
     }
 
     /* New-style flags. */
-    dev->flags			= IFF_BROADCAST;
-    dev->family			= AF_INET;
-    dev->pa_addr		= 0;
-    dev->pa_brdaddr		= 0;
-    dev->pa_mask		= 0;
-    dev->pa_alen		= sizeof(unsigned long);
+    dev->flags = IFF_BROADCAST;
+    dev->family = AF_INET;
+    dev->pa_addr = 0;
+    dev->pa_brdaddr = 0;
+    dev->pa_mask = 0;
+    dev->pa_alen = sizeof(unsigned long);
 
     return 0;
 }
 
-
 /* Open/initialize the board.  This is called (in the current kernel)
    sometime after booting when the 'ifconfig' program is run.
 
@@ -276,7 +276,6 @@ net_open(struct device *dev)
     {
         return -EAGAIN;
     }
-
 
     /* Always snarf a DMA channel after the IRQ. */
     if (request_dma(dev->dma))
@@ -329,10 +328,10 @@ net_send_packet(struct sk_buff *skb, struct device *dev)
 
     /* For ethernet, fill in the header.  This should really be done by a
        higher level, rather than duplicated for each ethernet adaptor. */
-    if (!skb->arp  &&  dev->rebuild_header(skb->data, dev))
+    if (!skb->arp && dev->rebuild_header(skb->data, dev))
     {
         skb->dev = dev;
-        arp_queue (skb);
+        arp_queue(skb);
         return 0;
     }
     skb->arp = 1;
@@ -350,15 +349,15 @@ net_send_packet(struct sk_buff *skb, struct device *dev)
         dev->trans_start = jiffies;
     }
     if (skb->free)
-        kfree_skb (skb, FREE_WRITE);
+        kfree_skb(skb, FREE_WRITE);
 
     /* You might need to clean up and record Tx statistics here. */
-    if (inw(ioaddr) == /*RU*/81)
+    if (inw(ioaddr) == /*RU*/ 81)
         lp->stats.tx_aborted_errors++;
 
     return 0;
 }
-
+
 /* The typical workload of the driver:
    Handle the network interface interrupts. */
 static void
@@ -371,7 +370,7 @@ net_interrupt(int reg_ptr)
 
     if (dev == NULL)
     {
-        printk ("net_interrupt(): irq %d for unknown device.\n", irq);
+        printk("net_interrupt(): irq %d for unknown device.\n", irq);
         return;
     }
     dev->interrupt = 1;
@@ -391,15 +390,14 @@ net_interrupt(int reg_ptr)
         {
             lp->stats.tx_packets++;
             dev->tbusy = 0;
-            mark_bh(INET_BH);	/* Inform upper layers. */
+            mark_bh(INET_BH); /* Inform upper layers. */
         }
         if (status /*& COUNTERS_INTR*/)
         {
             /* Increment the appropriate 'localstats' field. */
             lp->stats.tx_window_errors++;
         }
-    }
-    while (++boguscount < 20) ;
+    } while (++boguscount < 20);
 
     return;
 }
@@ -417,16 +415,20 @@ net_rx(struct device *dev)
         int status = inw(ioaddr);
         int pkt_len = inw(ioaddr);
 
-        if (pkt_len == 0)		/* Read all the frames? */
-            break;			/* Done for now */
+        if (pkt_len == 0) /* Read all the frames? */
+            break;        /* Done for now */
 
-        if (status & 0x40)  	/* There was an error. */
+        if (status & 0x40) /* There was an error. */
         {
             lp->stats.rx_errors++;
-            if (status & 0x20) lp->stats.rx_frame_errors++;
-            if (status & 0x10) lp->stats.rx_over_errors++;
-            if (status & 0x08) lp->stats.rx_crc_errors++;
-            if (status & 0x04) lp->stats.rx_fifo_errors++;
+            if (status & 0x20)
+                lp->stats.rx_frame_errors++;
+            if (status & 0x10)
+                lp->stats.rx_over_errors++;
+            if (status & 0x08)
+                lp->stats.rx_crc_errors++;
+            if (status & 0x04)
+                lp->stats.rx_fifo_errors++;
         }
         else
         {
@@ -465,8 +467,7 @@ net_rx(struct device *dev)
 #endif
             lp->stats.rx_packets++;
         }
-    }
-    while (--boguscount);
+    } while (--boguscount);
 
     /* If any worth-while packets have been received, dev_rint()
        has done a mark_bh(INET_BH) for us and will work on them
@@ -491,7 +492,7 @@ net_close(struct device *dev)
     disable_dma(dev->dma);
 
     /* If not IRQ or DMA jumpered, free up the line. */
-    outw(0x00, ioaddr + 0);		/* Release the physical interrupt line. */
+    outw(0x00, ioaddr + 0); /* Release the physical interrupt line. */
 
     free_irq(dev->irq);
     free_dma(dev->dma);
@@ -501,7 +502,6 @@ net_close(struct device *dev)
     /* Update the statistics here. */
 
     return 0;
-
 }
 
 /* Get the current statistics.	This may be called with the card open or
@@ -533,13 +533,13 @@ set_multicast_list(struct device *dev, int num_addrs, void *addrs)
     short ioaddr = dev->base_addr;
     if (num_addrs)
     {
-        outw(69, ioaddr);		/* Enable promiscuous mode */
+        outw(69, ioaddr); /* Enable promiscuous mode */
     }
     else
-        outw(99, ioaddr);		/* Disable promiscuous mode, use normal mode */
+        outw(99, ioaddr); /* Disable promiscuous mode, use normal mode */
 }
 #endif
-
+
 /*
  * Local variables:
  *  compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c skeleton.c"

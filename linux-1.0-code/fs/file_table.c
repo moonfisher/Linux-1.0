@@ -45,7 +45,7 @@ void grow_files(void)
     struct file *file;
     int i;
 
-    file = (struct file *) get_free_page(GFP_KERNEL);
+    file = (struct file *)get_free_page(GFP_KERNEL);
 
     if (!file)
         return;
@@ -55,7 +55,7 @@ void grow_files(void)
     if (!first_file)
         file->f_next = file->f_prev = first_file = file++, i--;
 
-    for (; i ; i--)
+    for (; i; i--)
         insert_file_free(file++);
 }
 

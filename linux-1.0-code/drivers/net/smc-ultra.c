@@ -29,8 +29,12 @@ static char *version =
 
 /* Compatibility definitions for earlier kernel versions. */
 #ifndef HAVE_PORTRESERVE
-#define check_region(ioaddr, size)              0
-#define snarf_region(ioaddr, size);             do ; while (0)
+#define check_region(ioaddr, size) 0
+#define snarf_region(ioaddr, size) \
+    ;                              \
+    do                             \
+        ;                          \
+    while (0)
 #endif
 
 int ultraprobe(int ioaddr, struct device *dev);
@@ -44,14 +48,13 @@ static void ultra_block_output(struct device *dev, int count,
                                const unsigned char *buf, const start_page);
 static int ultra_close_card(struct device *dev);
 
-
-#define START_PG	0x00	/* First page of TX buffer */
+#define START_PG 0x00 /* First page of TX buffer */
 
-#define ULTRA_CMDREG	0	/* Offset to ASIC command register. */
-#define  ULTRA_RESET	0x80	/* Board reset, in ULTRA_CMDREG. */
-#define  ULTRA_MEMENB	0x40	/* Enable the shared memory. */
-#define ULTRA_NIC_OFFSET  16	/* NIC register offset from the base_addr. */
-
+#define ULTRA_CMDREG 0      /* Offset to ASIC command register. */
+#define ULTRA_RESET 0x80    /* Board reset, in ULTRA_CMDREG. */
+#define ULTRA_MEMENB 0x40   /* Enable the shared memory. */
+#define ULTRA_NIC_OFFSET 16 /* NIC register offset from the base_addr. */
+
 /*  Probe for the Ultra.  This looks like a 8013 with the station
     address PROM at I/O ports <base>+8 to <base>+13, with a checksum
     following.
@@ -65,14 +68,14 @@ int ultra_probe(struct device *dev)
     if (ioaddr > 0x1ff)
         return ultraprobe1(ioaddr, dev);
     else if (ioaddr > 0)
-        return ENXIO;		/* Don't probe at all. */
+        return ENXIO; /* Don't probe at all. */
 
     for (port = &ports[0]; *port; port++)
     {
         if (check_region(*port, 32))
             continue;
-        if ((inb(*port + 7) & 0xF0) == 0x20	/* Check chip ID nibble. */
-                && ultraprobe1(*port, dev) == 0)
+        if ((inb(*port + 7) & 0xF0) == 0x20 /* Check chip ID nibble. */
+            && ultraprobe1(*port, dev) == 0)
             return 0;
     }
     dev->base_addr = ioaddr;
@@ -88,7 +91,6 @@ int ultraprobe1(int ioaddr, struct device *dev)
     unsigned char eeprom_irq = 0;
     /* Values from various config regs. */
     unsigned char num_pages, irqreg, addr, reg4 = inb(ioaddr + 4) & 0x7f;
-
 
     /* Select the station address register set. */
     outb(reg4, ioaddr + 4);
@@ -134,7 +136,6 @@ int ultraprobe1(int ioaddr, struct device *dev)
         eeprom_irq = 1;
     }
 
-
     /* OK, were are certain this is going to work.  Setup the device. */
     snarf_region(ioaddr, 32);
 
@@ -145,7 +146,7 @@ int ultraprobe1(int ioaddr, struct device *dev)
         int addr_tbl[4] = {0x0C0000, 0x0E0000, 0xFC0000, 0xFE0000};
         short num_pages_tbl[4] = {0x20, 0x40, 0x80, 0xff};
 
-        dev->mem_start = ((addr & 0x0f) << 13) + addr_tbl[(addr >> 6) & 3] ;
+        dev->mem_start = ((addr & 0x0f) << 13) + addr_tbl[(addr >> 6) & 3];
         num_pages = num_pages_tbl[(addr >> 4) & 3];
     }
 
@@ -158,8 +159,7 @@ int ultraprobe1(int ioaddr, struct device *dev)
     ei_status.stop_page = num_pages;
 
     dev->rmem_start = dev->mem_start + TX_PAGES * 256;
-    dev->mem_end = dev->rmem_end
-                   = dev->mem_start + (ei_status.stop_page - START_PG) * 256;
+    dev->mem_end = dev->rmem_end = dev->mem_start + (ei_status.stop_page - START_PG) * 256;
 
     printk(",%s IRQ %d memory %#lx-%#lx.\n", eeprom_irq ? "" : "assigned ",
            dev->irq, dev->mem_start, dev->mem_end - 1);
@@ -184,9 +184,9 @@ ultra_open(struct device *dev)
     if (irqaction(dev->irq, &ei_sigaction))
         return -EAGAIN;
 
-    outb(ULTRA_MEMENB, ioaddr);	/* Enable memory, 16 bit mode. */
+    outb(ULTRA_MEMENB, ioaddr); /* Enable memory, 16 bit mode. */
     outb(0x80, ioaddr + 5);
-    outb(0x01, ioaddr + 6);	/* Enable interrupts and memory. */
+    outb(0x01, ioaddr + 6); /* Enable interrupts and memory. */
     return ei_open(dev);
 }
 
@@ -196,12 +196,14 @@ ultra_reset_8390(struct device *dev)
     int cmd_port = dev->base_addr - ULTRA_NIC_OFFSET; /* ASIC base addr */
 
     outb(ULTRA_RESET, cmd_port);
-    if (ei_debug > 1) printk("resetting Ultra, t=%ld...", jiffies);
+    if (ei_debug > 1)
+        printk("resetting Ultra, t=%ld...", jiffies);
     ei_status.txing = 0;
 
     outb(ULTRA_MEMENB, cmd_port);
 
-    if (ei_debug > 1) printk("reset done\n");
+    if (ei_debug > 1)
+        printk("reset done\n");
     return;
 }
 
@@ -211,10 +213,9 @@ ultra_reset_8390(struct device *dev)
 static int
 ultra_block_input(struct device *dev, int count, char *buf, int ring_offset)
 {
-    void *xfer_start = (void *)(dev->mem_start + ring_offset
-                                - (START_PG << 8));
+    void *xfer_start = (void *)(dev->mem_start + ring_offset - (START_PG << 8));
 
-    if (xfer_start + count > (void *) dev->rmem_end)
+    if (xfer_start + count > (void *)dev->rmem_end)
     {
         /* We must wrap the input move. */
         int semi_count = (void *)dev->rmem_end - xfer_start;
@@ -232,11 +233,9 @@ static void
 ultra_block_output(struct device *dev, int count, const unsigned char *buf,
                    int start_page)
 {
-    unsigned char *shmem
-        = (unsigned char *)dev->mem_start + ((start_page - START_PG) << 8);
+    unsigned char *shmem = (unsigned char *)dev->mem_start + ((start_page - START_PG) << 8);
 
     memcpy(shmem, buf, count);
-
 }
 
 static int
@@ -250,7 +249,7 @@ ultra_close_card(struct device *dev)
     if (ei_debug > 1)
         printk("%s: Shutting down ethercard.\n", dev->name);
 
-    outb(0x00, ioaddr + 6);	/* Disable interrupts. */
+    outb(0x00, ioaddr + 6); /* Disable interrupts. */
     free_irq(dev->irq);
     irq2dev_map[dev->irq] = 0;
 
@@ -261,7 +260,6 @@ ultra_close_card(struct device *dev)
 
     return 0;
 }
-
 
 /*
  * Local variables:

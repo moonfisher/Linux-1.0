@@ -14,7 +14,7 @@ static int fifo_open(struct inode *inode, struct file *filp)
     int retval = 0;
     unsigned long page;
 
-    switch( filp->f_mode )
+    switch (filp->f_mode)
     {
 
     case 1:
@@ -28,7 +28,8 @@ static int fifo_open(struct inode *inode, struct file *filp)
             wake_up_interruptible(&PIPE_WAIT(*inode));
         if (!(filp->f_flags & O_NONBLOCK) && !PIPE_WRITERS(*inode))
         {
-            PIPE_RD_OPENERS(*inode)++;
+            PIPE_RD_OPENERS(*inode)
+            ++;
             while (!PIPE_WRITERS(*inode))
             {
                 if (current->signal & ~current->blocked)
@@ -65,7 +66,8 @@ static int fifo_open(struct inode *inode, struct file *filp)
             wake_up_interruptible(&PIPE_WAIT(*inode));
         if (!PIPE_READERS(*inode))
         {
-            PIPE_WR_OPENERS(*inode)++;
+            PIPE_WR_OPENERS(*inode)
+            ++;
             while (!PIPE_READERS(*inode))
             {
                 if (current->signal & ~current->blocked)
@@ -117,7 +119,7 @@ static int fifo_open(struct inode *inode, struct file *filp)
         return -ENOMEM;
     PIPE_LOCK(*inode) = 0;
     PIPE_START(*inode) = PIPE_LEN(*inode) = 0;
-    PIPE_BASE(*inode) = (char *) page;
+    PIPE_BASE(*inode) = (char *)page;
     return 0;
 }
 
@@ -127,36 +129,35 @@ static int fifo_open(struct inode *inode, struct file *filp)
  * depending on the access mode of the file...
  */
 static struct file_operations def_fifo_fops =
-{
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    NULL,
-    fifo_open,		/* will set read or write pipe_fops */
-    NULL,
-    NULL
-};
+    {
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        fifo_open, /* will set read or write pipe_fops */
+        NULL,
+        NULL};
 
 static struct inode_operations fifo_inode_operations =
-{
-    &def_fifo_fops,		/* default file operations */
-    NULL,			/* create */
-    NULL,			/* lookup */
-    NULL,			/* link */
-    NULL,			/* unlink */
-    NULL,			/* symlink */
-    NULL,			/* mkdir */
-    NULL,			/* rmdir */
-    NULL,			/* mknod */
-    NULL,			/* rename */
-    NULL,			/* readlink */
-    NULL,			/* follow_link */
-    NULL,			/* bmap */
-    NULL,			/* truncate */
-    NULL			/* permission */
+    {
+        &def_fifo_fops, /* default file operations */
+        NULL,           /* create */
+        NULL,           /* lookup */
+        NULL,           /* link */
+        NULL,           /* unlink */
+        NULL,           /* symlink */
+        NULL,           /* mkdir */
+        NULL,           /* rmdir */
+        NULL,           /* mknod */
+        NULL,           /* rename */
+        NULL,           /* readlink */
+        NULL,           /* follow_link */
+        NULL,           /* bmap */
+        NULL,           /* truncate */
+        NULL            /* permission */
 };
 
 void init_fifo(struct inode *inode)

@@ -20,7 +20,7 @@
 #include "linux/stat.h"
 #include "linux/fcntl.h"
 
-#define OFFSET_MAX	((off_t)0x7fffffff)	/* FIXME: move elsewhere? */
+#define OFFSET_MAX ((off_t)0x7fffffff) /* FIXME: move elsewhere? */
 
 static int copy_flock(struct file *filp, struct file_lock *fl, struct flock *l,
                       unsigned int fd);
@@ -76,8 +76,7 @@ int fcntl_getlk(unsigned int fd, struct flock *l)
         {
             flock.l_pid = fl->fl_owner->pid;
             flock.l_start = fl->fl_start;
-            flock.l_len = fl->fl_end == OFFSET_MAX ? 0 :
-                          fl->fl_end - fl->fl_start + 1;
+            flock.l_len = fl->fl_end == OFFSET_MAX ? 0 : fl->fl_end - fl->fl_start + 1;
             flock.l_whence = fl->fl_whence;
             flock.l_type = fl->fl_type;
             memcpy_tofs(l, &flock, sizeof(flock));
@@ -85,7 +84,7 @@ int fcntl_getlk(unsigned int fd, struct flock *l)
         }
     }
 
-    flock.l_type = F_UNLCK;			/* no conflict found */
+    flock.l_type = F_UNLCK; /* no conflict found */
     memcpy_tofs(l, &flock, sizeof(flock));
     return 0;
 }
@@ -115,25 +114,25 @@ int fcntl_setlk(unsigned int fd, unsigned int cmd, struct flock *l)
         return -EINVAL;
     switch (file_lock.fl_type)
     {
-    case F_RDLCK :
+    case F_RDLCK:
         if (!(filp->f_mode & 1))
             return -EBADF;
         break;
-    case F_WRLCK :
+    case F_WRLCK:
         if (!(filp->f_mode & 2))
             return -EBADF;
         break;
-    case F_SHLCK :
+    case F_SHLCK:
         if (!(filp->f_mode & 3))
             return -EBADF;
         file_lock.fl_type = F_RDLCK;
         break;
-    case F_EXLCK :
+    case F_EXLCK:
         if (!(filp->f_mode & 3))
             return -EBADF;
         file_lock.fl_type = F_WRLCK;
         break;
-    case F_UNLCK :
+    case F_UNLCK:
         break;
     }
 
@@ -143,7 +142,7 @@ int fcntl_setlk(unsigned int fd, unsigned int cmd, struct flock *l)
 
     if (file_lock.fl_type != F_UNLCK)
     {
-repeat:
+    repeat:
         for (fl = filp->f_inode->i_flock; fl != NULL; fl = fl->fl_next)
         {
             if (!conflict(&file_lock, fl))
@@ -205,37 +204,36 @@ static int copy_flock(struct file *filp, struct file_lock *fl, struct flock *l,
 {
     off_t start;
 
-    if (!filp->f_inode)	/* just in case */
+    if (!filp->f_inode) /* just in case */
         return 0;
     if (!S_ISREG(filp->f_inode->i_mode))
         return 0;
-    if (l->l_type != F_UNLCK && l->l_type != F_RDLCK && l->l_type != F_WRLCK
-            && l->l_type != F_SHLCK && l->l_type != F_EXLCK)
+    if (l->l_type != F_UNLCK && l->l_type != F_RDLCK && l->l_type != F_WRLCK && l->l_type != F_SHLCK && l->l_type != F_EXLCK)
         return 0;
     switch (l->l_whence)
     {
-    case 0 /*SEEK_SET*/ :
+    case 0 /*SEEK_SET*/:
         start = 0;
         break;
-    case 1 /*SEEK_CUR*/ :
+    case 1 /*SEEK_CUR*/:
         start = filp->f_pos;
         break;
-    case 2 /*SEEK_END*/ :
+    case 2 /*SEEK_END*/:
         start = filp->f_inode->i_size;
         break;
-    default :
+    default:
         return 0;
     }
     if ((start += l->l_start) < 0 || l->l_len < 0)
         return 0;
     fl->fl_type = l->l_type;
-    fl->fl_start = start;	/* we record the absolute position */
-    fl->fl_whence = 0;	/* FIXME: do we record {l_start} as passed? */
+    fl->fl_start = start; /* we record the absolute position */
+    fl->fl_whence = 0;    /* FIXME: do we record {l_start} as passed? */
     if (l->l_len == 0 || (fl->fl_end = start + l->l_len - 1) < 0)
         fl->fl_end = OFFSET_MAX;
     fl->fl_owner = current;
     fl->fl_fd = fd;
-    fl->fl_wait = NULL;		/* just for cleanliness */
+    fl->fl_wait = NULL; /* just for cleanliness */
     return 1;
 }
 
@@ -245,19 +243,18 @@ static int copy_flock(struct file *filp, struct file_lock *fl, struct flock *l,
 
 static int conflict(struct file_lock *caller_fl, struct file_lock *sys_fl)
 {
-    if (   caller_fl->fl_owner == sys_fl->fl_owner
-            && caller_fl->fl_fd == sys_fl->fl_fd)
+    if (caller_fl->fl_owner == sys_fl->fl_owner && caller_fl->fl_fd == sys_fl->fl_fd)
         return 0;
     if (!overlap(caller_fl, sys_fl))
         return 0;
     switch (caller_fl->fl_type)
     {
-    case F_RDLCK :
+    case F_RDLCK:
         return sys_fl->fl_type != F_RDLCK;
-    case F_WRLCK :
-        return 1;	/* overlapping region not owned by caller */
+    case F_WRLCK:
+        return 1; /* overlapping region not owned by caller */
     }
-    return 0;	/* shouldn't get here, but just in case */
+    return 0; /* shouldn't get here, but just in case */
 }
 
 static int overlap(struct file_lock *fl1, struct file_lock *fl2)
@@ -299,17 +296,15 @@ static int lock_it(struct file *filp, struct file_lock *caller, unsigned int fd)
 
     before = &filp->f_inode->i_flock;
     while ((fl = *before) &&
-            (caller->fl_owner != fl->fl_owner ||
-             caller->fl_fd != fl->fl_fd))
+           (caller->fl_owner != fl->fl_owner ||
+            caller->fl_fd != fl->fl_fd))
         before = &fl->fl_next;
 
     /*
      * Look up all locks of this owner.
      */
 
-    while (   (fl = *before)
-              && caller->fl_owner == fl->fl_owner
-              && caller->fl_fd == fl->fl_fd)
+    while ((fl = *before) && caller->fl_owner == fl->fl_owner && caller->fl_fd == fl->fl_fd)
     {
         /*
          * Detect adjacent or overlapping regions (if same lock type)
@@ -386,23 +381,23 @@ static int lock_it(struct file *filp, struct file_lock *caller, unsigned int fd)
              */
             wake_up(&fl->fl_wait);
             fl->fl_start = caller->fl_start;
-            fl->fl_end   = caller->fl_end;
-            fl->fl_type  = caller->fl_type;
+            fl->fl_end = caller->fl_end;
+            fl->fl_type = caller->fl_type;
             caller = fl;
             added = 1;
         }
         /*
          * Go on to next lock.
          */
-next_lock:
+    next_lock:
         before = &(*before)->fl_next;
     }
 
-    if (! added)
+    if (!added)
     {
         if (caller->fl_type == F_UNLCK)
             return -EINVAL;
-        if (! (caller = alloc_lock(before, caller, fd)))
+        if (!(caller = alloc_lock(before, caller, fd)))
             return -ENOLCK;
     }
     if (right)
@@ -414,9 +409,9 @@ next_lock:
              * have to allocate one more lock (in this case, even
              * F_UNLCK may fail!).
              */
-            if (! (left = alloc_lock(before, right, fd)))
+            if (!(left = alloc_lock(before, right, fd)))
             {
-                if (! added)
+                if (!added)
                     free_lock(before);
                 return -ENOLCK;
             }
@@ -434,13 +429,13 @@ next_lock:
 
 static struct file_lock *alloc_lock(struct file_lock **pos,
                                     struct file_lock *fl,
-                                    unsigned int     fd)
+                                    unsigned int fd)
 {
     struct file_lock *tmp;
 
     tmp = file_lock_free_list;
     if (tmp == NULL)
-        return NULL;			/* no available entry */
+        return NULL; /* no available entry */
     if (tmp->fl_owner != NULL)
         panic("alloc_lock: broken free list\n");
 
@@ -449,11 +444,11 @@ static struct file_lock *alloc_lock(struct file_lock **pos,
 
     *tmp = *fl;
 
-    tmp->fl_next = *pos;	/* insert into file's list */
+    tmp->fl_next = *pos; /* insert into file's list */
     *pos = tmp;
 
-    tmp->fl_owner = current;	/* FIXME: needed? */
-    tmp->fl_fd = fd;		/* FIXME: needed? */
+    tmp->fl_owner = current; /* FIXME: needed? */
+    tmp->fl_fd = fd;         /* FIXME: needed? */
     tmp->fl_wait = NULL;
     return tmp;
 }
@@ -467,14 +462,14 @@ static void free_lock(struct file_lock **fl_p)
     struct file_lock *fl;
 
     fl = *fl_p;
-    if (fl->fl_owner == NULL)	/* sanity check */
+    if (fl->fl_owner == NULL) /* sanity check */
         panic("free_lock: broken lock list\n");
 
     *fl_p = (*fl_p)->fl_next;
 
-    fl->fl_next = file_lock_free_list;	/* add to free list */
+    fl->fl_next = file_lock_free_list; /* add to free list */
     file_lock_free_list = fl;
-    fl->fl_owner = NULL;			/* for sanity checks */
+    fl->fl_owner = NULL; /* for sanity checks */
 
     wake_up(&fl->fl_wait);
 }

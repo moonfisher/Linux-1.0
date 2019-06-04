@@ -30,8 +30,11 @@ static char *version =
 
 /* Compatibility definitions for earlier kernel versions. */
 #ifndef HAVE_PORTRESERVE
-#define check_region(ioaddr, size)		0
-#define snarf_region(ioaddr, size)		do ; while (0)
+#define check_region(ioaddr, size) 0
+#define snarf_region(ioaddr, size) \
+    do                             \
+        ;                          \
+    while (0)
 #endif
 
 int wd_probe(struct device *dev);
@@ -45,19 +48,18 @@ static void wd_block_output(struct device *dev, int count,
                             const unsigned char *buf, const start_page);
 static int wd_close_card(struct device *dev);
 
-
-#define WD_START_PG		0x00	/* First page of TX buffer */
-#define WD03_STOP_PG	0x20	/* Last page +1 of RX ring */
-#define WD13_STOP_PG	0x40	/* Last page +1 of RX ring */
+#define WD_START_PG 0x00  /* First page of TX buffer */
+#define WD03_STOP_PG 0x20 /* Last page +1 of RX ring */
+#define WD13_STOP_PG 0x40 /* Last page +1 of RX ring */
 
-#define WD_CMDREG		0		/* Offset to ASIC command register. */
-#define	 WD_RESET		0x80	/* Board reset, in WD_CMDREG. */
-#define	 WD_MEMENB		0x40	/* Enable the shared memory. */
-#define WD_CMDREG5		5		/* Offset to 16-bit-only ASIC register 5. */
-#define	 ISA16			0x80	/* Enable 16 bit access from the ISA bus. */
-#define	 NIC16			0x40	/* Enable 16 bit access from the 8390. */
-#define WD_NIC_OFFSET	16		/* Offset to the 8390 NIC from the base_addr. */
-
+#define WD_CMDREG 0      /* Offset to ASIC command register. */
+#define WD_RESET 0x80    /* Board reset, in WD_CMDREG. */
+#define WD_MEMENB 0x40   /* Enable the shared memory. */
+#define WD_CMDREG5 5     /* Offset to 16-bit-only ASIC register 5. */
+#define ISA16 0x80       /* Enable 16 bit access from the ISA bus. */
+#define NIC16 0x40       /* Enable 16 bit access from the 8390. */
+#define WD_NIC_OFFSET 16 /* Offset to the 8390 NIC from the base_addr. */
+
 /*	Probe for the WD8003 and WD8013.  These cards have the station
 	address PROM at I/O ports <base>+8 to <base>+13, with a checksum
 	following. A Soundblaster can have the same checksum as an WDethercard,
@@ -72,17 +74,16 @@ int wd_probe(struct device *dev)
     short ioaddr = dev->base_addr;
 
     if (ioaddr < 0)
-        return ENXIO;			/* Don't probe at all. */
+        return ENXIO; /* Don't probe at all. */
     if (ioaddr > 0x100)
-        return ! wdprobe1(ioaddr, dev);
+        return !wdprobe1(ioaddr, dev);
 
     for (port = &ports[0]; *port; port++)
     {
         if (check_region(*port, 32))
             continue;
-        if (inb(*port + 8) != 0xff
-                && inb(*port + 9) != 0xff /* Extra check to avoid soundcard. */
-                && wdprobe1(*port, dev))
+        if (inb(*port + 8) != 0xff && inb(*port + 9) != 0xff /* Extra check to avoid soundcard. */
+            && wdprobe1(*port, dev))
             return 0;
     }
     dev->base_addr = ioaddr;
@@ -94,8 +95,8 @@ int wdprobe1(int ioaddr, struct device *dev)
     int i;
     unsigned char *station_addr = dev->dev_addr;
     int checksum = 0;
-    int ancient = 0;			/* An old card without config registers. */
-    int word16 = 0;				/* 0 = 8 bit, 1 = 16 bit */
+    int ancient = 0; /* An old card without config registers. */
+    int word16 = 0;  /* 0 = 8 bit, 1 = 16 bit */
     char *model_name;
 
     for (i = 0; i < 8; i++)
@@ -139,7 +140,7 @@ int wdprobe1(int ioaddr, struct device *dev)
         dev->mem_start = ((reg5 & 0x1c) + 0xc0) << 12;
         dev->irq = (reg5 & 0xe0) == 0xe0 ? 10 : (reg5 >> 5) + 1;
     }
-    else  								/* End of PureData probe */
+    else /* End of PureData probe */
     {
         /* This method of checking for a 16-bit board is borrowed from the
            we.c driver.  A simpler method is just to look in ASIC reg. 0x03.
@@ -158,27 +159,27 @@ int wdprobe1(int ioaddr, struct device *dev)
         }
         else
         {
-            int tmp = inb(ioaddr + 1); /* fiddle with 16bit bit */
-            outb( tmp ^ 0x01, ioaddr + 1 ); /* attempt to clear 16bit bit */
-            if (((inb( ioaddr + 1) & 0x01) == 0x01) /* A 16 bit card */
-                    && (tmp & 0x01) == 0x01	)  				/* In a 16 slot. */
+            int tmp = inb(ioaddr + 1);             /* fiddle with 16bit bit */
+            outb(tmp ^ 0x01, ioaddr + 1);          /* attempt to clear 16bit bit */
+            if (((inb(ioaddr + 1) & 0x01) == 0x01) /* A 16 bit card */
+                && (tmp & 0x01) == 0x01)           /* In a 16 slot. */
             {
                 int asic_reg5 = inb(ioaddr + WD_CMDREG5);
                 /* Magic to set ASIC to word-wide mode. */
-                outb( NIC16 | (asic_reg5 & 0x1f), ioaddr + WD_CMDREG5);
+                outb(NIC16 | (asic_reg5 & 0x1f), ioaddr + WD_CMDREG5);
                 outb(tmp, ioaddr + 1);
                 model_name = "WD8013";
-                word16 = 1;		/* We have a 16bit board here! */
+                word16 = 1; /* We have a 16bit board here! */
             }
             else
             {
                 model_name = "WD8003";
                 word16 = 0;
             }
-            outb(tmp, ioaddr + 1);			/* Restore original reg1 value. */
+            outb(tmp, ioaddr + 1); /* Restore original reg1 value. */
         }
 #ifndef final_version
-        if ( !ancient && (inb(ioaddr + 1) & 0x01) != (word16 & 0x01))
+        if (!ancient && (inb(ioaddr + 1) & 0x01) != (word16 & 0x01))
             printk("\nWD80?3: Bus width conflict, %d (probe) != %d (reg report).",
                    word16 ? 16 : 8, (inb(ioaddr + 1) & 0x01) ? 16 : 8);
 #endif
@@ -217,7 +218,7 @@ int wdprobe1(int ioaddr, struct device *dev)
         int irqmap[] = {9, 3, 5, 7, 10, 11, 15, 4};
         int reg1 = inb(ioaddr + 1);
         int reg4 = inb(ioaddr + 4);
-        if (ancient || reg1 == 0xff)  	/* Ack!! No way to read the IRQ! */
+        if (ancient || reg1 == 0xff) /* Ack!! No way to read the IRQ! */
         {
             short nic_addr = ioaddr + WD_NIC_OFFSET;
 
@@ -225,14 +226,14 @@ int wdprobe1(int ioaddr, struct device *dev)
                line.  Do autoirq to find the IRQ line. Note that this IS NOT
                a reliable way to trigger an interrupt. */
             outb_p(E8390_NODMA + E8390_STOP, nic_addr);
-            outb(0x00, nic_addr + EN0_IMR);	/* Disable all intrs. */
+            outb(0x00, nic_addr + EN0_IMR); /* Disable all intrs. */
             autoirq_setup(0);
-            outb_p(0xff, nic_addr + EN0_IMR);	/* Enable all interrupts. */
+            outb_p(0xff, nic_addr + EN0_IMR); /* Enable all interrupts. */
             outb_p(0x00, nic_addr + EN0_RCNTLO);
             outb_p(0x00, nic_addr + EN0_RCNTHI);
             outb(E8390_RREAD + E8390_START, nic_addr); /* Trigger it... */
             dev->irq = autoirq_report(2);
-            outb_p(0x00, nic_addr + EN0_IMR);	/* Mask all intrs. again. */
+            outb_p(0x00, nic_addr + EN0_IMR); /* Mask all intrs. again. */
 
             if (ei_debug > 2)
                 printk(" autoirq is %d", dev->irq);
@@ -242,14 +243,14 @@ int wdprobe1(int ioaddr, struct device *dev)
         else
             dev->irq = irqmap[((reg4 >> 5) & 0x03) + (reg1 & 0x04)];
     }
-    else if (dev->irq == 2)		/* Fixup bogosity: IRQ2 is really IRQ9 */
+    else if (dev->irq == 2) /* Fixup bogosity: IRQ2 is really IRQ9 */
         dev->irq = 9;
 
     /* Snarf the interrupt now.  There's no point in waiting since we cannot
        share and the board will usually be enabled. */
-    if (irqaction (dev->irq, &ei_sigaction))
+    if (irqaction(dev->irq, &ei_sigaction))
     {
-        printk (" unable to get IRQ %d.\n", dev->irq);
+        printk(" unable to get IRQ %d.\n", dev->irq);
         return 0;
     }
 
@@ -265,8 +266,7 @@ int wdprobe1(int ioaddr, struct device *dev)
 
     /* Don't map in the shared memory until the board is actually opened. */
     dev->rmem_start = dev->mem_start + TX_PAGES * 256;
-    dev->mem_end = dev->rmem_end
-                   = dev->mem_start + (ei_status.stop_page - WD_START_PG) * 256;
+    dev->mem_end = dev->rmem_end = dev->mem_start + (ei_status.stop_page - WD_START_PG) * 256;
 
     printk(" %s, IRQ %d, shared memory at %#lx-%#lx.\n",
            model_name, dev->irq, dev->mem_start, dev->mem_end - 1);
@@ -306,7 +306,8 @@ wd_reset_8390(struct device *dev)
     int wd_cmd_port = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
 
     outb(WD_RESET, wd_cmd_port);
-    if (ei_debug > 1) printk("resetting the WD80x3 t=%lu...", jiffies);
+    if (ei_debug > 1)
+        printk("resetting the WD80x3 t=%lu...", jiffies);
     ei_status.txing = 0;
 
     /* Set up the ASIC registers, just in case something changed them. */
@@ -314,7 +315,8 @@ wd_reset_8390(struct device *dev)
     if (ei_status.word16)
         outb(NIC16 | ((dev->mem_start >> 19) & 0x1f), wd_cmd_port + WD_CMDREG5);
 
-    if (ei_debug > 1) printk("reset done\n");
+    if (ei_debug > 1)
+        printk("reset done\n");
     return;
 }
 
@@ -364,7 +366,6 @@ wd_block_output(struct device *dev, int count, const unsigned char *buf,
     int wd_cmdreg = dev->base_addr - WD_NIC_OFFSET; /* WD_CMDREG */
     long shmem = dev->mem_start + ((start_page - WD_START_PG) << 8);
 
-
     if (ei_status.word16)
     {
         /* Turn on and off 16 bit access so that reboot works. */
@@ -376,7 +377,6 @@ wd_block_output(struct device *dev, int count, const unsigned char *buf,
         memcpy((char *)shmem, buf, count);
 }
 
-
 static int
 wd_close_card(struct device *dev)
 {
@@ -387,14 +387,13 @@ wd_close_card(struct device *dev)
     NS8390_init(dev, 0);
 
     /* Change from 16-bit to 8-bit shared memory so reboot works. */
-    outb(ei_status.reg5, wd_cmdreg + WD_CMDREG5 );
+    outb(ei_status.reg5, wd_cmdreg + WD_CMDREG5);
 
     /* And disable the shared memory. */
     outb(ei_status.reg0 & ~WD_MEMENB, wd_cmdreg);
 
     return 0;
 }
-
 
 /*
  * Local variables:

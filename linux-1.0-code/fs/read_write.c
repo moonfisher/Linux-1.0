@@ -23,12 +23,12 @@ asmlinkage int sys_readdir(unsigned int fd, struct dirent *dirent, unsigned int 
     struct inode *inode;
 
     if (fd >= NR_OPEN || !(file = current->filp[fd]) ||
-            !(inode = file->f_inode))
+        !(inode = file->f_inode))
         return -EBADF;
     error = -ENOTDIR;
     if (file->f_op && file->f_op->readdir)
     {
-        error = verify_area(VERIFY_WRITE, dirent, sizeof (*dirent));
+        error = verify_area(VERIFY_WRITE, dirent, sizeof(*dirent));
         if (!error)
             error = file->f_op->readdir(inode, file, dirent, count);
     }

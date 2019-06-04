@@ -33,7 +33,9 @@ static void cp_old_stat(struct inode *inode, struct old_stat *statbuf)
 
 static void cp_new_stat(struct inode *inode, struct new_stat *statbuf)
 {
-    struct new_stat tmp = {0, };
+    struct new_stat tmp = {
+        0,
+    };
     unsigned int blocks, indirect;
 
     tmp.st_dev = inode->i_dev;
@@ -62,8 +64,8 @@ static void cp_new_stat(struct inode *inode, struct new_stat *statbuf)
      * Everything is in BLOCK_SIZE'd units until the assignment to
      * tmp.st_blksize.
      */
-#define D_B   7
-#define I_B   (BLOCK_SIZE / sizeof(unsigned short))
+#define D_B 7
+#define I_B (BLOCK_SIZE / sizeof(unsigned short))
 
     if (!inode->i_blksize)
     {
@@ -96,7 +98,7 @@ asmlinkage int sys_stat(char *filename, struct old_stat *statbuf)
     struct inode *inode;
     int error;
 
-    error = verify_area(VERIFY_WRITE, statbuf, sizeof (*statbuf));
+    error = verify_area(VERIFY_WRITE, statbuf, sizeof(*statbuf));
     if (error)
         return error;
     error = namei(filename, &inode);
@@ -112,7 +114,7 @@ asmlinkage int sys_newstat(char *filename, struct new_stat *statbuf)
     struct inode *inode;
     int error;
 
-    error = verify_area(VERIFY_WRITE, statbuf, sizeof (*statbuf));
+    error = verify_area(VERIFY_WRITE, statbuf, sizeof(*statbuf));
     if (error)
         return error;
     error = namei(filename, &inode);
@@ -128,7 +130,7 @@ asmlinkage int sys_lstat(char *filename, struct old_stat *statbuf)
     struct inode *inode;
     int error;
 
-    error = verify_area(VERIFY_WRITE, statbuf, sizeof (*statbuf));
+    error = verify_area(VERIFY_WRITE, statbuf, sizeof(*statbuf));
     if (error)
         return error;
     error = lnamei(filename, &inode);
@@ -144,7 +146,7 @@ asmlinkage int sys_newlstat(char *filename, struct new_stat *statbuf)
     struct inode *inode;
     int error;
 
-    error = verify_area(VERIFY_WRITE, statbuf, sizeof (*statbuf));
+    error = verify_area(VERIFY_WRITE, statbuf, sizeof(*statbuf));
     if (error)
         return error;
     error = lnamei(filename, &inode);
@@ -161,7 +163,7 @@ asmlinkage int sys_fstat(unsigned int fd, struct old_stat *statbuf)
     struct inode *inode;
     int error;
 
-    error = verify_area(VERIFY_WRITE, statbuf, sizeof (*statbuf));
+    error = verify_area(VERIFY_WRITE, statbuf, sizeof(*statbuf));
     if (error)
         return error;
     if (fd >= NR_OPEN || !(f = current->filp[fd]) || !(inode = f->f_inode))
@@ -176,7 +178,7 @@ asmlinkage int sys_newfstat(unsigned int fd, struct new_stat *statbuf)
     struct inode *inode;
     int error;
 
-    error = verify_area(VERIFY_WRITE, statbuf, sizeof (*statbuf));
+    error = verify_area(VERIFY_WRITE, statbuf, sizeof(*statbuf));
     if (error)
         return error;
     if (fd >= NR_OPEN || !(f = current->filp[fd]) || !(inode = f->f_inode))

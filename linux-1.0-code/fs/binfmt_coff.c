@@ -30,36 +30,36 @@
 #include "linux/coff.h"
 #include "linux/malloc.h"
 
-asmlinkage int sys_exit (int exit_code);
-asmlinkage int sys_close (unsigned fd);
-asmlinkage int sys_open (const char *, int, int);
+asmlinkage int sys_exit(int exit_code);
+asmlinkage int sys_close(unsigned fd);
+asmlinkage int sys_open(const char *, int, int);
 asmlinkage int sys_uselib(const char *library);
 
-static int preload_library (struct linux_binprm *exe_bprm,
-                            COFF_SCNHDR *sect,
-                            struct file *fp);
+static int preload_library(struct linux_binprm *exe_bprm,
+                           COFF_SCNHDR *sect,
+                           struct file *fp);
 
-static int load_object (struct linux_binprm *bprm,
-                        struct pt_regs *regs,
-                        int lib_ok);
+static int load_object(struct linux_binprm *bprm,
+                       struct pt_regs *regs,
+                       int lib_ok);
 
 /*
  *  Small procedure to test for the proper file alignment.
  */
 
 static inline int
-is_properly_aligned (COFF_SCNHDR *sect)
+is_properly_aligned(COFF_SCNHDR *sect)
 {
-    long scnptr = COFF_LONG (sect->s_scnptr);
-    long vaddr  = COFF_LONG (sect->s_vaddr);
+    long scnptr = COFF_LONG(sect->s_scnptr);
+    long vaddr = COFF_LONG(sect->s_vaddr);
     /*
      *  Print the section information if needed
      */
 
 #ifdef COFF_DEBUG
-    printk ("%s, scnptr = %d, vaddr = %d\n",
-            sect->s_name,
-            scnptr, vaddr);
+    printk("%s, scnptr = %d, vaddr = %d\n",
+           sect->s_name,
+           scnptr, vaddr);
 #endif
 
     /*
@@ -68,7 +68,7 @@ is_properly_aligned (COFF_SCNHDR *sect)
 
 #ifdef COFF_DEBUG
     if (((vaddr - scnptr) & ~PAGE_MASK) != 0)
-        printk ("bad alignment in %s\n", sect->s_name);
+        printk("bad alignment in %s\n", sect->s_name);
 #endif
     return ((((vaddr - scnptr) & ~PAGE_MASK) != 0) ? -ENOEXEC : 0);
 }
@@ -77,8 +77,7 @@ is_properly_aligned (COFF_SCNHDR *sect)
  *    Clear the bytes in the last page of data.
  */
 
-static
-int clear_memory (unsigned long addr, unsigned long size)
+static int clear_memory(unsigned long addr, unsigned long size)
 {
     int status;
 
@@ -89,18 +88,18 @@ int clear_memory (unsigned long addr, unsigned long size)
     {
 
 #ifdef COFF_DEBUG
-        printk ("un-initialized storage in last page %d\n", size);
+        printk("un-initialized storage in last page %d\n", size);
 #endif
 
-        status = verify_area (VERIFY_WRITE,
-                              (void *) addr, size);
+        status = verify_area(VERIFY_WRITE,
+                             (void *)addr, size);
 #ifdef COFF_DEBUG
-        printk ("result from verify_area = %d\n", status);
+        printk("result from verify_area = %d\n", status);
 #endif
 
         if (status >= 0)
             while (size-- != 0)
-                put_fs_byte (0, addr++);
+                put_fs_byte(0, addr++);
     }
     return status;
 }
@@ -110,27 +109,27 @@ int clear_memory (unsigned long addr, unsigned long size)
  */
 
 static int
-load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
+load_object(struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
 {
-    COFF_FILHDR  *coff_hdr = (COFF_FILHDR *) bprm->buf;	/* COFF Header */
-    COFF_SCNHDR  *sect_bufr;	/* Pointer to section table            */
-    COFF_SCNHDR  *text_sect;	/* Pointer to the text section         */
-    COFF_SCNHDR  *data_sect;	/* Pointer to the data section         */
-    COFF_SCNHDR  *bss_sect;	/* Pointer to the bss section          */
-    int text_count;		/* Number of text sections             */
-    int data_count;		/* Number of data sections             */
-    int bss_count;		/* Number of bss sections              */
-    int lib_count;		/* Number of lib sections              */
-    unsigned int start_addr = 0;/* Starting location for program       */
-    int status = 0;		/* Result status register              */
-    int fd = -1;		/* Open file descriptor                */
-    struct file *fp     = NULL;	/* Pointer to the file at "fd"         */
-    short int sections  = 0;	/* Number of sections in the file      */
-    short int aout_size = 0;	/* Size of the a.out header area       */
-    short int flags;		/* Flag bits from the COFF header      */
+    COFF_FILHDR *coff_hdr = (COFF_FILHDR *)bprm->buf; /* COFF Header */
+    COFF_SCNHDR *sect_bufr;                           /* Pointer to section table            */
+    COFF_SCNHDR *text_sect;                           /* Pointer to the text section         */
+    COFF_SCNHDR *data_sect;                           /* Pointer to the data section         */
+    COFF_SCNHDR *bss_sect;                            /* Pointer to the bss section          */
+    int text_count;                                   /* Number of text sections             */
+    int data_count;                                   /* Number of data sections             */
+    int bss_count;                                    /* Number of bss sections              */
+    int lib_count;                                    /* Number of lib sections              */
+    unsigned int start_addr = 0;                      /* Starting location for program       */
+    int status = 0;                                   /* Result status register              */
+    int fd = -1;                                      /* Open file descriptor                */
+    struct file *fp = NULL;                           /* Pointer to the file at "fd"         */
+    short int sections = 0;                           /* Number of sections in the file      */
+    short int aout_size = 0;                          /* Size of the a.out header area       */
+    short int flags;                                  /* Flag bits from the COFF header      */
 
 #ifdef COFF_DEBUG
-    printk ("binfmt_coff entry: %s\n", bprm->filename);
+    printk("binfmt_coff entry: %s\n", bprm->filename);
 #endif
 
     /*
@@ -138,10 +137,10 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
      */
     do
     {
-        if (COFF_I386BADMAG (*coff_hdr))
+        if (COFF_I386BADMAG(*coff_hdr))
         {
 #ifdef COFF_DEBUG
-            printk ("bad filehdr magic\n");
+            printk("bad filehdr magic\n");
 #endif
             status = -ENOEXEC;
             break;
@@ -151,11 +150,11 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
          *  it to have the 16 bit object file flag set as Linux is not able to run
          *  on the 80286/80186/8086.
          */
-        flags = COFF_SHORT (coff_hdr->f_flags);
+        flags = COFF_SHORT(coff_hdr->f_flags);
         if ((flags & (COFF_F_AR32WR | COFF_F_AR16WR)) != COFF_F_AR32WR)
         {
 #ifdef COFF_DEBUG
-            printk ("invalid f_flags bits\n");
+            printk("invalid f_flags bits\n");
 #endif
             status = -ENOEXEC;
             break;
@@ -163,8 +162,8 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         /*
          *  Extract the header information which we need.
          */
-        sections  = COFF_SHORT (coff_hdr->f_nscns);   /* Number of sections */
-        aout_size = COFF_SHORT (coff_hdr->f_opthdr);  /* Size of opt. headr */
+        sections = COFF_SHORT(coff_hdr->f_nscns);   /* Number of sections */
+        aout_size = COFF_SHORT(coff_hdr->f_opthdr); /* Size of opt. headr */
         /*
          *  If the file is not executable then reject the exectution. This means
          *  that there must not be external references.
@@ -172,7 +171,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         if ((flags & COFF_F_EXEC) == 0)
         {
 #ifdef COFF_DEBUG
-            printk ("not executable bit\n");
+            printk("not executable bit\n");
 #endif
             status = -ENOEXEC;
             break;
@@ -183,7 +182,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         if (sections == 0)
         {
 #ifdef COFF_DEBUG
-            printk ("no sections\n");
+            printk("no sections\n");
 #endif
             status = -ENOEXEC;
             break;
@@ -194,15 +193,14 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
          *  to use a file system with no mapping, the format is not valid.
          */
         if (!bprm->inode->i_op ||
-                !bprm->inode->i_op->default_file_ops->mmap)
+            !bprm->inode->i_op->default_file_ops->mmap)
         {
 #ifdef COFF_DEBUG
-            printk ("no mmap in fs\n");
+            printk("no mmap in fs\n");
 #endif
             status = -ENOEXEC;
         }
-    }
-    while (0);
+    } while (0);
     /*
      *  Allocate a buffer to hold the entire coff section list.
      */
@@ -210,11 +208,11 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
     {
         int nbytes = sections * COFF_SCNHSZ;
 
-        sect_bufr = (COFF_SCNHDR *) kmalloc (nbytes, GFP_KERNEL);
+        sect_bufr = (COFF_SCNHDR *)kmalloc(nbytes, GFP_KERNEL);
         if (0 == sect_bufr)
         {
 #ifdef COFF_DEBUG
-            printk ("kmalloc failed\n");
+            printk("kmalloc failed\n");
 #endif
             status = -ENOEXEC;
         }
@@ -223,33 +221,33 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
          */
         else
         {
-            int old_fs = get_fs ();
-            set_fs (get_ds ());  /* Make it point to the proper location    */
-            status = read_exec (bprm->inode,	     /* INODE for file       */
-                                aout_size + COFF_FILHSZ, /* Offset in the file   */
-                                (char *) sect_bufr,      /* Buffer for read      */
-                                nbytes);                 /* Byte count reqd.     */
-            set_fs (old_fs);	                     /* Restore the selector */
+            int old_fs = get_fs();
+            set_fs(get_ds());                           /* Make it point to the proper location    */
+            status = read_exec(bprm->inode,             /* INODE for file       */
+                               aout_size + COFF_FILHSZ, /* Offset in the file   */
+                               (char *)sect_bufr,       /* Buffer for read      */
+                               nbytes);                 /* Byte count reqd.     */
+            set_fs(old_fs);                             /* Restore the selector */
 #ifdef COFF_DEBUG
             if (status < 0)
-                printk ("read aout hdr, status = %d\n", status);
+                printk("read aout hdr, status = %d\n", status);
 #endif
         }
     }
     else
-        sect_bufr = NULL;	/* Errors do not have a section buffer */
+        sect_bufr = NULL; /* Errors do not have a section buffer */
     /*
      *  Count the number of sections for the required types and store the location
      *  of the last section for the three primary types.
      */
     text_count = 0;
     data_count = 0;
-    bss_count  = 0;
-    lib_count  = 0;
+    bss_count = 0;
+    lib_count = 0;
 
     text_sect = NULL;
     data_sect = NULL;
-    bss_sect  = NULL;
+    bss_sect = NULL;
     /*
      *  Loop through the sections and find the various types
      */
@@ -260,20 +258,20 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
 
         for (nIndex = 0; nIndex < sections; ++nIndex)
         {
-            long int sect_flags = COFF_LONG (sect_ptr->s_flags);
+            long int sect_flags = COFF_LONG(sect_ptr->s_flags);
 
             switch (sect_flags)
             {
             case COFF_STYP_TEXT:
                 text_sect = sect_ptr;
                 ++text_count;
-                status = is_properly_aligned (sect_ptr);
+                status = is_properly_aligned(sect_ptr);
                 break;
 
             case COFF_STYP_DATA:
                 data_sect = sect_ptr;
                 ++data_count;
-                status = is_properly_aligned (sect_ptr);
+                status = is_properly_aligned(sect_ptr);
                 break;
 
             case COFF_STYP_BSS:
@@ -283,7 +281,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
 
             case COFF_STYP_LIB:
 #ifdef COFF_DEBUG
-                printk (".lib section found\n");
+                printk(".lib section found\n");
 #endif
                 ++lib_count;
                 break;
@@ -291,7 +289,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
             default:
                 break;
             }
-            sect_ptr = (COFF_SCNHDR *) & ((char *) sect_ptr)[COFF_SCNHSZ];
+            sect_ptr = (COFF_SCNHDR *)&((char *)sect_ptr)[COFF_SCNHSZ];
         }
         /*
          *  Ensure that there are the required sections. There must be one text
@@ -302,7 +300,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         {
             status = -ENOEXEC;
 #ifdef COFF_DEBUG
-            printk ("no text sections\n");
+            printk("no text sections\n");
 #endif
         }
         else
@@ -313,7 +311,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
                 {
                     status = -ENOEXEC;
 #ifdef COFF_DEBUG
-                    printk ("no .data nor .bss sections\n");
+                    printk("no .data nor .bss sections\n");
 #endif
                 }
             }
@@ -333,10 +331,10 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
             {
                 status = -ENOEXEC;
 #ifdef COFF_DEBUG
-                printk ("no header in library\n");
+                printk("no header in library\n");
 #endif
             }
-            start_addr = COFF_LONG (text_sect->s_vaddr);
+            start_addr = COFF_LONG(text_sect->s_vaddr);
         }
         /*
          *  There is some header. Ensure that it is sufficient.
@@ -347,14 +345,14 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
             {
                 status = -ENOEXEC;
 #ifdef COFF_DEBUG
-                printk ("header too small\n");
+                printk("header too small\n");
 #endif
             }
             else
             {
-                COFF_AOUTHDR *aout_hdr =	/* Pointer to a.out header */
-                    (COFF_AOUTHDR *) & ((char *) coff_hdr)[COFF_FILHSZ];
-                short int aout_magic = COFF_SHORT (aout_hdr->magic); /* id */
+                COFF_AOUTHDR *aout_hdr = /* Pointer to a.out header */
+                    (COFF_AOUTHDR *)&((char *)coff_hdr)[COFF_FILHSZ];
+                short int aout_magic = COFF_SHORT(aout_hdr->magic); /* id */
                 /*
                  *  Validate the magic number in the a.out header. If it is valid then
                  *  update the starting symbol location. Do not accept these file formats
@@ -369,10 +367,10 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
                     {
                         status = -ENOEXEC;
 #ifdef COFF_DEBUG
-                        printk ("wrong a.out header magic\n");
+                        printk("wrong a.out header magic\n");
 #endif
                     }
-                    start_addr = (unsigned int) COFF_LONG (aout_hdr->entry);
+                    start_addr = (unsigned int)COFF_LONG(aout_hdr->entry);
                     break;
                 /*
                  *  Magic value for a shared library. This is valid only when loading a
@@ -382,7 +380,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
                     if (lib_ok)
                     {
 #ifdef COFF_DEBUG
-                        printk ("wrong a.out header magic\n");
+                        printk("wrong a.out header magic\n");
 #endif
                         status = -ENOEXEC;
                     }
@@ -390,7 +388,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
 
                 default:
 #ifdef COFF_DEBUG
-                    printk ("wrong a.out header magic\n");
+                    printk("wrong a.out header magic\n");
 #endif
                     status = -ENOEXEC;
                     break;
@@ -403,11 +401,11 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
      */
     if (status >= 0)
     {
-        fd = open_inode (bprm->inode, O_RDONLY);
+        fd = open_inode(bprm->inode, O_RDONLY);
         if (fd < 0)
         {
 #ifdef COFF_DEBUG
-            printk ("can not open inode, result = %d\n", fd);
+            printk("can not open inode, result = %d\n", fd);
 #endif
             status = fd;
         }
@@ -415,7 +413,7 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
             fp = current->filp[fd];
     }
     else
-        fd = -1;		/* Invalidate the open file descriptor */
+        fd = -1; /* Invalidate the open file descriptor */
     /*
      *  Generate the proper values for the text fields
      *
@@ -424,9 +422,9 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
      */
     if (status >= 0)
     {
-        long text_scnptr = COFF_LONG (text_sect->s_scnptr);
-        long text_size   = COFF_LONG (text_sect->s_size);
-        long text_vaddr  = COFF_LONG (text_sect->s_vaddr);
+        long text_scnptr = COFF_LONG(text_sect->s_scnptr);
+        long text_size = COFF_LONG(text_sect->s_size);
+        long text_vaddr = COFF_LONG(text_sect->s_vaddr);
 
         long data_scnptr;
         long data_size;
@@ -439,27 +437,27 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
          */
         if (data_sect != NULL)
         {
-            data_scnptr = COFF_LONG (data_sect->s_scnptr);
-            data_size   = COFF_LONG (data_sect->s_size);
-            data_vaddr  = COFF_LONG (data_sect->s_vaddr);
+            data_scnptr = COFF_LONG(data_sect->s_scnptr);
+            data_size = COFF_LONG(data_sect->s_size);
+            data_vaddr = COFF_LONG(data_sect->s_vaddr);
         }
         else
         {
             data_scnptr = 0;
-            data_size   = 0;
-            data_vaddr  = 0;
+            data_size = 0;
+            data_vaddr = 0;
         }
         /*
          *  Generate the proper values for the bss fields
          */
         if (bss_sect != NULL)
         {
-            bss_size  = COFF_LONG (bss_sect->s_size);
-            bss_vaddr = COFF_LONG (bss_sect->s_vaddr);
+            bss_size = COFF_LONG(bss_sect->s_size);
+            bss_vaddr = COFF_LONG(bss_sect->s_vaddr);
         }
         else
         {
-            bss_size  = 0;
+            bss_size = 0;
             bss_vaddr = 0;
         }
         /*
@@ -469,39 +467,39 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         if (lib_ok)
         {
 #ifdef COFF_DEBUG
-            printk ("flushing executable\n");
+            printk("flushing executable\n");
 #endif
-            flush_old_exec (bprm);
+            flush_old_exec(bprm);
             /*
              *  Define the initial locations for the various items in the new process
              */
-            current->mmap        = NULL;
-            current->rss         = 0;
+            current->mmap = NULL;
+            current->rss = 0;
             /*
              *  Construct the parameter and environment string table entries.
              */
-            bprm->p += change_ldt (0, bprm->page);
+            bprm->p += change_ldt(0, bprm->page);
             bprm->p -= MAX_ARG_PAGES * PAGE_SIZE;
-            bprm->p  = (unsigned long) create_tables ((char *) bprm->p,
-                       bprm->argc,
-                       bprm->envc,
-                       1);
+            bprm->p = (unsigned long)create_tables((char *)bprm->p,
+                                                   bprm->argc,
+                                                   bprm->envc,
+                                                   1);
             /*
              *  Do the end processing once the stack has been constructed
              */
-            current->start_code  = text_vaddr & PAGE_MASK;
-            current->end_code    = text_vaddr + text_size;
-            current->end_data    = data_vaddr + data_size;
-            current->start_brk   =
-                current->brk         = bss_vaddr + bss_size;
-            current->suid        =
-                current->euid        = bprm->e_uid;
-            current->sgid        =
-                current->egid        = bprm->e_gid;
-            current->executable  = bprm->inode; /* Store inode for file  */
-            ++bprm->inode->i_count;             /* Count the open inode  */
-            regs->eip            = start_addr;  /* Current EIP register  */
-            regs->esp            =
+            current->start_code = text_vaddr & PAGE_MASK;
+            current->end_code = text_vaddr + text_size;
+            current->end_data = data_vaddr + data_size;
+            current->start_brk =
+                current->brk = bss_vaddr + bss_size;
+            current->suid =
+                current->euid = bprm->e_uid;
+            current->sgid =
+                current->egid = bprm->e_gid;
+            current->executable = bprm->inode; /* Store inode for file  */
+            ++bprm->inode->i_count;            /* Count the open inode  */
+            regs->eip = start_addr;            /* Current EIP register  */
+            regs->esp =
                 current->start_stack = bprm->p;
         }
         /*
@@ -509,17 +507,17 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
          */
 
 #ifdef COFF_DEBUG
-        printk (".text: vaddr = %d, size = %d, scnptr = %d\n",
-                text_vaddr,
-                text_size,
-                text_scnptr);
+        printk(".text: vaddr = %d, size = %d, scnptr = %d\n",
+               text_vaddr,
+               text_size,
+               text_scnptr);
 #endif
-        status = do_mmap (fp,
-                          text_vaddr & PAGE_MASK,
-                          text_size + (text_vaddr & ~PAGE_MASK),
-                          PROT_READ | PROT_EXEC,
-                          MAP_FIXED | MAP_SHARED,
-                          text_scnptr & PAGE_MASK);
+        status = do_mmap(fp,
+                         text_vaddr & PAGE_MASK,
+                         text_size + (text_vaddr & ~PAGE_MASK),
+                         PROT_READ | PROT_EXEC,
+                         MAP_FIXED | MAP_SHARED,
+                         text_scnptr & PAGE_MASK);
 
         status = (status == (text_vaddr & PAGE_MASK)) ? 0 : -ENOEXEC;
         /*
@@ -528,17 +526,17 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         if (status >= 0 && data_size != 0)
         {
 #ifdef COFF_DEBUG
-            printk (".data: vaddr = %d, size = %d, scnptr = %d\n",
-                    data_vaddr,
-                    data_size,
-                    data_scnptr);
+            printk(".data: vaddr = %d, size = %d, scnptr = %d\n",
+                   data_vaddr,
+                   data_size,
+                   data_scnptr);
 #endif
-            status = do_mmap (fp,
-                              data_vaddr & PAGE_MASK,
-                              data_size + (data_vaddr & ~PAGE_MASK),
-                              PROT_READ | PROT_WRITE | PROT_EXEC,
-                              MAP_FIXED | MAP_PRIVATE,
-                              data_scnptr & PAGE_MASK);
+            status = do_mmap(fp,
+                             data_vaddr & PAGE_MASK,
+                             data_size + (data_vaddr & ~PAGE_MASK),
+                             PROT_READ | PROT_WRITE | PROT_EXEC,
+                             MAP_FIXED | MAP_PRIVATE,
+                             data_scnptr & PAGE_MASK);
 
             status = (status == (data_vaddr & PAGE_MASK)) ? 0 : -ENOEXEC;
         }
@@ -550,15 +548,15 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         if (status >= 0 && bss_size != 0)
         {
 #ifdef COFF_DEBUG
-            printk (".bss: vaddr = %d, size = %d\n",
-                    bss_vaddr,
-                    bss_size);
+            printk(".bss: vaddr = %d, size = %d\n",
+                   bss_vaddr,
+                   bss_size);
 #endif
-            zeromap_page_range (PAGE_ALIGN (bss_vaddr),
-                                PAGE_ALIGN (bss_size),
-                                PAGE_COPY);
+            zeromap_page_range(PAGE_ALIGN(bss_vaddr),
+                               PAGE_ALIGN(bss_size),
+                               PAGE_COPY);
 
-            status = clear_memory (bss_vaddr, bss_size);
+            status = clear_memory(bss_vaddr, bss_size);
         }
         /*
          *  Load any shared library for the executable.
@@ -574,14 +572,14 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
              */
             for (nIndex = 0; nIndex < sections; ++nIndex)
             {
-                long int sect_flags = COFF_LONG (sect_ptr->s_flags);
+                long int sect_flags = COFF_LONG(sect_ptr->s_flags);
                 if (sect_flags == COFF_STYP_LIB)
                 {
-                    status = preload_library (bprm, sect_ptr, fp);
+                    status = preload_library(bprm, sect_ptr, fp);
                     if (status != 0)
                         break;
                 }
-                sect_ptr = (COFF_SCNHDR *) & ((char *) sect_ptr) [COFF_SCNHSZ];
+                sect_ptr = (COFF_SCNHDR *)&((char *)sect_ptr)[COFF_SCNHSZ];
             }
         }
         /*
@@ -594,28 +592,28 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
         if (lib_ok)
         {
             if (status < 0)
-                send_sig (SIGSEGV, current, 0);	/* Generate the error trap  */
+                send_sig(SIGSEGV, current, 0); /* Generate the error trap  */
             else
             {
                 if (current->flags & PF_PTRACED)
-                    send_sig (SIGTRAP, current, 0);
+                    send_sig(SIGTRAP, current, 0);
             }
-            status = 0;		/* We are committed. It can't fail */
+            status = 0; /* We are committed. It can't fail */
         }
     }
     /*
      *  Do any cleanup processing
      */
     if (fd >= 0)
-        sys_close (fd);		/* Close unused code file      */
+        sys_close(fd); /* Close unused code file      */
 
     if (sect_bufr != NULL)
-        kfree (sect_bufr);	/* Release section list buffer */
-    /*
+        kfree(sect_bufr); /* Release section list buffer */
+        /*
      *  Return the completion status.
      */
 #ifdef COFF_DEBUG
-    printk ("binfmt_coff: result = %d\n", status);
+    printk("binfmt_coff: result = %d\n", status);
 #endif
     return (status);
 }
@@ -627,26 +625,26 @@ load_object (struct linux_binprm *bprm, struct pt_regs *regs, int lib_ok)
  */
 
 static int
-preload_this_library (struct linux_binprm *exe_bprm, char *lib_name)
+preload_this_library(struct linux_binprm *exe_bprm, char *lib_name)
 {
-    int   status;
-    int   old_fs = get_fs();
+    int status;
+    int old_fs = get_fs();
     /*
      *  If debugging then print "we have arrived"
      */
 #ifdef COFF_DEBUG
-    printk ("%s loading shared library %s\n",
-            exe_bprm->filename,
-            lib_name);
+    printk("%s loading shared library %s\n",
+           exe_bprm->filename,
+           lib_name);
 #endif
     /*
      *  Change the FS register to the proper kernel address space and attempt
      *  to load the library. The library name is allocated from the kernel
      *  pool.
      */
-    set_fs (get_ds ());
-    status = sys_uselib (lib_name);
-    set_fs (old_fs);
+    set_fs(get_ds());
+    status = sys_uselib(lib_name);
+    set_fs(old_fs);
     /*
      *  Return the success/failure to the caller.
      */
@@ -659,21 +657,21 @@ preload_this_library (struct linux_binprm *exe_bprm, char *lib_name)
  */
 
 static int
-preload_library (struct linux_binprm *exe_bprm,
-                 COFF_SCNHDR *sect, struct file *fp)
+preload_library(struct linux_binprm *exe_bprm,
+                COFF_SCNHDR *sect, struct file *fp)
 {
-    int status = 0;		/* Completion status                  */
-    long nbytes;		/* Count of bytes in the header area  */
+    int status = 0; /* Completion status                  */
+    long nbytes;    /* Count of bytes in the header area  */
     /*
      *  Fetch the size of the section. There must be enough room for atleast
      *  one entry.
      */
-    nbytes = COFF_LONG (sect->s_size);
+    nbytes = COFF_LONG(sect->s_size);
     if (nbytes < COFF_SLIBSZ)
     {
         status = -ENOEXEC;
 #ifdef COFF_DEBUG
-        printk ("library section too small\n");
+        printk("library section too small\n");
 #endif
     }
     /*
@@ -682,34 +680,34 @@ preload_library (struct linux_binprm *exe_bprm,
     else
     {
         COFF_SLIBHD *phdr;
-        char *buffer = (char *) kmalloc (nbytes, GFP_KERNEL);
+        char *buffer = (char *)kmalloc(nbytes, GFP_KERNEL);
 
         if (0 == buffer)
         {
             status = -ENOEXEC;
 #ifdef COFF_DEBUG
-            printk ("kmalloc failed\n");
+            printk("kmalloc failed\n");
 #endif
         }
         else
         {
-            int old_fs   = get_fs ();
+            int old_fs = get_fs();
             /*
              *  Read the section data from the disk file.
              */
-            set_fs (get_ds ());   /* Make it point to the proper location    */
-            status = read_exec (exe_bprm->inode,     /* INODE for file       */
-                                COFF_LONG (sect->s_scnptr), /* Disk location     */
-                                buffer,                     /* Buffer for read   */
-                                nbytes);                    /* Byte count reqd.  */
-            set_fs (old_fs);                         /* Restore the selector */
+            set_fs(get_ds());                             /* Make it point to the proper location    */
+            status = read_exec(exe_bprm->inode,           /* INODE for file       */
+                               COFF_LONG(sect->s_scnptr), /* Disk location     */
+                               buffer,                    /* Buffer for read   */
+                               nbytes);                   /* Byte count reqd.  */
+            set_fs(old_fs);                               /* Restore the selector */
             /*
              *  Check the result. The value returned is the byte count actaully read.
              */
             if (status >= 0 && status != nbytes)
             {
 #ifdef COFF_DEBUG
-                printk ("read of lib section was short\n");
+                printk("read of lib section was short\n");
 #endif
                 status = -ENOEXEC;
             }
@@ -717,21 +715,21 @@ preload_library (struct linux_binprm *exe_bprm,
         /*
          *  At this point, go through the list of libraries in the data area.
          */
-        phdr = (COFF_SLIBHD *) buffer;
+        phdr = (COFF_SLIBHD *)buffer;
         while (status >= 0 && nbytes > COFF_SLIBSZ)
         {
-            int entry_size  = COFF_LONG (phdr->sl_entsz)   * sizeof (long);
-            int header_size = COFF_LONG (phdr->sl_pathndx) * sizeof (long);
+            int entry_size = COFF_LONG(phdr->sl_entsz) * sizeof(long);
+            int header_size = COFF_LONG(phdr->sl_pathndx) * sizeof(long);
             /*
              *  Validate the sizes of the various items. I don't trust the linker!!
              */
-            if ((unsigned) header_size >= (unsigned) nbytes ||
-                    entry_size <= 0 ||
-                    (unsigned) entry_size <= (unsigned) header_size)
+            if ((unsigned)header_size >= (unsigned)nbytes ||
+                entry_size <= 0 ||
+                (unsigned)entry_size <= (unsigned)header_size)
             {
                 status = -ENOEXEC;
 #ifdef COFF_DEBUG
-                printk ("header count is invalid\n");
+                printk("header count is invalid\n");
 #endif
             }
             /*
@@ -739,23 +737,23 @@ preload_library (struct linux_binprm *exe_bprm,
              */
             else
             {
-                status = preload_this_library (exe_bprm,
-                                               &((char *) phdr)[header_size]);
+                status = preload_this_library(exe_bprm,
+                                              &((char *)phdr)[header_size]);
 #ifdef COFF_DEBUG
-                printk ("preload_this_library result = %d\n", status);
+                printk("preload_this_library result = %d\n", status);
 #endif
             }
             /*
              *  Point to the next library in the section data.
              */
             nbytes -= entry_size;
-            phdr = (COFF_SLIBHD *) & ((char *) phdr)[entry_size];
+            phdr = (COFF_SLIBHD *)&((char *)phdr)[entry_size];
         }
         /*
          *  Release the space for the library list.
          */
         if (buffer != NULL)
-            kfree (buffer);
+            kfree(buffer);
     }
     /*
      *  Return the resulting status to the caller.
@@ -770,10 +768,9 @@ preload_library (struct linux_binprm *exe_bprm,
  *  this is the main executable. How simple it is . . . .
  */
 
-int
-load_coff_binary (struct linux_binprm *bprm, struct pt_regs *regs)
+int load_coff_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 {
-    return (load_object (bprm, regs, 1));
+    return (load_object(bprm, regs, 1));
 }
 
 /*
@@ -782,51 +779,50 @@ load_coff_binary (struct linux_binprm *bprm, struct pt_regs *regs)
  *   This is called when we need to load a library based upon a file name.
  */
 
-int
-load_coff_library (int fd)
+int load_coff_library(int fd)
 {
-    struct linux_binprm *bprm;  /* Parameters for the load operation   */
-    int    status;              /* Status of the request               */
+    struct linux_binprm *bprm; /* Parameters for the load operation   */
+    int status;                /* Status of the request               */
     /*
      *  Read the first portion of the file.
      */
-    bprm = (struct linux_binprm *) kmalloc (sizeof (struct linux_binprm),
-                                            GFP_KERNEL);
+    bprm = (struct linux_binprm *)kmalloc(sizeof(struct linux_binprm),
+                                          GFP_KERNEL);
     if (0 == bprm)
     {
 #ifdef COFF_DEBUG
-        printk ("kmalloc failed\n");
+        printk("kmalloc failed\n");
 #endif
         status = -ENOEXEC;
     }
     else
     {
-        struct file         *file;  /* Pointer to the file table           */
-        struct pt_regs       regs;  /* Register work area                  */
-        int old_fs = get_fs ();     /* Previous FS register value          */
+        struct file *file;     /* Pointer to the file table           */
+        struct pt_regs regs;   /* Register work area                  */
+        int old_fs = get_fs(); /* Previous FS register value          */
 
-        memset (bprm, '\0', sizeof (struct linux_binprm));
+        memset(bprm, '\0', sizeof(struct linux_binprm));
 
-        file           = current->filp[fd];
-        bprm->inode    = file->f_inode;   /* The only item _really_ needed */
-        bprm->filename = "";              /* Make it a legal string        */
+        file = current->filp[fd];
+        bprm->inode = file->f_inode; /* The only item _really_ needed */
+        bprm->filename = "";         /* Make it a legal string        */
         /*
          *  Read the section list from the disk file.
          */
-        set_fs (get_ds ());   /* Make it point to the proper location    */
-        status = read_exec (bprm->inode,	 /* INODE for file       */
-                            0L,                  /* Offset in the file   */
-                            bprm->buf,           /* Buffer for read      */
-                            sizeof (bprm->buf)); /* Size of the buffer   */
-        set_fs (old_fs);	                 /* Restore the selector */
+        set_fs(get_ds());                      /* Make it point to the proper location    */
+        status = read_exec(bprm->inode,        /* INODE for file       */
+                           0L,                 /* Offset in the file   */
+                           bprm->buf,          /* Buffer for read      */
+                           sizeof(bprm->buf)); /* Size of the buffer   */
+        set_fs(old_fs);                        /* Restore the selector */
         /*
          *  Try to load the library.
          */
-        status = load_object (bprm, &regs, 0);
+        status = load_object(bprm, &regs, 0);
         /*
          *  Release the work buffer and return the result.
          */
-        kfree (bprm);                 /* Release the buffer area */
+        kfree(bprm); /* Release the buffer area */
     }
     /*
      *  Return the result of the load operation

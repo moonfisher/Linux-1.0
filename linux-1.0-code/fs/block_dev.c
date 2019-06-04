@@ -33,7 +33,7 @@ int block_write(struct inode *inode, struct file *filp, char *buf, int count)
 
     i = blocksize;
     blocksize_bits = 0;
-    while(i != 1)
+    while (i != 1)
     {
         blocksize_bits++;
         i >>= 1;
@@ -86,7 +86,7 @@ int block_read(struct inode *inode, struct file *filp, char *buf, int count)
     unsigned int left;
     unsigned int blocks;
     int bhrequest, uptodate;
-    struct buffer_head **bhb, ** bhe;
+    struct buffer_head **bhb, **bhe;
     struct buffer_head *buflist[NBUF];
     struct buffer_head *bhreq[NBUF];
     unsigned int chars;
@@ -172,12 +172,12 @@ int block_read(struct inode *inode, struct file *filp, char *buf, int count)
         if (bhrequest)
             ll_rw_block(READ, bhrequest, bhreq);
 
-        do   /* Finish off all I/O that has actually completed */
+        do /* Finish off all I/O that has actually completed */
         {
             if (*bhe)
             {
                 wait_on_buffer(*bhe);
-                if (!(*bhe)->b_uptodate)  	/* read error? */
+                if (!(*bhe)->b_uptodate) /* read error? */
                 {
                     brelse(*bhe);
                     if (++bhe == &buflist[NBUF])
@@ -207,10 +207,8 @@ int block_read(struct inode *inode, struct file *filp, char *buf, int count)
             offset = 0;
             if (++bhe == &buflist[NBUF])
                 bhe = buflist;
-        }
-        while (left > 0 && bhe != bhb && (!*bhe || !(*bhe)->b_lock));
-    }
-    while (left > 0);
+        } while (left > 0 && bhe != bhb && (!*bhe || !(*bhe)->b_lock));
+    } while (left > 0);
 
     /* Release the read-ahead blocks */
     while (bhe != bhb)
@@ -227,5 +225,5 @@ int block_read(struct inode *inode, struct file *filp, char *buf, int count)
 
 int block_fsync(struct inode *inode, struct file *filp)
 {
-    return fsync_dev (inode->i_rdev);
+    return fsync_dev(inode->i_rdev);
 }

@@ -103,8 +103,8 @@ make one yourself.  The wiring is:
 #undef PRINTK2
 #endif
 
-#define PLIP_DEBUG	/* debugging */
-#undef  PLIP_DEBUG2	/* debugging with more varbose report */
+#define PLIP_DEBUG /* debugging */
+#undef PLIP_DEBUG2 /* debugging with more varbose report */
 
 #ifdef PLIP_DEBUG
 #define PRINTK(x) printk x
@@ -125,9 +125,9 @@ extern struct device *irq2dev_map[16];
 #define netstats enet_statistics
 
 /* constants */
-#define PAR_DATA	0
-#define PAR_STATUS	1
-#define PAR_CONTROL	2
+#define PAR_DATA 0
+#define PAR_STATUS 1
+#define PAR_CONTROL 2
 #define PLIP_MTU 1600
 #define PLIP_HEADER_TYPE1 0xfd
 #define PLIP_HEADER_TYPE2 0xfc
@@ -137,9 +137,9 @@ extern int plip_probe(int ioaddr, struct device *dev);
 static int plip_open(struct device *dev);
 static int plip_close(struct device *dev);
 static int plip_tx_packet(struct sk_buff *skb, struct device *dev);
-static int plip_header (unsigned char *buff, struct device *dev,
-                        unsigned short type, unsigned long h_dest,
-                        unsigned long h_source, unsigned len);
+static int plip_header(unsigned char *buff, struct device *dev,
+                       unsigned short type, unsigned long h_dest,
+                       unsigned long h_source, unsigned len);
 
 /* variables used internally. */
 #define INITIALTIMEOUTFACTOR 4
@@ -162,9 +162,8 @@ static int plip_send_packet(struct device *dev, unsigned char *buf, int length);
 static int plip_send_start(struct device *dev, struct ethhdr *eth);
 static void double_timeoutfactor(void);
 static struct enet_statistics *plip_get_stats(struct device *dev);
-
-int
-plip_init(struct device *dev)
+
+int plip_init(struct device *dev)
 {
     int port_base = dev->base_addr;
     int i;
@@ -175,11 +174,11 @@ plip_init(struct device *dev)
     if (inb(port_base + PAR_DATA) != 0x55)
         return -ENODEV;
 
-    /* Alpha testers must have the version number to report bugs. */
+        /* Alpha testers must have the version number to report bugs. */
 #ifdef PLIP_DEBUG
     {
         static int version_shown = 0;
-        if (! version_shown)
+        if (!version_shown)
             printk(version), version_shown++;
     }
 #endif
@@ -204,7 +203,7 @@ plip_init(struct device *dev)
     /* These are ethernet specific. */
     dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
-    dev->mtu = PLIP_MTU;	/* PLIP may later negotiate max pkt size */
+    dev->mtu = PLIP_MTU; /* PLIP may later negotiate max pkt size */
     dev->addr_len = ETH_ALEN;
     for (i = 0; i < dev->addr_len; i++)
     {
@@ -218,7 +217,7 @@ plip_init(struct device *dev)
     timeoutfactor = INITIALTIMEOUTFACTOR;
     return 0;
 }
-
+
 /* Open/initialize the board.  This is called (in the current kernel)
    sometime after booting when the 'config <dev->name>' program is
    run.
@@ -258,7 +257,7 @@ plip_close(struct device *dev)
     free_irq(dev->irq);
     irq2dev_map[dev->irq] = NULL;
     sti();
-    outb(0x00, dev->base_addr);		/* Release the interrupt. */
+    outb(0x00, dev->base_addr); /* Release the interrupt. */
     return 0;
 }
 
@@ -267,7 +266,7 @@ plip_tx_packet(struct sk_buff *skb, struct device *dev)
 {
     int ret_val;
 
-    if (dev->tbusy || dev->interrupt)  	/* Do timeouts, to avoid hangs. */
+    if (dev->tbusy || dev->interrupt) /* Do timeouts, to avoid hangs. */
     {
         int tickssofar = jiffies - dev->trans_start;
         if (tickssofar < 50)
@@ -289,10 +288,10 @@ plip_tx_packet(struct sk_buff *skb, struct device *dev)
 
     /* Pretend we are an ethernet and fill in the header.  This could use
        a simplified routine someday. */
-    if (!skb->arp  &&  dev->rebuild_header(skb->data, dev))
+    if (!skb->arp && dev->rebuild_header(skb->data, dev))
     {
         skb->dev = dev;
-        arp_queue (skb);
+        arp_queue(skb);
         return 0;
     }
     skb->arp = 1;
@@ -300,16 +299,16 @@ plip_tx_packet(struct sk_buff *skb, struct device *dev)
     dev->trans_start = jiffies;
     ret_val = plip_send_packet(dev, skb->data, skb->len);
     if (skb->free)
-        kfree_skb (skb, FREE_WRITE);
+        kfree_skb(skb, FREE_WRITE);
     dev->tbusy = 0;
-    mark_bh (INET_BH);
-    return 0/*ret_val*/;
+    mark_bh(INET_BH);
+    return 0 /*ret_val*/;
 }
 
 static int
-plip_header (unsigned char *buff, struct device *dev,
-             unsigned short type, unsigned long h_dest,
-             unsigned long h_source, unsigned len)
+plip_header(unsigned char *buff, struct device *dev,
+            unsigned short type, unsigned long h_dest,
+            unsigned long h_source, unsigned len)
 {
     if (dev->dev_addr[0] == 0)
     {
@@ -318,14 +317,14 @@ plip_header (unsigned char *buff, struct device *dev,
     }
     return eth_header(buff, dev, type, h_dest, h_source, len);
 }
-
+
 static void
 plip_device_clear(struct device *dev)
 {
     dev->interrupt = 0;
     dev->tbusy = 0;
     outb(0x00, dev->base_addr + PAR_DATA);
-    outb(0x10, dev->base_addr + PAR_CONTROL);		/* Enable the rx interrupt. */
+    outb(0x10, dev->base_addr + PAR_CONTROL); /* Enable the rx interrupt. */
 }
 
 static void
@@ -334,7 +333,7 @@ plip_receiver_error(struct device *dev)
     dev->interrupt = 0;
     dev->tbusy = 0;
     outb(0x02, dev->base_addr + PAR_DATA);
-    outb(0x10, dev->base_addr + PAR_CONTROL);		/* Enable the rx interrupt. */
+    outb(0x10, dev->base_addr + PAR_CONTROL); /* Enable the rx interrupt. */
 }
 
 static int
@@ -350,14 +349,14 @@ get_byte(struct device *dev)
     {
         oldval = val;
         val = inb(dev->base_addr + PAR_STATUS);
-        if ( oldval != val ) continue; /* it's unstable */
-        if ( timeout < jiffies )
+        if (oldval != val)
+            continue; /* it's unstable */
+        if (timeout < jiffies)
         {
             error++;
             break;
         }
-    }
-    while ( (val & 0x80) );
+    } while ((val & 0x80));
     val = inb(dev->base_addr + PAR_STATUS);
     low_nibble = (val >> 3) & 0x0f;
     outb(0x11, dev->base_addr + PAR_DATA);
@@ -366,14 +365,14 @@ get_byte(struct device *dev)
     {
         oldval = val;
         val = inb(dev->base_addr + PAR_STATUS);
-        if (oldval != val) continue; /* it's unstable */
-        if ( timeout < jiffies )
+        if (oldval != val)
+            continue; /* it's unstable */
+        if (timeout < jiffies)
         {
             error++;
             break;
         }
-    }
-    while ( !(val & 0x80) );
+    } while (!(val & 0x80));
     val = inb(dev->base_addr + PAR_STATUS);
     PRINTK2(("%02x %s ", low_nibble | ((val << 1) & 0xf0),
              error ? "t" : ""));
@@ -401,11 +400,12 @@ plip_interrupt(int reg_ptr)
         PRINTK(("plip_interrupt(): irq %d for unknown device.\n", irq));
         return;
     }
-    localstats = (struct netstats *) dev->priv;
-    if (dev->tbusy || dev->interrupt) return;
+    localstats = (struct netstats *)dev->priv;
+    if (dev->tbusy || dev->interrupt)
+        return;
     dev->interrupt = 1;
-    outb(0x00, dev->base_addr + PAR_CONTROL);  /* Disable the rx interrupt. */
-    sti(); /* Allow other interrupts. */
+    outb(0x00, dev->base_addr + PAR_CONTROL); /* Disable the rx interrupt. */
+    sti();                                    /* Allow other interrupts. */
     PRINTK2(("%s: interrupt.  ", dev->name));
 
     {
@@ -413,7 +413,7 @@ plip_interrupt(int reg_ptr)
         int timeout = jiffies + timeoutfactor;
         while ((inb(dev->base_addr + PAR_STATUS) & 0xf8) != 0xc0)
         {
-            if ( timeout < jiffies )
+            if (timeout < jiffies)
             {
                 PRINTK2(("%s: No interrupt (status=%#02x)!\n",
                          dev->name, inb(dev->base_addr + PAR_STATUS)));
@@ -444,23 +444,24 @@ plip_receive_packet(struct device *dev)
     struct netstats *localstats;
     struct ethhdr eth;
 
-    localstats = (struct netstats *) dev->priv;
+    localstats = (struct netstats *)dev->priv;
 
-    outb(1, dev->base_addr + PAR_DATA);		/* Ack: 'Ready' */
+    outb(1, dev->base_addr + PAR_DATA); /* Ack: 'Ready' */
 
     {
         /* get header octet and length of packet */
         plip_type = get_byte(dev);
-        if (plip_type < 0) return 1; /* probably wrong interrupt */
+        if (plip_type < 0)
+            return 1; /* probably wrong interrupt */
         length = get_byte(dev) << 8;
         length |= get_byte(dev);
-        switch ( plip_type )
+        switch (plip_type)
         {
         case PLIP_HEADER_TYPE1:
         {
             int i;
             unsigned char *eth_p = (unsigned char *)&eth;
-            for ( i = 0; i < sizeof(eth); i++, eth_p++)
+            for (i = 0; i < sizeof(eth); i++, eth_p++)
             {
                 *eth_p = get_byte(dev);
             }
@@ -510,12 +511,12 @@ plip_receive_packet(struct device *dev)
         unsigned char *buf = skb->data;
         unsigned char *eth_p = (unsigned char *)&eth;
         int i;
-        for ( i = 0; i < sizeof(eth); i++)
+        for (i = 0; i < sizeof(eth); i++)
         {
             checksum += *eth_p;
             *buf++ = *eth_p++;
         }
-        for ( i = 0; i < length - sizeof(eth); i++)
+        for (i = 0; i < length - sizeof(eth); i++)
         {
             unsigned char new_byte = get_byte(dev);
             checksum += new_byte;
@@ -528,7 +529,7 @@ plip_receive_packet(struct device *dev)
             PRINTK(("checksum error\n"));
             return 1;
         }
-        else if(dev_rint((unsigned char *)skb, length, IN_SKBUFF, dev))
+        else if (dev_rint((unsigned char *)skb, length, IN_SKBUFF, dev))
         {
             printk("%s: rcv buff full.\n", dev->name);
             localstats->rx_dropped++;
@@ -542,9 +543,9 @@ plip_receive_packet(struct device *dev)
         timeout = jiffies + length * timeoutfactor / 16;
         outb(0x00, dev->base_addr + PAR_DATA);
         /* Wait for the remote end to reset. */
-        while ( (inb(dev->base_addr + PAR_STATUS) & 0xf8) != 0x80 )
+        while ((inb(dev->base_addr + PAR_STATUS) & 0xf8) != 0x80)
         {
-            if (timeout < jiffies )
+            if (timeout < jiffies)
             {
                 double_timeoutfactor();
                 PRINTK(("Remote has not reset.\n"));
@@ -555,7 +556,6 @@ plip_receive_packet(struct device *dev)
     localstats->rx_packets++;
     return 0;
 }
-
 
 static int send_byte(struct device *dev, unsigned char val)
 {
@@ -570,8 +570,8 @@ static int send_byte(struct device *dev, unsigned char val)
     outb(val, dev->base_addr); /* this makes data bits more stable */
     outb(0x10 | val, dev->base_addr);
     timeout = jiffies + timeoutfactor;
-    while( inb(dev->base_addr + PAR_STATUS) & 0x80 )
-        if ( timeout < jiffies )
+    while (inb(dev->base_addr + PAR_STATUS) & 0x80)
+        if (timeout < jiffies)
         {
             error++;
             break;
@@ -579,8 +579,8 @@ static int send_byte(struct device *dev, unsigned char val)
     outb(0x10 | (val >> 4), dev->base_addr);
     outb(val >> 4, dev->base_addr);
     timeout = jiffies + timeoutfactor;
-    while( (inb(dev->base_addr + PAR_STATUS) & 0x80) == 0 )
-        if ( timeout < jiffies )
+    while ((inb(dev->base_addr + PAR_STATUS) & 0x80) == 0)
+        if (timeout < jiffies)
         {
             error++;
             break;
@@ -608,16 +608,16 @@ plip_send_start(struct device *dev, struct ethhdr *eth)
     int timeout;
     int status;
     int lasttrigger;
-    struct netstats *localstats = (struct netstats *) dev->priv;
+    struct netstats *localstats = (struct netstats *)dev->priv;
 
     /* This starts the packet protocol by triggering a remote IRQ. */
     timeout = jiffies + timeoutfactor * 16;
     lasttrigger = jiffies;
-    while ( ((status = inb(dev->base_addr + PAR_STATUS)) & 0x08) == 0 )
+    while (((status = inb(dev->base_addr + PAR_STATUS)) & 0x08) == 0)
     {
         dev->tbusy = 1;
         outb(0x00, dev->base_addr + PAR_CONTROL); /* Disable my rx intr. */
-        outb(0x08, dev->base_addr + PAR_DATA); 	/* Trigger remote rx intr. */
+        outb(0x08, dev->base_addr + PAR_DATA);    /* Trigger remote rx intr. */
         if (status & 0x40)
         {
             /* The remote end is also trying to send a packet.
@@ -625,7 +625,7 @@ plip_send_start(struct device *dev, struct ethhdr *eth)
              * so we use the "ethernet" address (set from the IP address)
              * to determine which end dominates.
              */
-            if ( plip_addrcmp(eth) > 0 )
+            if (plip_addrcmp(eth) > 0)
             {
                 localstats->collisions++;
                 PRINTK2(("both ends are trying to send a packet.\n"));
@@ -678,13 +678,13 @@ plip_send_packet(struct device *dev, unsigned char *buf, int length)
         printk("%s: packet too big, %d.\n", dev->name, length);
         return 0;
     }
-    localstats = (struct netstats *) dev->priv;
+    localstats = (struct netstats *)dev->priv;
 
     {
         /* phase of checking remote status */
         int i;
         int timeout = jiffies + timeoutfactor * 8;
-        while ( (i = (inb(dev->base_addr + PAR_STATUS) & 0xe8)) != 0x80 )
+        while ((i = (inb(dev->base_addr + PAR_STATUS) & 0xe8)) != 0x80)
         {
             if (i == 0x78)
             {
@@ -718,7 +718,7 @@ plip_send_packet(struct device *dev, unsigned char *buf, int length)
         struct ethhdr *eth = (struct ethhdr *)buf;
 
         plip_type = PLIP_HEADER_TYPE2;
-        for ( i = 0; i < ETH_ALEN - 1; i++)
+        for (i = 0; i < ETH_ALEN - 1; i++)
             if (eth->h_dest[i] != eth->h_source[i])
                 plip_type = PLIP_HEADER_TYPE1;
     }
@@ -745,7 +745,7 @@ plip_send_packet(struct device *dev, unsigned char *buf, int length)
         {
             plip_send_enethdr(dev, (struct ethhdr *)buf);
         }
-        for ( i = 0; i < sizeof(struct ethhdr); i++ )
+        for (i = 0; i < sizeof(struct ethhdr); i++)
         {
             if (plip_type == PLIP_HEADER_TYPE1)
             {
@@ -774,7 +774,7 @@ plip_send_packet(struct device *dev, unsigned char *buf, int length)
         timeout = jiffies + ((length * timeoutfactor) >> 4);
         while ((inb(dev->base_addr + PAR_STATUS) & 0xe8) != 0x80)
         {
-            if (timeout < jiffies )
+            if (timeout < jiffies)
             {
                 double_timeoutfactor();
                 PRINTK(("Remote end has not reset.\n"));
@@ -793,7 +793,7 @@ plip_send_packet(struct device *dev, unsigned char *buf, int length)
     PRINTK2(("plip_send_packet(%d) done.\n", length));
     return error ? 1 : 0;
 }
-
+
 /*
  * some trivial functions
  */
@@ -808,7 +808,8 @@ plip_set_physicaladdr(struct device *dev, unsigned long ipaddr)
     unsigned char *addr = dev->dev_addr;
     int i;
 
-    if ((ipaddr >> 24) == 0 || (ipaddr >> 24) == 0xff) return;
+    if ((ipaddr >> 24) == 0 || (ipaddr >> 24) == 0xff)
+        return;
     PRINTK2(("%s: set physical address to %08x\n", dev->name, ipaddr));
     for (i = 0; i < ETH_ALEN - sizeof(unsigned long); i++)
     {
@@ -821,10 +822,12 @@ static int
 plip_addrcmp(struct ethhdr *eth)
 {
     int i;
-    for ( i = ETH_ALEN - 1; i >= 0; i-- )
+    for (i = ETH_ALEN - 1; i >= 0; i--)
     {
-        if (eth->h_dest[i] > eth->h_source[i]) return -1;
-        if (eth->h_dest[i] < eth->h_source[i]) return 1;
+        if (eth->h_dest[i] > eth->h_source[i])
+            return -1;
+        if (eth->h_dest[i] < eth->h_source[i])
+            return 1;
     }
     PRINTK2(("h_dest = %08x%04x h_source = %08x%04x\n",
              *(long *)&eth->h_dest[2], *(short *)&eth->h_dest[0],
@@ -861,7 +864,7 @@ static void
 cold_sleep(int tics)
 {
     int start = jiffies;
-    while(jiffies < start + tics)
+    while (jiffies < start + tics)
         ; /* do nothing */
     return;
 }
@@ -880,10 +883,10 @@ double_timeoutfactor()
 static struct enet_statistics *
 plip_get_stats(struct device *dev)
 {
-    struct netstats *localstats = (struct netstats *) dev->priv;
+    struct netstats *localstats = (struct netstats *)dev->priv;
     return localstats;
 }
-
+
 /*
  * Local variables:
  *  compile-command: "gcc -D__KERNEL__ -Wall -O6 -fomit-frame-pointer -x c++ -c plip.c"

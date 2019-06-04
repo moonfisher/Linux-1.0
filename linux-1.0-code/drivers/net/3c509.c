@@ -34,9 +34,8 @@ static char *version = "3c509.c:pl15k 3/5/94 becker@super.org\n";
 #include "arp.h"
 
 #ifndef HAVE_ALLOC_SKB
-#define alloc_skb(size, priority) (struct sk_buff *) kmalloc(size,priority)
+#define alloc_skb(size, priority) (struct sk_buff *)kmalloc(size, priority)
 #endif
-
 
 #ifdef EL3_DEBUG
 int el3_debug = EL3_DEBUG;
@@ -52,19 +51,19 @@ int el3_debug = 2;
 #define EL3_CMD 0x0e
 #define EL3_STATUS 0x0e
 #define ID_PORT 0x100
-#define	 EEPROM_READ 0x80
+#define EEPROM_READ 0x80
 
-#define EL3WINDOW(win_num) outw(0x0800+(win_num), ioaddr + EL3_CMD)
+#define EL3WINDOW(win_num) outw(0x0800 + (win_num), ioaddr + EL3_CMD)
 
 /* Register window 1 offsets, the window used in normal operation. */
-#define TX_FIFO		0x00
-#define RX_FIFO		0x00
-#define RX_STATUS 	0x08
-#define TX_STATUS 	0x0B
-#define TX_FREE		0x0C		/* Remaining free bytes in Tx buffer. */
+#define TX_FIFO 0x00
+#define RX_FIFO 0x00
+#define RX_STATUS 0x08
+#define TX_STATUS 0x0B
+#define TX_FREE 0x0C /* Remaining free bytes in Tx buffer. */
 
-#define WN4_MEDIA	0x0A		/* Window 4: Various transceiver/media bits. */
-#define  MEDIA_TP	0x00C0		/* Enable link beat and jabber for 10baseT. */
+#define WN4_MEDIA 0x0A  /* Window 4: Various transceiver/media bits. */
+#define MEDIA_TP 0x00C0 /* Enable link beat and jabber for 10baseT. */
 
 struct el3_private
 {
@@ -83,8 +82,6 @@ static int el3_close(struct device *dev);
 #ifdef HAVE_MULTICAST
 static void set_multicast_list(struct device *dev, int num_addrs, void *addrs);
 #endif
-
-
 
 int el3_probe(struct device *dev)
 {
@@ -132,14 +129,13 @@ int el3_probe(struct device *dev)
                 goto found;
             }
         mca_adaptor_select_mode(0);
-
     }
 #endif
 
     /* Send the ID sequence to the ID_PORT. */
     outb(0x00, ID_PORT);
     outb(0x00, ID_PORT);
-    for(i = 0; i < 255; i++)
+    for (i = 0; i < 255; i++)
     {
         outb(lrs_state, ID_PORT);
         lrs_state <<= 1;
@@ -149,7 +145,7 @@ int el3_probe(struct device *dev)
     /* For the first probe, clear all board's tag registers. */
     if (current_tag == 0)
         outb(0xd0, ID_PORT);
-    else				/* Otherwise kill off already-found boards. */
+    else /* Otherwise kill off already-found boards. */
         outb(0xd8, ID_PORT);
 
     if (id_read_eeprom(7) != 0x6d50)
@@ -175,8 +171,7 @@ int el3_probe(struct device *dev)
     /* The current Space.c structure makes it difficult to have more
        than one adaptor initialized.  Send me email if you have a need for
        multiple adaptors, and we'll work out something.	 -becker@super.org */
-    if (dev->base_addr != 0
-            &&	dev->base_addr != (unsigned short)ioaddr)
+    if (dev->base_addr != 0 && dev->base_addr != (unsigned short)ioaddr)
     {
         return -ENODEV;
     }
@@ -228,28 +223,28 @@ found:
     for (i = 0; i < DEV_NUMBUFFS; i++)
         dev->buffs[i] = NULL;
 
-    dev->hard_header	= eth_header;
-    dev->add_arp		= eth_add_arp;
-    dev->queue_xmit		= dev_queue_xmit;
+    dev->hard_header = eth_header;
+    dev->add_arp = eth_add_arp;
+    dev->queue_xmit = dev_queue_xmit;
     dev->rebuild_header = eth_rebuild_header;
-    dev->type_trans		= eth_type_trans;
+    dev->type_trans = eth_type_trans;
 
-    dev->type			= ARPHRD_ETHER;
+    dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
-    dev->mtu			= 1500; /* eth_mtu */
-    dev->addr_len		= ETH_ALEN;
+    dev->mtu = 1500; /* eth_mtu */
+    dev->addr_len = ETH_ALEN;
     for (i = 0; i < ETH_ALEN; i++)
     {
         dev->broadcast[i] = 0xff;
     }
 
     /* New-style flags. */
-    dev->flags			= IFF_BROADCAST;
-    dev->family			= AF_INET;
-    dev->pa_addr		= 0;
-    dev->pa_brdaddr		= 0;
-    dev->pa_mask		= 0;
-    dev->pa_alen		= sizeof(unsigned long);
+    dev->flags = IFF_BROADCAST;
+    dev->family = AF_INET;
+    dev->pa_addr = 0;
+    dev->pa_brdaddr = 0;
+    dev->pa_mask = 0;
+    dev->pa_alen = sizeof(unsigned long);
 
     return 0;
 }
@@ -290,8 +285,6 @@ static ushort id_read_eeprom(int index)
     return word;
 }
 
-
-
 static int
 el3_open(struct device *dev)
 {
@@ -349,7 +342,7 @@ el3_open(struct device *dev)
         printk("%s: Opened 3c509  IRQ %d  status %4.4x.\n",
                dev->name, dev->irq, inw(ioaddr + EL3_STATUS));
 
-    return 0;					/* Always succeed */
+    return 0; /* Always succeed */
 }
 
 static int
@@ -380,10 +373,10 @@ el3_start_xmit(struct sk_buff *skb, struct device *dev)
     }
 
     /* Fill in the ethernet header. */
-    if (!skb->arp  &&  dev->rebuild_header(skb->data, dev))
+    if (!skb->arp && dev->rebuild_header(skb->data, dev))
     {
         skb->dev = dev;
-        arp_queue (skb);
+        arp_queue(skb);
         return 0;
     }
     skb->arp = 1;
@@ -400,11 +393,12 @@ el3_start_xmit(struct sk_buff *skb, struct device *dev)
     {
         /* Error-checking code, delete for 1.00. */
         ushort status = inw(ioaddr + EL3_STATUS);
-        if (status & 0x0001 		/* IRQ line active, missed one. */
-                && inw(ioaddr + EL3_STATUS) & 1)   			/* Make sure. */
+        if (status & 0x0001                  /* IRQ line active, missed one. */
+            && inw(ioaddr + EL3_STATUS) & 1) /* Make sure. */
         {
             printk("%s: Missed interrupt, status then %04x now %04x"
-                   "  Tx %2.2x Rx %4.4x.\n", dev->name, status,
+                   "  Tx %2.2x Rx %4.4x.\n",
+                   dev->name, status,
                    inw(ioaddr + EL3_STATUS), inb(ioaddr + TX_STATUS),
                    inw(ioaddr + RX_STATUS));
             outw(0x7800, ioaddr + EL3_CMD); /* Fake interrupt trigger. */
@@ -436,20 +430,23 @@ el3_start_xmit(struct sk_buff *skb, struct device *dev)
     }
 
     if (skb->free)
-        kfree_skb (skb, FREE_WRITE);
+        kfree_skb(skb, FREE_WRITE);
 
     /* Clear the Tx status stack. */
     {
         short tx_status;
         int i = 4;
 
-        while (--i > 0	&&	(tx_status = inb(ioaddr + TX_STATUS)) > 0)
+        while (--i > 0 && (tx_status = inb(ioaddr + TX_STATUS)) > 0)
         {
             if (el3_debug > 5)
                 printk("		Tx status %4.4x.\n", tx_status);
-            if (tx_status & 0x38) lp->stats.tx_aborted_errors++;
-            if (tx_status & 0x30) outw(0x5800, ioaddr + EL3_CMD);
-            if (tx_status & 0x3C) outw(0x4800, ioaddr + EL3_CMD);
+            if (tx_status & 0x38)
+                lp->stats.tx_aborted_errors++;
+            if (tx_status & 0x30)
+                outw(0x5800, ioaddr + EL3_CMD);
+            if (tx_status & 0x3C)
+                outw(0x4800, ioaddr + EL3_CMD);
             outb(0x00, ioaddr + TX_STATUS); /* Pop the status stack. */
         }
     }
@@ -467,7 +464,7 @@ el3_interrupt(int reg_ptr)
 
     if (dev == NULL)
     {
-        printk ("el3_interrupt(): irq %d for unknown device.\n", irq);
+        printk("el3_interrupt(): irq %d for unknown device.\n", irq);
         return;
     }
 
@@ -496,7 +493,7 @@ el3_interrupt(int reg_ptr)
             dev->tbusy = 0;
             mark_bh(INET_BH);
         }
-        if (status & 0x80)				/* Statistics full. */
+        if (status & 0x80) /* Statistics full. */
             update_stats(ioaddr, dev);
 
         if (++i > 10)
@@ -520,7 +517,6 @@ el3_interrupt(int reg_ptr)
     dev->interrupt = 0;
     return;
 }
-
 
 static struct enet_statistics *
 el3_get_stats(struct device *dev)
@@ -548,16 +544,16 @@ static void update_stats(int ioaddr, struct device *dev)
     outw(0xB000, ioaddr + EL3_CMD);
     /* Switch to the stats window, and read everything. */
     EL3WINDOW(6);
-    lp->stats.tx_carrier_errors 	+= inb(ioaddr + 0);
-    lp->stats.tx_heartbeat_errors	+= inb(ioaddr + 1);
-    /* Multiple collisions. */	   	inb(ioaddr + 2);
-    lp->stats.collisions			+= inb(ioaddr + 3);
-    lp->stats.tx_window_errors		+= inb(ioaddr + 4);
-    lp->stats.rx_fifo_errors		+= inb(ioaddr + 5);
-    lp->stats.tx_packets			+= inb(ioaddr + 6);
-    lp->stats.rx_packets			+= inb(ioaddr + 7);
-    /* Tx deferrals */				inb(ioaddr + 8);
-    inw(ioaddr + 10);	/* Total Rx and Tx octets. */
+    lp->stats.tx_carrier_errors += inb(ioaddr + 0);
+    lp->stats.tx_heartbeat_errors += inb(ioaddr + 1);
+    /* Multiple collisions. */ inb(ioaddr + 2);
+    lp->stats.collisions += inb(ioaddr + 3);
+    lp->stats.tx_window_errors += inb(ioaddr + 4);
+    lp->stats.rx_fifo_errors += inb(ioaddr + 5);
+    lp->stats.tx_packets += inb(ioaddr + 6);
+    lp->stats.rx_packets += inb(ioaddr + 7);
+    /* Tx deferrals */ inb(ioaddr + 8);
+    inw(ioaddr + 10); /* Total Rx and Tx octets. */
     inw(ioaddr + 12);
 
     /* Back to window 1, and turn statistics back on. */
@@ -578,7 +574,7 @@ el3_rx(struct device *dev)
                inw(ioaddr + EL3_STATUS), inw(ioaddr + RX_STATUS));
     while ((rx_status = inw(ioaddr + RX_STATUS)) > 0)
     {
-        if (rx_status & 0x4000)   /* Error, update stats. */
+        if (rx_status & 0x4000) /* Error, update stats. */
         {
             short error = rx_status & 0x3800;
             lp->stats.rx_errors++;
@@ -604,8 +600,7 @@ el3_rx(struct device *dev)
                 break;
             }
         }
-        if ( (! (rx_status & 0x4000))
-                || ! (rx_status & 0x1000))   /* Dribble bits are OK. */
+        if ((!(rx_status & 0x4000)) || !(rx_status & 0x1000)) /* Dribble bits are OK. */
         {
             short pkt_len = rx_status & 0x7ff;
             int sksize = sizeof(struct sk_buff) + pkt_len + 3;
@@ -641,7 +636,7 @@ el3_rx(struct device *dev)
                     outw(0x4000, ioaddr + EL3_CMD); /* Rx discard */
                     while (inw(ioaddr + EL3_STATUS) & 0x1000)
                         printk("	Waiting for 3c509 to discard packet, status %x.\n",
-                               inw(ioaddr + EL3_STATUS) );
+                               inw(ioaddr + EL3_STATUS));
                     if (el3_debug > 6)
                         printk("	 discarded packet, status %4.4x.\n",
                                inb(ioaddr + EL3_STATUS));
@@ -662,7 +657,7 @@ el3_rx(struct device *dev)
         outw(0x4000, ioaddr + EL3_CMD); /* Rx discard */
         while (inw(ioaddr + EL3_STATUS) & 0x1000)
             printk("	Waiting for 3c509 to discard packet, status %x.\n",
-                   inw(ioaddr + EL3_STATUS) );
+                   inw(ioaddr + EL3_STATUS));
     }
 
     if (el3_debug > 5)
@@ -730,13 +725,12 @@ el3_close(struct device *dev)
     /* But we explicitly zero the IRQ line select anyway. */
     outw(0x0f00, ioaddr + 8);
 
-
     irq2dev_map[dev->irq] = 0;
 
     update_stats(ioaddr, dev);
     return 0;
 }
-
+
 /*
  * Local variables:
  *  compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c 3c509.c"

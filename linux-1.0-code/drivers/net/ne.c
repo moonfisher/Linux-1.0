@@ -29,15 +29,15 @@ static char *version =
 #include "dev.h"
 #include "8390.h"
 
-#define NE_BASE	 (dev->base_addr)
-#define NE_CMD	 	0x00
-#define NE_DATAPORT	0x10	/* NatSemi-defined port window offset. */
-#define NE_RESET	0x1f	/* Issue a read to reset, a write to clear. */
+#define NE_BASE (dev->base_addr)
+#define NE_CMD 0x00
+#define NE_DATAPORT 0x10 /* NatSemi-defined port window offset. */
+#define NE_RESET 0x1f    /* Issue a read to reset, a write to clear. */
 
-#define NE1SM_START_PG	0x20	/* First page of TX buffer */
-#define NE1SM_STOP_PG 	0x40	/* Last page +1 of RX ring */
-#define NESM_START_PG	0x40	/* First page of TX buffer */
-#define NESM_STOP_PG	0x80	/* Last page +1 of RX ring */
+#define NE1SM_START_PG 0x20 /* First page of TX buffer */
+#define NE1SM_STOP_PG 0x40  /* Last page +1 of RX ring */
+#define NESM_START_PG 0x40  /* First page of TX buffer */
+#define NESM_STOP_PG 0x80   /* Last page +1 of RX ring */
 
 int ne_probe(struct device *dev);
 static int neprobe1(int ioaddr, struct device *dev, int verbose);
@@ -48,7 +48,6 @@ static int ne_block_input(struct device *dev, int count,
 static void ne_block_output(struct device *dev, const int count,
                             const unsigned char *buf, const int start_page);
 
-
 /*  Probe for various non-shared-memory ethercards.
 
    NEx000-clone boards have a Station Address PROM (SAPROM) in the packet
@@ -76,9 +75,9 @@ int ne_probe(struct device *dev)
     short ioaddr = dev->base_addr;
 
     if (ioaddr < 0)
-        return ENXIO;		/* Don't probe at all. */
+        return ENXIO; /* Don't probe at all. */
     if (ioaddr > 0x100)
-        return ! neprobe1(ioaddr, dev, 1);
+        return !neprobe1(ioaddr, dev, 1);
 
     for (port = &ports[0]; *port; port++)
     {
@@ -106,7 +105,7 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
     int neX000, ctron, dlink, dfi;
     int reg0 = inb(ioaddr);
 
-    if ( reg0 == 0xFF)
+    if (reg0 == 0xFF)
         return 0;
 
     /* Do a quick preliminary check that we have a 8390. */
@@ -120,7 +119,7 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
         if (inb_p(ioaddr + EN0_COUNTER0) != 0)
         {
             outb_p(reg0, ioaddr);
-            outb(regd, ioaddr + 0x0d);	/* Restore the old values. */
+            outb(regd, ioaddr + 0x0d); /* Restore the old values. */
             return 0;
         }
     }
@@ -137,25 +136,25 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
         {
             unsigned char value, offset;
         } program_seq[] =
-        {
-            {E8390_NODMA + E8390_PAGE0 + E8390_STOP, E8390_CMD}, /* Select page 0*/
-            {0x48,	EN0_DCFG},	/* Set byte-wide (0x48) access. */
-            {0x00,	EN0_RCNTLO},	/* Clear the count regs. */
-            {0x00,	EN0_RCNTHI},
-            {0x00,	EN0_IMR},	/* Mask completion irq. */
-            {0xFF,	EN0_ISR},
-            {E8390_RXOFF, EN0_RXCR},	/* 0x20  Set to monitor */
-            {E8390_TXOFF, EN0_TXCR},	/* 0x02  and loopback mode. */
-            {32,	EN0_RCNTLO},
-            {0x00,	EN0_RCNTHI},
-            {0x00,	EN0_RSARLO},	/* DMA starting at 0x0000. */
-            {0x00,	EN0_RSARHI},
-            {E8390_RREAD + E8390_START, E8390_CMD},
-        };
+            {
+                {E8390_NODMA + E8390_PAGE0 + E8390_STOP, E8390_CMD}, /* Select page 0*/
+                {0x48, EN0_DCFG},                                    /* Set byte-wide (0x48) access. */
+                {0x00, EN0_RCNTLO},                                  /* Clear the count regs. */
+                {0x00, EN0_RCNTHI},
+                {0x00, EN0_IMR}, /* Mask completion irq. */
+                {0xFF, EN0_ISR},
+                {E8390_RXOFF, EN0_RXCR}, /* 0x20  Set to monitor */
+                {E8390_TXOFF, EN0_TXCR}, /* 0x02  and loopback mode. */
+                {32, EN0_RCNTLO},
+                {0x00, EN0_RCNTHI},
+                {0x00, EN0_RSARLO}, /* DMA starting at 0x0000. */
+                {0x00, EN0_RSARHI},
+                {E8390_RREAD + E8390_START, E8390_CMD},
+            };
         for (i = 0; i < sizeof(program_seq) / sizeof(program_seq[0]); i++)
             outb_p(program_seq[i].value, ioaddr + program_seq[i].offset);
     }
-    for(i = 0; i < 32 /*sizeof(SA_prom)*/; i += 2)
+    for (i = 0; i < 32 /*sizeof(SA_prom)*/; i += 2)
     {
         SA_prom[i] = inb(ioaddr + NE_DATAPORT);
         SA_prom[i + 1] = inb(ioaddr + NE_DATAPORT);
@@ -176,20 +175,20 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
 
 #if defined(show_all_SAPROM)
     /* If your ethercard isn't detected define this to see the SA_PROM. */
-    for(i = 0; i < sizeof(SA_prom); i++)
+    for (i = 0; i < sizeof(SA_prom); i++)
         printk(" %2.2x", SA_prom[i]);
 #else
-    for(i = 0; i < ETHER_ADDR_LEN; i++)
+    for (i = 0; i < ETHER_ADDR_LEN; i++)
     {
         dev->dev_addr[i] = SA_prom[i];
         printk(" %2.2x", SA_prom[i]);
     }
 #endif
 
-    neX000 = (SA_prom[14] == 0x57  &&  SA_prom[15] == 0x57);
-    ctron =  (SA_prom[0] == 0x00 && SA_prom[1] == 0x00 && SA_prom[2] == 0x1d);
-    dlink =  (SA_prom[0] == 0x00 && SA_prom[1] == 0xDE && SA_prom[2] == 0x01);
-    dfi   =  (SA_prom[0] == 'D' && SA_prom[1] == 'F' && SA_prom[2] == 'I');
+    neX000 = (SA_prom[14] == 0x57 && SA_prom[15] == 0x57);
+    ctron = (SA_prom[0] == 0x00 && SA_prom[1] == 0x00 && SA_prom[2] == 0x1d);
+    dlink = (SA_prom[0] == 0x00 && SA_prom[1] == 0xDE && SA_prom[2] == 0x01);
+    dfi = (SA_prom[0] == 'D' && SA_prom[1] == 'F' && SA_prom[2] == 'I');
 
     /* Set up the rest of the parameters. */
     if (neX000 || dlink || dfi)
@@ -222,11 +221,11 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
     if (dev->irq < 2)
     {
         autoirq_setup(0);
-        outb_p(0x50, ioaddr + EN0_IMR);	/* Enable one interrupt. */
+        outb_p(0x50, ioaddr + EN0_IMR); /* Enable one interrupt. */
         outb_p(0x00, ioaddr + EN0_RCNTLO);
         outb_p(0x00, ioaddr + EN0_RCNTHI);
         outb_p(E8390_RREAD + E8390_START, ioaddr); /* Trigger it... */
-        outb_p(0x00, ioaddr + EN0_IMR); 		/* Mask it again. */
+        outb_p(0x00, ioaddr + EN0_IMR);            /* Mask it again. */
         dev->irq = autoirq_report(0);
         if (ei_debug > 2)
             printk(" autoirq is %d", dev->irq);
@@ -239,10 +238,10 @@ static int neprobe1(int ioaddr, struct device *dev, int verbose)
     /* Snarf the interrupt now.  There's no point in waiting since we cannot
        share and the board will usually be enabled. */
     {
-        int irqval = irqaction (dev->irq, &ei_sigaction);
+        int irqval = irqaction(dev->irq, &ei_sigaction);
         if (irqval)
         {
-            printk (" unable to get IRQ %d (irqval=%d).\n", dev->irq, irqval);
+            printk(" unable to get IRQ %d (irqval=%d).\n", dev->irq, irqval);
             return 0;
         }
     }
@@ -286,7 +285,8 @@ ne_reset_8390(struct device *dev)
     int tmp = inb_p(NE_BASE + NE_RESET);
     int reset_start_time = jiffies;
 
-    if (ei_debug > 1) printk("resetting the 8390 t=%ld...", jiffies);
+    if (ei_debug > 1)
+        printk("resetting the 8390 t=%ld...", jiffies);
     ei_status.txing = 0;
 
     outb_p(tmp, NE_BASE + NE_RESET);
@@ -340,7 +340,7 @@ ne_block_input(struct device *dev, int count, char *buf, int ring_offset)
        encountering problems that it is still here.  If you see
        this message you either 1) have an slightly imcompatible clone
        or 2) have noise/speed problems with your bus. */
-    if (ei_debug > 1)  		/* DMA termination address check... */
+    if (ei_debug > 1) /* DMA termination address check... */
     {
         int addr, tries = 20;
         do
@@ -352,8 +352,7 @@ ne_block_input(struct device *dev, int count, char *buf, int ring_offset)
             addr = (high << 8) + low;
             if (((ring_offset + xfer_count) & 0xff) == low)
                 break;
-        }
-        while (--tries > 0);
+        } while (--tries > 0);
         if (tries <= 0)
             printk("%s: RX transfer address mismatch,"
                    "%#4.4x (expected) vs. %#4.4x (actual).\n",
@@ -394,7 +393,7 @@ retry:
        Actually this doesn't aways work either, but if you have
        problems with your NEx000 this is better than nothing! */
     outb_p(0x42, nic_base + EN0_RCNTLO);
-    outb_p(0x00,   nic_base + EN0_RCNTHI);
+    outb_p(0x00, nic_base + EN0_RCNTHI);
     outb_p(0x42, nic_base + EN0_RSARLO);
     outb_p(0x00, nic_base + EN0_RSARHI);
     outb_p(E8390_RREAD + E8390_START, nic_base + NE_CMD);
@@ -402,11 +401,11 @@ retry:
     SLOW_DOWN_IO;
     SLOW_DOWN_IO;
     SLOW_DOWN_IO;
-#endif  /* rw_bugfix */
+#endif /* rw_bugfix */
 
     /* Now the normal output. */
     outb_p(count & 0xff, nic_base + EN0_RCNTLO);
-    outb_p(count >> 8,   nic_base + EN0_RCNTHI);
+    outb_p(count >> 8, nic_base + EN0_RCNTHI);
     outb_p(0x00, nic_base + EN0_RSARLO);
     outb_p(start_page, nic_base + EN0_RSARHI);
 
@@ -422,7 +421,7 @@ retry:
 
     /* This was for the ALPHA version only, but enough people have
        encountering problems that it is still here. */
-    if (ei_debug > 1)  		/* DMA termination address check... */
+    if (ei_debug > 1) /* DMA termination address check... */
     {
         int addr, tries = 20;
         do
@@ -434,8 +433,7 @@ retry:
             addr = (high << 8) + low;
             if ((start_page << 8) + count == addr)
                 break;
-        }
-        while (--tries > 0);
+        } while (--tries > 0);
         if (tries <= 0)
         {
             printk("%s: Tx packet transfer address mismatch,"
@@ -449,7 +447,6 @@ retry:
     return;
 }
 
-
 /*
  * Local variables:
  *  compile-command: "gcc -DKERNEL -Wall -O6 -fomit-frame-pointer -I/usr/src/linux/net/tcp -c ne.c"

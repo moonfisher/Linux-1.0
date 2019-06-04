@@ -55,8 +55,8 @@ extern struct device *irq2dev_map[16];
 #endif
 
 #ifndef HAVE_ALLOC_SKB
-#define alloc_skb(size, priority) (struct sk_buff *) kmalloc(size,priority)
-#define kfree_skbmem(addr, size) kfree_s(addr,size);
+#define alloc_skb(size, priority) (struct sk_buff *)kmalloc(size, priority)
+#define kfree_skbmem(addr, size) kfree_s(addr, size);
 #endif
 
 /* use 0 for production, 1 for verification, >2 for debug */
@@ -71,44 +71,50 @@ typedef unsigned char uchar;
 struct net_local
 {
     struct enet_statistics stats;
-    long open_time;				/* Useless example local info. */
-    uint tx_started: 1;			/* Number of packet on the Tx queue. */
-    uchar tx_queue;				/* Number of packet on the Tx queue. */
-    ushort tx_queue_len;		/* Current length of the Tx queue. */
+    long open_time;      /* Useless example local info. */
+    uint tx_started : 1; /* Number of packet on the Tx queue. */
+    uchar tx_queue;      /* Number of packet on the Tx queue. */
+    ushort tx_queue_len; /* Current length of the Tx queue. */
 };
 
-
 /* Offsets from the base address. */
-#define STATUS			0
-#define TX_STATUS		0
-#define RX_STATUS		1
-#define TX_INTR			2		/* Bit-mapped interrupt enable registers. */
-#define RX_INTR			3
-#define TX_MODE			4
-#define RX_MODE			5
-#define CONFIG_0		6		/* Misc. configuration settings. */
-#define CONFIG_1		7
+#define STATUS 0
+#define TX_STATUS 0
+#define RX_STATUS 1
+#define TX_INTR 2 /* Bit-mapped interrupt enable registers. */
+#define RX_INTR 3
+#define TX_MODE 4
+#define RX_MODE 5
+#define CONFIG_0 6 /* Misc. configuration settings. */
+#define CONFIG_1 7
 /* Run-time register bank 2 definitions. */
-#define DATAPORT		8		/* Word-wide DMA or programmed-I/O dataport. */
-#define TX_START		10
-#define MODE13			13
-#define EEPROM_Ctrl 	16
-#define EEPROM_Data 	17
+#define DATAPORT 8 /* Word-wide DMA or programmed-I/O dataport. */
+#define TX_START 10
+#define MODE13 13
+#define EEPROM_Ctrl 16
+#define EEPROM_Data 17
 
 /*  EEPROM_Ctrl bits. */
-#define EE_SHIFT_CLK	0x40	/* EEPROM shift clock, in reg. 16. */
-#define EE_CS			0x20	/* EEPROM chip select, in reg. 16. */
-#define EE_DATA_WRITE	0x80	/* EEPROM chip data in, in reg. 17. */
-#define EE_DATA_READ	0x80	/* EEPROM chip data out, in reg. 17. */
+#define EE_SHIFT_CLK 0x40  /* EEPROM shift clock, in reg. 16. */
+#define EE_CS 0x20         /* EEPROM chip select, in reg. 16. */
+#define EE_DATA_WRITE 0x80 /* EEPROM chip data in, in reg. 17. */
+#define EE_DATA_READ 0x80  /* EEPROM chip data out, in reg. 17. */
 
 /* Delay between EEPROM clock transitions. */
-#define eeprom_delay()	do { int _i = 40; while (--_i > 0) { __SLOW_DOWN_IO; }} while (0)
+#define eeprom_delay()      \
+    do                      \
+    {                       \
+        int _i = 40;        \
+        while (--_i > 0)    \
+        {                   \
+            __SLOW_DOWN_IO; \
+        }                   \
+    } while (0)
 
 /* The EEPROM commands include the alway-set leading bit. */
-#define EE_WRITE_CMD	(5 << 6)
-#define EE_READ_CMD		(6 << 6)
-#define EE_ERASE_CMD	(7 << 6)
-
+#define EE_WRITE_CMD (5 << 6)
+#define EE_READ_CMD (6 << 6)
+#define EE_ERASE_CMD (7 << 6)
 
 /* Index to functions, as function prototypes. */
 
@@ -117,7 +123,7 @@ extern int at1700_probe(struct device *dev);
 static int at1700_probe1(struct device *dev, short ioaddr);
 static int read_eeprom(int ioaddr, int location);
 static int net_open(struct device *dev);
-static int	net_send_packet(struct sk_buff *skb, struct device *dev);
+static int net_send_packet(struct sk_buff *skb, struct device *dev);
 static void net_interrupt(int reg_ptr);
 static void net_rx(struct device *dev);
 static int net_close(struct device *dev);
@@ -126,22 +132,20 @@ static struct enet_statistics *net_get_stats(struct device *dev);
 static void set_multicast_list(struct device *dev, int num_addrs, void *addrs);
 #endif
 
-
 /* Check for a network adaptor of this type, and return '0' iff one exists.
    If dev->base_addr == 0, probe all likely locations.
    If dev->base_addr == 1, always return failure.
    If dev->base_addr == 2, alloate space for the device and return success
    (detachable devices only).
    */
-int
-at1700_probe(struct device *dev)
+int at1700_probe(struct device *dev)
 {
     short ports[] = {0x300, 0x280, 0x380, 0x320, 0x340, 0x260, 0x2a0, 0x240, 0};
     short *port, base_addr = dev->base_addr;
 
-    if (base_addr > 0x1ff)		/* Check a single specified location. */
+    if (base_addr > 0x1ff) /* Check a single specified location. */
         return at1700_probe1(dev, base_addr);
-    else if (base_addr > 0)		/* Don't probe at all. */
+    else if (base_addr > 0) /* Don't probe at all. */
         return ENXIO;
 
     for (port = &ports[0]; *port; port++)
@@ -166,7 +170,7 @@ at1700_probe(struct device *dev)
 
 int at1700_probe1(struct device *dev, short ioaddr)
 {
-    unsigned short signature[4]         = {0xffff, 0xffff, 0x7ff7, 0xff5f};
+    unsigned short signature[4] = {0xffff, 0xffff, 0x7ff7, 0xff5f};
     unsigned short signature_invalid[4] = {0xffff, 0xffff, 0x7ff7, 0xdf0f};
     char irqmap[8] = {3, 4, 5, 9, 10, 11, 14, 15};
     unsigned short *station_address = (unsigned short *)dev->dev_addr;
@@ -183,22 +187,21 @@ int at1700_probe1(struct device *dev, short ioaddr)
                        i, inw(ioaddr + 2 * i), signature[i]);
             return -ENODEV;
         }
-    if (read_eeprom(ioaddr, 4) != 0x0000
-            || read_eeprom(ioaddr, 5) & 0x00ff != 0x00F4)
+    if (read_eeprom(ioaddr, 4) != 0x0000 || read_eeprom(ioaddr, 5) & 0x00ff != 0x00F4)
         return -ENODEV;
 
     /* Grab the region so that we can find another board if the IRQ request
        fails. */
     snarf_region(ioaddr, 32);
 
-    irq = irqmap[(read_eeprom(ioaddr, 12) & 0x04)
-                                          | (read_eeprom(ioaddr, 0) >> 14)];
+    irq = irqmap[(read_eeprom(ioaddr, 12) & 0x04) | (read_eeprom(ioaddr, 0) >> 14)];
 
     /* Snarf the interrupt vector now. */
     if (request_irq(irq, &net_interrupt))
     {
-        printk ("AT1700 found at %#3x, but it's unusable due to a conflict on"
-                "IRQ %d.\n", ioaddr, irq);
+        printk("AT1700 found at %#3x, but it's unusable due to a conflict on"
+               "IRQ %d.\n",
+               ioaddr, irq);
         return EAGAIN;
     }
 
@@ -209,7 +212,7 @@ int at1700_probe1(struct device *dev, short ioaddr)
     dev->irq = irq;
     irq2dev_map[irq] = dev;
 
-    for(i = 0; i < 3; i++)
+    for (i = 0; i < 3; i++)
     {
         unsigned short eeprom_val = read_eeprom(ioaddr, 4 + i);
         printk("%04x", eeprom_val);
@@ -259,10 +262,10 @@ int at1700_probe1(struct device *dev, short ioaddr)
     dev->priv = kmalloc(sizeof(struct net_local), GFP_KERNEL);
     memset(dev->priv, 0, sizeof(struct net_local));
 
-    dev->open		= net_open;
-    dev->stop		= net_close;
+    dev->open = net_open;
+    dev->stop = net_close;
     dev->hard_start_xmit = net_send_packet;
-    dev->get_stats	= net_get_stats;
+    dev->get_stats = net_get_stats;
 #ifdef HAVE_MULTICAST
     dev->set_multicast_list = &set_multicast_list;
 #endif
@@ -272,28 +275,28 @@ int at1700_probe1(struct device *dev, short ioaddr)
     for (i = 0; i < DEV_NUMBUFFS; i++)
         dev->buffs[i] = NULL;
 
-    dev->hard_header	= eth_header;
-    dev->add_arp		= eth_add_arp;
-    dev->queue_xmit		= dev_queue_xmit;
-    dev->rebuild_header	= eth_rebuild_header;
-    dev->type_trans		= eth_type_trans;
+    dev->hard_header = eth_header;
+    dev->add_arp = eth_add_arp;
+    dev->queue_xmit = dev_queue_xmit;
+    dev->rebuild_header = eth_rebuild_header;
+    dev->type_trans = eth_type_trans;
 
-    dev->type		= ARPHRD_ETHER;
+    dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
-    dev->mtu		= 1500; /* eth_mtu */
-    dev->addr_len	= ETH_ALEN;
+    dev->mtu = 1500; /* eth_mtu */
+    dev->addr_len = ETH_ALEN;
     for (i = 0; i < ETH_ALEN; i++)
     {
         dev->broadcast[i] = 0xff;
     }
 
     /* New-style flags. */
-    dev->flags		= IFF_BROADCAST;
-    dev->family		= AF_INET;
-    dev->pa_addr	= 0;
-    dev->pa_brdaddr	= 0;
-    dev->pa_mask	= 0;
-    dev->pa_alen	= sizeof(unsigned long);
+    dev->flags = IFF_BROADCAST;
+    dev->family = AF_INET;
+    dev->pa_addr = 0;
+    dev->pa_brdaddr = 0;
+    dev->pa_mask = 0;
+    dev->pa_alen = sizeof(unsigned long);
 
     return 0;
 }
@@ -314,9 +317,9 @@ static int read_eeprom(int ioaddr, int location)
     {
         short dataval = (read_cmd & (1 << i)) ? EE_DATA_WRITE : 0;
         outb(dataval, ee_daddr);
-        outb(EE_CS | EE_SHIFT_CLK, ee_addr);	/* EEPROM clock tick. */
+        outb(EE_CS | EE_SHIFT_CLK, ee_addr); /* EEPROM clock tick. */
         eeprom_delay();
-        outb(EE_CS, ee_addr);	/* Finish EEPROM a clock tick. */
+        outb(EE_CS, ee_addr); /* Finish EEPROM a clock tick. */
         eeprom_delay();
     }
     outb(EE_CS, ee_addr);
@@ -338,8 +341,6 @@ static int read_eeprom(int ioaddr, int location)
     eeprom_delay();
     return retval;
 }
-
-
 
 static int net_open(struct device *dev)
 {
@@ -395,8 +396,7 @@ net_send_packet(struct sk_buff *skb, struct device *dev)
         if (tickssofar < 10)
             return 1;
         printk("%s: transmit timed out with status %04x, %s?\n", dev->name,
-               inw(ioaddr + STATUS), inb(ioaddr + TX_STATUS) & 0x80
-               ? "IRQ conflict" : "network cable problem");
+               inw(ioaddr + STATUS), inb(ioaddr + TX_STATUS) & 0x80 ? "IRQ conflict" : "network cable problem");
         printk("%s: timeout registers: %04x %04x %04x %04x %04x %04x %04x %04x.\n",
                dev->name, inw(ioaddr + 0), inw(ioaddr + 2), inw(ioaddr + 4),
                inw(ioaddr + 6), inw(ioaddr + 8), inw(ioaddr + 10),
@@ -422,10 +422,10 @@ net_send_packet(struct sk_buff *skb, struct device *dev)
 
     /* For ethernet, fill in the header.  This should really be done by a
        higher level, rather than duplicated for each ethernet adaptor. */
-    if (!skb->arp  &&  dev->rebuild_header(skb->data, dev))
+    if (!skb->arp && dev->rebuild_header(skb->data, dev))
     {
         skb->dev = dev;
-        arp_queue (skb);
+        arp_queue(skb);
         return 0;
     }
     skb->arp = 1;
@@ -457,18 +457,18 @@ net_send_packet(struct sk_buff *skb, struct device *dev)
             dev->trans_start = jiffies;
             lp->tx_started = 1;
         }
-        else if (lp->tx_queue_len < 4096 - 1502)	/* Room for one more packet? */
+        else if (lp->tx_queue_len < 4096 - 1502) /* Room for one more packet? */
             dev->tbusy = 0;
 
         /* Turn on Tx interrupts back on. */
         outb(0x82, ioaddr + TX_INTR);
     }
     if (skb->free)
-        kfree_skb (skb, FREE_WRITE);
+        kfree_skb(skb, FREE_WRITE);
 
     return 0;
 }
-
+
 /* The typical workload of the driver:
    Handle the network interface interrupts. */
 static void
@@ -481,7 +481,7 @@ net_interrupt(int reg_ptr)
 
     if (dev == NULL)
     {
-        printk ("at1700_interrupt(): irq %d for unknown device.\n", irq);
+        printk("at1700_interrupt(): irq %d for unknown device.\n", irq);
         return;
     }
     dev->interrupt = 1;
@@ -493,8 +493,7 @@ net_interrupt(int reg_ptr)
 
     if (net_debug > 4)
         printk("%s: Interrupt with status %04x.\n", dev->name, status);
-    if (status & 0xff00
-            ||  (inb(ioaddr + RX_MODE) & 0x40) == 0)  			/* Got a packet(s). */
+    if (status & 0xff00 || (inb(ioaddr + RX_MODE) & 0x40) == 0) /* Got a packet(s). */
     {
         net_rx(dev);
     }
@@ -510,7 +509,7 @@ net_interrupt(int reg_ptr)
                 lp->tx_queue_len = 0;
                 dev->trans_start = jiffies;
                 dev->tbusy = 0;
-                mark_bh(INET_BH);	/* Inform upper layers. */
+                mark_bh(INET_BH); /* Inform upper layers. */
             }
             else
             {
@@ -548,13 +547,17 @@ net_rx(struct device *dev)
         }
 #endif
 
-        if ((status & 0xF0) != 0x20)  	/* There was an error. */
+        if ((status & 0xF0) != 0x20) /* There was an error. */
         {
             lp->stats.rx_errors++;
-            if (status & 0x08) lp->stats.rx_length_errors++;
-            if (status & 0x04) lp->stats.rx_frame_errors++;
-            if (status & 0x02) lp->stats.rx_crc_errors++;
-            if (status & 0x01) lp->stats.rx_over_errors++;
+            if (status & 0x08)
+                lp->stats.rx_length_errors++;
+            if (status & 0x04)
+                lp->stats.rx_frame_errors++;
+            if (status & 0x02)
+                lp->stats.rx_crc_errors++;
+            if (status & 0x01)
+                lp->stats.rx_over_errors++;
         }
         else
         {
@@ -681,13 +684,13 @@ set_multicast_list(struct device *dev, int num_addrs, void *addrs)
     short ioaddr = dev->base_addr;
     if (num_addrs)
     {
-        outw(3, ioaddr + RX_MODE);	/* Enable promiscuous mode */
+        outw(3, ioaddr + RX_MODE); /* Enable promiscuous mode */
     }
     else
-        outw(2, ioaddr + RX_MODE);	/* Disable promiscuous, use normal mode */
+        outw(2, ioaddr + RX_MODE); /* Disable promiscuous, use normal mode */
 }
 #endif
-
+
 /*
  * Local variables:
  *  compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c at1700.c"

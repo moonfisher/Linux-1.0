@@ -56,7 +56,7 @@ static struct wait_queue *buffer_wait = NULL;
 int nr_buffers = 0;
 int buffermem = 0;
 int nr_buffer_heads = 0;
-static int min_free_pages = 20;	/* nr free pages needed before buffer grows */
+static int min_free_pages = 20; /* nr free pages needed before buffer grows */
 extern int *blksize_size[];
 
 /*
@@ -70,7 +70,7 @@ extern int *blksize_size[];
  */
 void __wait_on_buffer(struct buffer_head *bh)
 {
-    struct wait_queue wait = { current, NULL };
+    struct wait_queue wait = {current, NULL};
 
     bh->b_count++;
     add_wait_queue(&bh->b_wait, &wait);
@@ -103,15 +103,15 @@ static int sync_buffers(dev_t dev, int wait)
 repeat:
     retry = 0;
     bh = free_list;
-    for (i = nr_buffers * 2 ; i-- > 0 ; bh = bh->b_next_free)
+    for (i = nr_buffers * 2; i-- > 0; bh = bh->b_next_free)
     {
         if (dev && bh->b_dev != dev)
             continue;
 #ifdef 0 /* Disable bad-block debugging code */
         if (bh->b_req && !bh->b_lock &&
-                !bh->b_dirt && !bh->b_uptodate)
-            printk ("Warning (IO error) - orphaned block %08x on %04x\n",
-                    bh->b_blocknr, bh->b_dev);
+            !bh->b_dirt && !bh->b_uptodate)
+            printk("Warning (IO error) - orphaned block %08x on %04x\n",
+                   bh->b_blocknr, bh->b_dev);
 #endif
         if (bh->b_lock)
         {
@@ -122,12 +122,12 @@ repeat:
                 retry = 1;
                 continue;
             }
-            wait_on_buffer (bh);
+            wait_on_buffer(bh);
         }
         /* If an unlocked buffer is not uptodate, there has been
            an IO error. Skip it. */
         if (wait && bh->b_req && !bh->b_lock &&
-                !bh->b_dirt && !bh->b_uptodate)
+            !bh->b_dirt && !bh->b_uptodate)
         {
             err = 1;
             continue;
@@ -172,7 +172,7 @@ asmlinkage int sys_sync(void)
     return 0;
 }
 
-int file_fsync (struct inode *inode, struct file *filp)
+int file_fsync(struct inode *inode, struct file *filp)
 {
     return fsync_dev(inode->i_dev);
 }
@@ -197,7 +197,7 @@ void invalidate_buffers(dev_t dev)
     struct buffer_head *bh;
 
     bh = free_list;
-    for (i = nr_buffers * 2 ; --i > 0 ; bh = bh->b_next_free)
+    for (i = nr_buffers * 2; --i > 0; bh = bh->b_next_free)
     {
         if (bh->b_dev != dev)
             continue;
@@ -226,7 +226,7 @@ void check_disk_change(dev_t dev)
     int i;
     struct buffer_head *bh;
 
-    switch(MAJOR(dev))
+    switch (MAJOR(dev))
     {
     case FLOPPY_MAJOR:
         if (!(bh = getblk(dev, 0, 1024)))
@@ -263,11 +263,12 @@ void check_disk_change(dev_t dev)
         return;
     };
 
-    if (!i)	return;
+    if (!i)
+        return;
 
     printk("VFS: Disk change detected on device %d/%d\n",
            MAJOR(dev), MINOR(dev));
-    for (i = 0 ; i < NR_SUPER ; i++)
+    for (i = 0; i < NR_SUPER; i++)
         if (super_blocks[i].s_dev == dev)
             put_super(super_blocks[i].s_dev);
     invalidate_inodes(dev);
@@ -281,8 +282,8 @@ void check_disk_change(dev_t dev)
 #endif
 }
 
-#define _hashfn(dev,block) (((unsigned)(dev^block))%NR_HASH)
-#define hash(dev,block) hash_table[_hashfn(dev,block)]
+#define _hashfn(dev, block) (((unsigned)(dev ^ block)) % NR_HASH)
+#define hash(dev, block) hash_table[_hashfn(dev, block)]
 
 static inline void remove_from_hash_queue(struct buffer_head *bh)
 {
@@ -364,7 +365,7 @@ static struct buffer_head *find_buffer(dev_t dev, int block, int size)
 {
     struct buffer_head *tmp;
 
-    for (tmp = hash(dev, block) ; tmp != NULL ; tmp = tmp->b_next)
+    for (tmp = hash(dev, block); tmp != NULL; tmp = tmp->b_next)
         if (tmp->b_dev == dev && tmp->b_blocknr == block)
             if (tmp->b_size == size)
                 return tmp;
@@ -408,15 +409,14 @@ void set_blocksize(dev_t dev, int size)
     if (!blksize_size[MAJOR(dev)])
         return;
 
-    switch(size)
+    switch (size)
     {
     default:
         panic("Invalid blocksize passed to set_blocksize");
     case 512:
     case 1024:
     case 2048:
-    case 4096:
-        ;
+    case 4096:;
     }
 
     if (blksize_size[MAJOR(dev)][MINOR(dev)] == 0 && size == BLOCK_SIZE)
@@ -433,7 +433,7 @@ void set_blocksize(dev_t dev, int size)
        around on the free list, and we can get in a loop if we are not careful.*/
 
     bh = free_list;
-    for (i = nr_buffers * 2 ; --i > 0 ; bh = bhnext)
+    for (i = nr_buffers * 2; --i > 0; bh = bhnext)
     {
         bhnext = bh->b_next_free;
         if (bh->b_dev != dev)
@@ -459,10 +459,10 @@ void set_blocksize(dev_t dev, int size)
  * 14.02.92: changed it to sync dirty buffers a bit: better performance
  * when the filesystem starts to get full of dirty blocks (I hope).
  */
-#define BADNESS(bh) (((bh)->b_dirt<<1)+(bh)->b_lock)
+#define BADNESS(bh) (((bh)->b_dirt << 1) + (bh)->b_lock)
 struct buffer_head *getblk(dev_t dev, int block, int size)
 {
-    struct buffer_head *bh, * tmp;
+    struct buffer_head *bh, *tmp;
     int buffers;
     static int grow_size = 0;
 
@@ -483,11 +483,11 @@ repeat:
     buffers = nr_buffers;
     bh = NULL;
 
-    for (tmp = free_list; buffers-- > 0 ; tmp = tmp->b_next_free)
+    for (tmp = free_list; buffers-- > 0; tmp = tmp->b_next_free)
     {
         if (tmp->b_count || tmp->b_size != size)
             continue;
-        if (mem_map[MAP_NR((unsigned long) tmp->b_data)] != 1)
+        if (mem_map[MAP_NR((unsigned long)tmp->b_data)] != 1)
             continue;
         if (!bh || BADNESS(tmp) < BADNESS(bh))
         {
@@ -629,9 +629,9 @@ static void put_unused_buffer_head(struct buffer_head *bh)
 {
     struct wait_queue *wait;
 
-    wait = ((volatile struct buffer_head *) bh)->b_wait;
-    memset((void *) bh, 0, sizeof(*bh));
-    ((volatile struct buffer_head *) bh)->b_wait = wait;
+    wait = ((volatile struct buffer_head *)bh)->b_wait;
+    memset((void *)bh, 0, sizeof(*bh));
+    ((volatile struct buffer_head *)bh)->b_wait = wait;
     bh->b_next_free = unused_list;
     unused_list = bh;
 }
@@ -644,12 +644,12 @@ static void get_more_buffer_heads(void)
     if (unused_list)
         return;
 
-    if(! (bh = (struct buffer_head *) get_free_page(GFP_BUFFER)))
+    if (!(bh = (struct buffer_head *)get_free_page(GFP_BUFFER)))
         return;
 
-    for (nr_buffer_heads += i = PAGE_SIZE / sizeof * bh ; i > 0; i--)
+    for (nr_buffer_heads += i = PAGE_SIZE / sizeof *bh; i > 0; i--)
     {
-        bh->b_next_free = unused_list;	/* only make link */
+        bh->b_next_free = unused_list; /* only make link */
         unused_list = bh++;
     }
 }
@@ -690,7 +690,7 @@ static struct buffer_head *create_buffers(unsigned long page, unsigned long size
             goto no_grow;
         bh->b_this_page = head;
         head = bh;
-        bh->b_data = (char *) (page + offset);
+        bh->b_data = (char *)(page + offset);
         bh->b_size = size;
     }
     return head;
@@ -714,14 +714,14 @@ static void read_buffers(struct buffer_head *bh[], int nrbuf)
     int bhnum = 0;
     struct buffer_head *bhr[8];
 
-    for (i = 0 ; i < nrbuf ; i++)
+    for (i = 0; i < nrbuf; i++)
     {
         if (bh[i] && !bh[i]->b_uptodate)
             bhr[bhnum++] = bh[i];
     }
     if (bhnum)
         ll_rw_block(READ, bhnum, bhr);
-    for (i = 0 ; i < nrbuf ; i++)
+    for (i = 0; i < nrbuf; i++)
     {
         if (bh[i])
         {
@@ -739,7 +739,7 @@ static unsigned long check_aligned(struct buffer_head *first, unsigned long addr
     int block;
     int nrbuf;
 
-    page = (unsigned long) first->b_data;
+    page = (unsigned long)first->b_data;
     if (page & ~PAGE_MASK)
     {
         brelse(first);
@@ -748,7 +748,7 @@ static unsigned long check_aligned(struct buffer_head *first, unsigned long addr
     mem_map[MAP_NR(page)]++;
     bh[0] = first;
     nrbuf = 1;
-    for (offset = size ; offset < PAGE_SIZE ; offset += size)
+    for (offset = size; offset < PAGE_SIZE; offset += size)
     {
         block = *++b;
         if (!block)
@@ -757,10 +757,10 @@ static unsigned long check_aligned(struct buffer_head *first, unsigned long addr
         if (!first)
             goto no_go;
         bh[nrbuf++] = first;
-        if (page + offset != (unsigned long) first->b_data)
+        if (page + offset != (unsigned long)first->b_data)
             goto no_go;
     }
-    read_buffers(bh, nrbuf);		/* make sure they are actually read correctly */
+    read_buffers(bh, nrbuf); /* make sure they are actually read correctly */
     while (nrbuf-- > 0)
         brelse(bh[nrbuf]);
     free_page(address);
@@ -774,9 +774,9 @@ no_go:
 }
 
 static unsigned long try_to_load_aligned(unsigned long address,
-        dev_t dev, int b[], int size)
+                                         dev_t dev, int b[], int size)
 {
-    struct buffer_head *bh, * tmp, * arr[8];
+    struct buffer_head *bh, *tmp, *arr[8];
     unsigned long offset;
     int *p;
     int block;
@@ -786,7 +786,7 @@ static unsigned long try_to_load_aligned(unsigned long address,
         return 0;
     /* do any of the buffers already exist? punt if so.. */
     p = b;
-    for (offset = 0 ; offset < PAGE_SIZE ; offset += size)
+    for (offset = 0; offset < PAGE_SIZE; offset += size)
     {
         block = *(p++);
         if (!block)
@@ -841,7 +841,7 @@ not_aligned:
  * demand-loadable executables).
  */
 static inline unsigned long try_to_share_buffers(unsigned long address,
-        dev_t dev, int *b, int size)
+                                                 dev_t dev, int *b, int size)
 {
     struct buffer_head *bh;
     int block;
@@ -855,10 +855,11 @@ static inline unsigned long try_to_share_buffers(unsigned long address,
     return try_to_load_aligned(address, dev, b, size);
 }
 
-#define COPYBLK(size,from,to) \
-__asm__ __volatile__("rep ; movsl": \
-	:"c" (((unsigned long) size) >> 2),"S" (from),"D" (to) \
-	:"cx","di","si")
+#define COPYBLK(size, from, to)                                                \
+    __asm__ __volatile__("rep ; movsl"                                         \
+                         :                                                     \
+                         : "c"(((unsigned long)size) >> 2), "S"(from), "D"(to) \
+                         : "cx", "di", "si")
 
 /*
  * bread_page reads four buffers into memory at the desired address. It's
@@ -880,7 +881,7 @@ unsigned long bread_page(unsigned long address, dev_t dev, int b[], int size, in
             return where;
     }
     ++current->maj_flt;
-    for (i = 0, j = 0; j < PAGE_SIZE ; i++, j += size)
+    for (i = 0, j = 0; j < PAGE_SIZE; i++, j += size)
     {
         bh[i] = NULL;
         if (b[i])
@@ -888,12 +889,12 @@ unsigned long bread_page(unsigned long address, dev_t dev, int b[], int size, in
     }
     read_buffers(bh, i);
     where = address;
-    for (i = 0, j = 0; j < PAGE_SIZE ; i++, j += size, address += size)
+    for (i = 0, j = 0; j < PAGE_SIZE; i++, j += size, address += size)
     {
         if (bh[i])
         {
             if (bh[i]->b_uptodate)
-                COPYBLK(size, (unsigned long) bh[i]->b_data, address);
+                COPYBLK(size, (unsigned long)bh[i]->b_data, address);
             brelse(bh[i]);
         }
     }
@@ -914,7 +915,7 @@ static int grow_buffers(int pri, int size)
         printk("VFS: grow_buffers: size = %d\n", size);
         return 0;
     }
-    if(!(page = __get_free_page(pri)))
+    if (!(page = __get_free_page(pri)))
         return 0;
     bh = create_buffers(page, size);
     if (!bh)
@@ -956,10 +957,10 @@ static int grow_buffers(int pri, int size)
 static int try_to_free(struct buffer_head *bh, struct buffer_head **bhp)
 {
     unsigned long page;
-    struct buffer_head *tmp, * p;
+    struct buffer_head *tmp, *p;
 
     *bhp = bh;
-    page = (unsigned long) bh->b_data;
+    page = (unsigned long)bh->b_data;
     page &= PAGE_MASK;
     tmp = bh;
     do
@@ -969,8 +970,7 @@ static int try_to_free(struct buffer_head *bh, struct buffer_head **bhp)
         if (tmp->b_count || tmp->b_dirt || tmp->b_lock || tmp->b_wait)
             return 0;
         tmp = tmp->b_this_page;
-    }
-    while (tmp != bh);
+    } while (tmp != bh);
     tmp = bh;
     do
     {
@@ -981,8 +981,7 @@ static int try_to_free(struct buffer_head *bh, struct buffer_head **bhp)
             *bhp = p->b_prev_free;
         remove_from_queues(p);
         put_unused_buffer_head(p);
-    }
-    while (tmp != bh);
+    } while (tmp != bh);
     buffermem -= PAGE_SIZE;
     free_page(page);
     return !mem_map[MAP_NR(page)];
@@ -1004,11 +1003,11 @@ int shrink_buffers(unsigned int priority)
         sync_buffers(0, 0);
     bh = free_list;
     i = nr_buffers >> priority;
-    for ( ; i-- > 0 ; bh = bh->b_next_free)
+    for (; i-- > 0; bh = bh->b_next_free)
     {
         if (bh->b_count ||
-                (priority >= 5 &&
-                 mem_map[MAP_NR((unsigned long) bh->b_data)] > 1))
+            (priority >= 5 &&
+             mem_map[MAP_NR((unsigned long)bh->b_data)] > 1))
         {
             put_last_free(bh);
             continue;
@@ -1052,8 +1051,7 @@ void show_buffers(void)
         if (bh->b_count)
             used++, lastused = found;
         bh = bh->b_next_free;
-    }
-    while (bh != free_list);
+    } while (bh != free_list);
     printk("Buffer mem: %d buffers, %d used (last=%d), %d locked, %d dirty\n",
            found, used, lastused, locked, dirty);
 }
@@ -1073,7 +1071,7 @@ void buffer_init(void)
         min_free_pages = 200;
     else
         min_free_pages = 20;
-    for (i = 0 ; i < NR_HASH ; i++)
+    for (i = 0; i < NR_HASH; i++)
         hash_table[i] = NULL;
     free_list = 0;
     grow_buffers(GFP_KERNEL, BLOCK_SIZE);

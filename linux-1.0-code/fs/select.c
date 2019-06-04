@@ -18,7 +18,7 @@
 #include "asm/segment.h"
 #include "asm/system.h"
 
-#define ROUND_UP(x,y) (((x)+(y)-1)/(y))
+#define ROUND_UP(x, y) (((x) + (y)-1) / (y))
 
 /*
  * Ok, Peter made a complicated, but straightforward multiple_wait() function.
@@ -65,12 +65,11 @@ static int check(int flag, select_table *wait, struct file *file)
 {
     struct inode *inode;
     struct file_operations *fops;
-    int (*select) (struct inode *, struct file *, int, select_table *);
+    int (*select)(struct inode *, struct file *, int, select_table *);
 
     inode = file->f_inode;
     if ((fops = file->f_op) && (select = fops->select))
-        return select(inode, file, flag, wait)
-               || (wait && select(inode, file, flag, NULL));
+        return select(inode, file, flag, wait) || (wait && select(inode, file, flag, NULL));
     if (S_ISREG(inode->i_mode))
         return 1;
     return 0;
@@ -86,13 +85,13 @@ int do_select(int n, fd_set *in, fd_set *out, fd_set *ex,
     int i, j;
     int max = -1;
 
-    for (j = 0 ; j < __FDSET_LONGS ; j++)
+    for (j = 0; j < __FDSET_LONGS; j++)
     {
         i = j << 5;
         if (i >= n)
             break;
         set = in->fds_bits[j] | out->fds_bits[j] | ex->fds_bits[j];
-        for ( ; set ; i++, set >>= 1)
+        for (; set; i++, set >>= 1)
         {
             if (i >= n)
                 goto end_check;
@@ -107,7 +106,7 @@ int do_select(int n, fd_set *in, fd_set *out, fd_set *ex,
     }
 end_check:
     n = max + 1;
-    if(!(entry = (struct select_table_entry *) __get_free_page(GFP_KERNEL)))
+    if (!(entry = (struct select_table_entry *)__get_free_page(GFP_KERNEL)))
         return -ENOMEM;
     FD_ZERO(res_in);
     FD_ZERO(res_out);
@@ -118,7 +117,7 @@ end_check:
     wait = &wait_table;
 repeat:
     current->state = TASK_INTERRUPTIBLE;
-    for (i = 0 ; i < n ; i++)
+    for (i = 0; i < n; i++)
     {
         if (FD_ISSET(i, in) && check(SEL_IN, wait, current->filp[i]))
         {
@@ -146,7 +145,7 @@ repeat:
         goto repeat;
     }
     free_wait(&wait_table);
-    free_page((unsigned long) entry);
+    free_page((unsigned long)entry);
     current->state = TASK_RUNNING;
     return count;
 }
@@ -188,11 +187,11 @@ static void __set_fd_set(int nr, unsigned long *fs_pointer, unsigned long *fdset
     }
 }
 
-#define get_fd_set(nr,fsp,fdp) \
-__get_fd_set(nr, (unsigned long *) (fsp), (unsigned long *) (fdp))
+#define get_fd_set(nr, fsp, fdp) \
+    __get_fd_set(nr, (unsigned long *)(fsp), (unsigned long *)(fdp))
 
-#define set_fd_set(nr,fsp,fdp) \
-__set_fd_set(nr, (unsigned long *) (fsp), (unsigned long *) (fdp))
+#define set_fd_set(nr, fsp, fdp) \
+    __set_fd_set(nr, (unsigned long *)(fsp), (unsigned long *)(fdp))
 
 /*
  * We can actually return ERESTARTSYS insetad of EINTR, but I'd
@@ -202,7 +201,7 @@ __set_fd_set(nr, (unsigned long *) (fsp), (unsigned long *) (fdp))
  * Update: ERESTARTSYS breaks at least the xview clock binary, so
  * I'm trying ERESTARTNOHAND which restart only when you want to.
  */
-asmlinkage int sys_select( unsigned long *buffer )
+asmlinkage int sys_select(unsigned long *buffer)
 {
     /* Perform the select(nd, in, out, ex, tv) system call. */
     int i;
@@ -221,13 +220,14 @@ asmlinkage int sys_select( unsigned long *buffer )
         return -EINVAL;
     if (n > NR_OPEN)
         n = NR_OPEN;
-    inp = (fd_set *) get_fs_long(buffer++);
-    outp = (fd_set *) get_fs_long(buffer++);
-    exp = (fd_set *) get_fs_long(buffer++);
-    tvp = (struct timeval *) get_fs_long(buffer);
+    inp = (fd_set *)get_fs_long(buffer++);
+    outp = (fd_set *)get_fs_long(buffer++);
+    exp = (fd_set *)get_fs_long(buffer++);
+    tvp = (struct timeval *)get_fs_long(buffer);
     if ((i = get_fd_set(n, inp, &in)) ||
-            (i = get_fd_set(n, outp, &out)) ||
-            (i = get_fd_set(n, exp, &ex))) return i;
+        (i = get_fd_set(n, outp, &out)) ||
+        (i = get_fd_set(n, exp, &ex)))
+        return i;
     timeout = ~0UL;
     if (tvp)
     {
@@ -248,10 +248,10 @@ asmlinkage int sys_select( unsigned long *buffer )
     current->timeout = 0;
     if (tvp)
     {
-        put_fs_long(timeout / HZ, (unsigned long *) &tvp->tv_sec);
+        put_fs_long(timeout / HZ, (unsigned long *)&tvp->tv_sec);
         timeout %= HZ;
         timeout *= (1000000 / HZ);
-        put_fs_long(timeout, (unsigned long *) &tvp->tv_usec);
+        put_fs_long(timeout, (unsigned long *)&tvp->tv_usec);
     }
     if (i < 0)
         return i;

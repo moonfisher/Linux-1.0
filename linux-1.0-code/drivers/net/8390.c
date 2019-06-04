@@ -90,8 +90,8 @@ int ei_debug = 1;
 static int high_water_mark = 0;
 
 /* Index to functions. */
-int ei_open(struct device *dev);	/* Put into the device structure. */
-void ei_interrupt(int reg_ptr);		/* Installed as the interrupt handler. */
+int ei_open(struct device *dev); /* Put into the device structure. */
+void ei_interrupt(int reg_ptr);  /* Installed as the interrupt handler. */
 
 static void ei_tx_intr(struct device *dev);
 static void ei_receive(struct device *dev);
@@ -105,17 +105,22 @@ static void NS8390_trigger_send(struct device *dev, unsigned int length,
 static void set_multicast_list(struct device *dev, int num_addrs, void *addrs);
 #endif
 
-struct sigaction ei_sigaction = { ei_interrupt, 0, 0, NULL, };
-
+struct sigaction ei_sigaction = {
+    ei_interrupt,
+    0,
+    0,
+    NULL,
+};
+
 /* Open/initialize the board.  This routine goes all-out, setting everything
    up anew at each open, even though many of these registers should only
    need to be set once at boot.
    */
 int ei_open(struct device *dev)
 {
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
 
-    if ( ! ei_local)
+    if (!ei_local)
     {
         printk("%s: Opening a non-existent physical device\n", dev->name);
         return ENXIO;
@@ -131,7 +136,7 @@ int ei_open(struct device *dev)
 static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
 {
     int e8390_base = dev->base_addr;
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
     int length, send_length;
 
     /* We normally shouldn't be called if dev->tbusy is set, but the
@@ -139,11 +144,11 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
        If it has been too long (> 100 or 150ms.) since the last Tx we assume
        the board has died and kick it. */
 
-    if (dev->tbusy)  	/* Do timeouts, just like the 8003 driver. */
+    if (dev->tbusy) /* Do timeouts, just like the 8003 driver. */
     {
         int txsr = inb(e8390_base + EN0_TSR), isr;
         int tickssofar = jiffies - dev->trans_start;
-        if (tickssofar < 10	||	(tickssofar < 15 && ! (txsr & ENTSR_PTX)))
+        if (tickssofar < 10 || (tickssofar < 15 && !(txsr & ENTSR_PTX)))
         {
             return 1;
         }
@@ -157,7 +162,7 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
         {
             /* The 8390 probably hasn't gotten on the cable yet. */
             printk("%s: Possible network cable problem?\n", dev->name);
-            ei_local->interface_num ^= 1; 	/* Try a different xcvr.  */
+            ei_local->interface_num ^= 1; /* Try a different xcvr.  */
         }
         /* Try to restart the card.  Perhaps the user has fixed something. */
         ei_reset_8390(dev);
@@ -174,10 +179,10 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
         return 0;
     }
     /* Fill in the ethernet header. */
-    if (!skb->arp  &&  dev->rebuild_header(skb->data, dev))
+    if (!skb->arp && dev->rebuild_header(skb->data, dev))
     {
         skb->dev = dev;
-        arp_queue (skb);
+        arp_queue(skb);
         return 0;
     }
     skb->arp = 1;
@@ -194,7 +199,7 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
     }
 
     /* Mask interrupts from the ethercard. */
-    outb(0x00,	e8390_base + EN0_IMR);
+    outb(0x00, e8390_base + EN0_IMR);
     ei_local->irqlock = 1;
 
     send_length = ETH_ZLEN < length ? length : ETH_ZLEN;
@@ -206,7 +211,7 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
         {
             output_page = ei_local->tx_start_page;
             ei_local->tx1 = send_length;
-            if (ei_debug  &&  ei_local->tx2 > 0)
+            if (ei_debug && ei_local->tx2 > 0)
                 printk("%s: idle transmitter tx2=%d, lasttx=%d, txing=%d.\n",
                        dev->name, ei_local->tx2, ei_local->lasttx,
                        ei_local->txing);
@@ -215,23 +220,23 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
         {
             output_page = ei_local->tx_start_page + 6;
             ei_local->tx2 = send_length;
-            if (ei_debug  &&  ei_local->tx1 > 0)
+            if (ei_debug && ei_local->tx1 > 0)
                 printk("%s: idle transmitter, tx1=%d, lasttx=%d, txing=%d.\n",
                        dev->name, ei_local->tx1, ei_local->lasttx,
                        ei_local->txing);
         }
-        else  	/* We should never get here. */
+        else /* We should never get here. */
         {
             if (ei_debug)
                 printk("%s: No packet buffer space for ping-pong use.\n",
                        dev->name);
             ei_local->irqlock = 0;
             dev->tbusy = 1;
-            outb_p(ENISR_ALL,  e8390_base + EN0_IMR);
+            outb_p(ENISR_ALL, e8390_base + EN0_IMR);
             return 1;
         }
         ei_block_output(dev, length, skb->data, output_page);
-        if (! ei_local->txing)
+        if (!ei_local->txing)
         {
             NS8390_trigger_send(dev, send_length, output_page);
             dev->trans_start = jiffies;
@@ -244,9 +249,9 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
         else
             ei_local->txqueue++;
 
-        dev->tbusy = (ei_local->tx1  &&  ei_local->tx2);
+        dev->tbusy = (ei_local->tx1 && ei_local->tx2);
     }
-    else      /* No pingpong, just a single Tx buffer. */
+    else /* No pingpong, just a single Tx buffer. */
     {
         ei_block_output(dev, length, skb->data, ei_local->tx_start_page);
         NS8390_trigger_send(dev, send_length, ei_local->tx_start_page);
@@ -259,11 +264,11 @@ static int ei_start_xmit(struct sk_buff *skb, struct device *dev)
     outb_p(ENISR_ALL, e8390_base + EN0_IMR);
 
     if (skb->free)
-        kfree_skb (skb, FREE_WRITE);
+        kfree_skb(skb, FREE_WRITE);
 
     return 0;
 }
-
+
 /* The typical workload of the driver:
    Handle the ether interface interrupts. */
 void ei_interrupt(int reg_ptr)
@@ -276,18 +281,18 @@ void ei_interrupt(int reg_ptr)
 
     if (dev == NULL)
     {
-        printk ("net_interrupt(): irq %d for unknown device.\n", irq);
+        printk("net_interrupt(): irq %d for unknown device.\n", irq);
         return;
     }
     e8390_base = dev->base_addr;
-    ei_local = (struct ei_device *) dev->priv;
+    ei_local = (struct ei_device *)dev->priv;
     if (dev->interrupt || ei_local->irqlock)
     {
         /* The "irqlock" check is only for testing. */
         sti();
         printk(ei_local->irqlock
-               ? "%s: Interrupted while interrupts are masked! isr=%#2x imr=%#2x.\n"
-               : "%s: Reentering the interrupt handler! isr=%#2x imr=%#2x.\n",
+                   ? "%s: Interrupted while interrupts are masked! isr=%#2x imr=%#2x.\n"
+                   : "%s: Reentering the interrupt handler! isr=%#2x imr=%#2x.\n",
                dev->name, inb_p(e8390_base + EN0_ISR),
                inb_p(e8390_base + EN0_IMR));
         return;
@@ -303,8 +308,7 @@ void ei_interrupt(int reg_ptr)
                inb_p(e8390_base + EN0_ISR));
 
     /* !!Assumption!! -- we stay in page 0.	 Don't break this. */
-    while ((interrupts = inb_p(e8390_base + EN0_ISR)) != 0
-            && ++boguscount < 5)
+    while ((interrupts = inb_p(e8390_base + EN0_ISR)) != 0 && ++boguscount < 5)
     {
         if (interrupts & ENISR_RDC)
         {
@@ -327,9 +331,9 @@ void ei_interrupt(int reg_ptr)
         }
         else if (interrupts & ENISR_COUNTERS)
         {
-            struct ei_device *ei_local = (struct ei_device *) dev->priv;
+            struct ei_device *ei_local = (struct ei_device *)dev->priv;
             ei_local->stat.rx_frame_errors += inb_p(e8390_base + EN0_COUNTER0);
-            ei_local->stat.rx_crc_errors   += inb_p(e8390_base + EN0_COUNTER1);
+            ei_local->stat.rx_crc_errors += inb_p(e8390_base + EN0_COUNTER1);
             ei_local->stat.rx_missed_errors += inb_p(e8390_base + EN0_COUNTER2);
             outb_p(ENISR_COUNTERS, e8390_base + EN0_ISR); /* Ack intr. */
         }
@@ -358,7 +362,7 @@ static void ei_tx_intr(struct device *dev)
 {
     int e8390_base = dev->base_addr;
     int status = inb(e8390_base + EN0_TSR);
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
 
     outb_p(ENISR_TX, e8390_base + EN0_ISR); /* Ack intr. */
 
@@ -378,14 +382,14 @@ static void ei_tx_intr(struct device *dev)
                 dev->trans_start = jiffies;
                 ei_local->txing = 1;
                 ei_local->tx2 = -1,
-                          ei_local->lasttx = 2;
+                ei_local->lasttx = 2;
             }
             else
                 ei_local->lasttx = 20, ei_local->txing = 0;
         }
         else if (ei_local->tx2 < 0)
         {
-            if (ei_local->lasttx != 2  &&  ei_local->lasttx != -2)
+            if (ei_local->lasttx != 2 && ei_local->lasttx != -2)
                 printk("%s: bogus last_tx_buffer %d, tx2=%d.\n",
                        ei_local->name, ei_local->lasttx, ei_local->tx2);
             ei_local->tx2 = 0;
@@ -412,20 +416,26 @@ static void ei_tx_intr(struct device *dev)
     }
 
     /* Minimize Tx latency: update the statistics after we restart TXing. */
-    if (status & ENTSR_COL) ei_local->stat.collisions++;
+    if (status & ENTSR_COL)
+        ei_local->stat.collisions++;
     if (status & ENTSR_PTX)
         ei_local->stat.tx_packets++;
     else
     {
         ei_local->stat.tx_errors++;
-        if (status & ENTSR_ABT) ei_local->stat.tx_aborted_errors++;
-        if (status & ENTSR_CRS) ei_local->stat.tx_carrier_errors++;
-        if (status & ENTSR_FU)  ei_local->stat.tx_fifo_errors++;
-        if (status & ENTSR_CDH) ei_local->stat.tx_heartbeat_errors++;
-        if (status & ENTSR_OWC) ei_local->stat.tx_window_errors++;
+        if (status & ENTSR_ABT)
+            ei_local->stat.tx_aborted_errors++;
+        if (status & ENTSR_CRS)
+            ei_local->stat.tx_carrier_errors++;
+        if (status & ENTSR_FU)
+            ei_local->stat.tx_fifo_errors++;
+        if (status & ENTSR_CDH)
+            ei_local->stat.tx_heartbeat_errors++;
+        if (status & ENTSR_OWC)
+            ei_local->stat.tx_window_errors++;
     }
 
-    mark_bh (INET_BH);
+    mark_bh(INET_BH);
 }
 
 /* We have a good packet(s), get it/them out of the buffers. */
@@ -433,7 +443,7 @@ static void ei_tx_intr(struct device *dev)
 static void ei_receive(struct device *dev)
 {
     int e8390_base = dev->base_addr;
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
     int rxing_page, this_frame, next_frame, current_offset;
     int rx_pkt_count = 0;
     struct e8390_pkt_hdr rx_frame;
@@ -455,12 +465,12 @@ static void ei_receive(struct device *dev)
 
         /* Someday we'll omit the previous, iff we never get this message.
            (There is at least one clone claimed to have a problem.)  */
-        if (ei_debug > 0  &&  this_frame != ei_local->current_page)
+        if (ei_debug > 0 && this_frame != ei_local->current_page)
             printk("%s: mismatched read page pointers %2x vs %2x.\n",
                    dev->name, this_frame, ei_local->current_page);
 
-        if (this_frame == rxing_page)	/* Read all the frames? */
-            break;				/* Done for now */
+        if (this_frame == rxing_page) /* Read all the frames? */
+            break;                    /* Done for now */
 
         current_offset = this_frame << 8;
         ei_block_input(dev, sizeof(rx_frame), (char *)&rx_frame,
@@ -473,10 +483,7 @@ static void ei_receive(struct device *dev)
         /* Check for bogosity warned by 3c503 book: the status byte is never
            written.  This happened a lot during testing! This code should be
            cleaned up someday. */
-        if (rx_frame.next != next_frame
-                && rx_frame.next != next_frame + 1
-                && rx_frame.next != next_frame - num_rx_pages
-                && rx_frame.next != next_frame + 1 - num_rx_pages)
+        if (rx_frame.next != next_frame && rx_frame.next != next_frame + 1 && rx_frame.next != next_frame - num_rx_pages && rx_frame.next != next_frame + 1 - num_rx_pages)
         {
             ei_local->current_page = rxing_page;
             outb(ei_local->current_page - 1, e8390_base + EN0_BOUNDARY);
@@ -484,7 +491,7 @@ static void ei_receive(struct device *dev)
             continue;
         }
 
-        if (pkt_len < 60  ||  pkt_len > 1518)
+        if (pkt_len < 60 || pkt_len > 1518)
         {
             if (ei_debug)
                 printk("%s: bogus packet size: %d, status=%#2x nxpg=%#2x.\n",
@@ -513,7 +520,7 @@ static void ei_receive(struct device *dev)
                 skb->len = pkt_len;
                 skb->dev = dev;
 
-                ei_block_input(dev, pkt_len, (char *) skb->data,
+                ei_block_input(dev, pkt_len, (char *)skb->data,
                                current_offset + sizeof(rx_frame));
                 netif_rx(skb);
                 ei_local->stat.rx_packets++;
@@ -560,7 +567,7 @@ static void ei_rx_overrun(struct device *dev)
 {
     int e8390_base = dev->base_addr;
     int reset_start_time = jiffies;
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
 
     /* We should already be stopped and in page0.  Remove after testing. */
     outb_p(E8390_NODMA + E8390_PAGE0 + E8390_STOP, e8390_base + E8390_CMD);
@@ -597,11 +604,11 @@ static void ei_rx_overrun(struct device *dev)
 static struct enet_statistics *get_stats(struct device *dev)
 {
     short ioaddr = dev->base_addr;
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
 
     /* Read the counter registers, assuming we are in page 0. */
     ei_local->stat.rx_frame_errors += inb_p(ioaddr + EN0_COUNTER0);
-    ei_local->stat.rx_crc_errors   += inb_p(ioaddr + EN0_COUNTER1);
+    ei_local->stat.rx_crc_errors += inb_p(ioaddr + EN0_COUNTER1);
     ei_local->stat.rx_missed_errors += inb_p(ioaddr + EN0_COUNTER2);
 
     return &ei_local->stat;
@@ -656,7 +663,7 @@ int ethdev_init(struct device *dev)
         dev->open = &ei_open;
     /* We should have a dev->stop entry also. */
     dev->hard_start_xmit = &ei_start_xmit;
-    dev->get_stats	= get_stats;
+    dev->get_stats = get_stats;
 #ifdef HAVE_MULTICAST
     dev->set_multicast_list = &set_multicast_list;
 #endif
@@ -664,76 +671,75 @@ int ethdev_init(struct device *dev)
     for (i = 0; i < DEV_NUMBUFFS; i++)
         dev->buffs[i] = NULL;
 
-    dev->hard_header	= eth_header;
-    dev->add_arp		= eth_add_arp;
-    dev->queue_xmit		= dev_queue_xmit;
-    dev->rebuild_header	= eth_rebuild_header;
-    dev->type_trans		= eth_type_trans;
+    dev->hard_header = eth_header;
+    dev->add_arp = eth_add_arp;
+    dev->queue_xmit = dev_queue_xmit;
+    dev->rebuild_header = eth_rebuild_header;
+    dev->type_trans = eth_type_trans;
 
-    dev->type		= ARPHRD_ETHER;
+    dev->type = ARPHRD_ETHER;
     dev->hard_header_len = ETH_HLEN;
-    dev->mtu		= 1500; /* eth_mtu */
-    dev->addr_len	= ETH_ALEN;
+    dev->mtu = 1500; /* eth_mtu */
+    dev->addr_len = ETH_ALEN;
     for (i = 0; i < ETH_ALEN; i++)
     {
         dev->broadcast[i] = 0xff;
     }
 
     /* New-style flags. */
-    dev->flags		= IFF_BROADCAST;
-    dev->family		= AF_INET;
-    dev->pa_addr	= 0;
-    dev->pa_brdaddr	= 0;
-    dev->pa_mask	= 0;
-    dev->pa_alen	= sizeof(unsigned long);
+    dev->flags = IFF_BROADCAST;
+    dev->family = AF_INET;
+    dev->pa_addr = 0;
+    dev->pa_brdaddr = 0;
+    dev->pa_mask = 0;
+    dev->pa_alen = sizeof(unsigned long);
 
     return 0;
 }
-
 
 /* This page of functions should be 8390 generic */
 /* Follow National Semi's recommendations for initializing the "NIC". */
 void NS8390_init(struct device *dev, int startp)
 {
     int e8390_base = dev->base_addr;
-    struct ei_device *ei_local = (struct ei_device *) dev->priv;
+    struct ei_device *ei_local = (struct ei_device *)dev->priv;
     int i;
     int endcfg = ei_local->word16 ? (0x48 | ENDCFG_WTS) : 0x48;
 
     /* Follow National Semi's recommendations for initing the DP83902. */
     outb_p(E8390_NODMA + E8390_PAGE0 + E8390_STOP, e8390_base); /* 0x21 */
-    outb_p(endcfg, e8390_base + EN0_DCFG);	/* 0x48 or 0x49 */
+    outb_p(endcfg, e8390_base + EN0_DCFG);                      /* 0x48 or 0x49 */
     /* Clear the remote byte count registers. */
-    outb_p(0x00,  e8390_base + EN0_RCNTLO);
-    outb_p(0x00,  e8390_base + EN0_RCNTHI);
+    outb_p(0x00, e8390_base + EN0_RCNTLO);
+    outb_p(0x00, e8390_base + EN0_RCNTHI);
     /* Set to monitor and loopback mode -- this is vital!. */
     outb_p(E8390_RXOFF, e8390_base + EN0_RXCR); /* 0x20 */
     outb_p(E8390_TXOFF, e8390_base + EN0_TXCR); /* 0x02 */
     /* Set the transmit page and receive ring. */
-    outb_p(ei_local->tx_start_page,	 e8390_base + EN0_TPSR);
+    outb_p(ei_local->tx_start_page, e8390_base + EN0_TPSR);
     ei_local->tx1 = ei_local->tx2 = 0;
-    outb_p(ei_local->rx_start_page,	 e8390_base + EN0_STARTPG);
+    outb_p(ei_local->rx_start_page, e8390_base + EN0_STARTPG);
     outb_p(ei_local->stop_page - 1, e8390_base + EN0_BOUNDARY); /* 3c503 says 0x3f,NS0x26*/
-    ei_local->current_page = ei_local->rx_start_page;		/* assert boundary+1 */
-    outb_p(ei_local->stop_page,	  e8390_base + EN0_STOPPG);
+    ei_local->current_page = ei_local->rx_start_page;           /* assert boundary+1 */
+    outb_p(ei_local->stop_page, e8390_base + EN0_STOPPG);
     /* Clear the pending interrupts and mask. */
     outb_p(0xFF, e8390_base + EN0_ISR);
-    outb_p(0x00,  e8390_base + EN0_IMR);
+    outb_p(0x00, e8390_base + EN0_IMR);
 
     /* Copy the station address into the DS8390 registers,
        and set the multicast hash bitmap to receive all multicasts. */
     cli();
     outb_p(E8390_NODMA + E8390_PAGE1 + E8390_STOP, e8390_base); /* 0x61 */
-    for(i = 0; i < 6; i++)
+    for (i = 0; i < 6; i++)
     {
         outb_p(dev->dev_addr[i], e8390_base + EN1_PHYS + i);
     }
     /* Initialize the multicast list to accept-all.  If we enable multicast
        the higher levels can do the filtering. */
-    for(i = 0; i < 8; i++)
+    for (i = 0; i < 8; i++)
         outb_p(0xff, e8390_base + EN1_MULT + i);
 
-    outb_p(ei_local->rx_start_page,	 e8390_base + EN1_CURPAG);
+    outb_p(ei_local->rx_start_page, e8390_base + EN1_CURPAG);
     outb_p(E8390_NODMA + E8390_PAGE0 + E8390_STOP, e8390_base);
     sti();
     dev->tbusy = 0;
@@ -742,12 +748,12 @@ void NS8390_init(struct device *dev, int startp)
     ei_local->txing = 0;
     if (startp)
     {
-        outb_p(0xff,  e8390_base + EN0_ISR);
-        outb_p(ENISR_ALL,  e8390_base + EN0_IMR);
+        outb_p(0xff, e8390_base + EN0_ISR);
+        outb_p(ENISR_ALL, e8390_base + EN0_IMR);
         outb_p(E8390_NODMA + E8390_PAGE0 + E8390_START, e8390_base);
         outb_p(E8390_TXCONFIG, e8390_base + EN0_TXCR); /* xmit on. */
         /* 3c503 TechMan says rxconfig only after the NIC is started. */
-        outb_p(E8390_RXCONFIG,	e8390_base + EN0_RXCR); /* rx on,  */
+        outb_p(E8390_RXCONFIG, e8390_base + EN0_RXCR); /* rx on,  */
     }
     return;
 }
@@ -774,7 +780,6 @@ static void NS8390_trigger_send(struct device *dev, unsigned int length,
     return;
 }
 
-
 /*
  * Local variables:
  *  compile-command: "gcc -D__KERNEL__ -I/usr/src/linux/net/inet -Wall -Wstrict-prototypes -O6 -m486 -c 8390.c"

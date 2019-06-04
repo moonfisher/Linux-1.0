@@ -43,7 +43,6 @@ static void el2_block_output(struct device *dev, int count,
 static int el2_block_input(struct device *dev, int count, char *buf,
                            int ring_offset);
 
-
 /* This routine probes for a memory-mapped 3c503 board by looking for
    the "location register" at the end of the jumpered boot PROM space.
    This works even if a PROM isn't there.
@@ -54,23 +53,22 @@ static int el2_block_input(struct device *dev, int count, char *buf,
 
 static int ports[] = {0x300, 0x310, 0x330, 0x350, 0x250, 0x280, 0x2a0, 0x2e0, 0};
 
-int
-el2_probe(struct device *dev)
+int el2_probe(struct device *dev)
 {
-    int *addr, addrs[] = { 0xddffe, 0xd9ffe, 0xcdffe, 0xc9ffe, 0};
+    int *addr, addrs[] = {0xddffe, 0xd9ffe, 0xcdffe, 0xc9ffe, 0};
     short ioaddr = dev->base_addr;
 
     if (ioaddr < 0)
-        return ENXIO;		/* Don't probe at all. */
+        return ENXIO; /* Don't probe at all. */
     if (ioaddr > 0)
-        return ! el2probe1(ioaddr, dev);
+        return !el2probe1(ioaddr, dev);
 
     for (addr = addrs; *addr; addr++)
     {
         int i;
         unsigned int base_bits = *(unsigned char *)*addr;
         /* Find first set bit. */
-        for(i = 7; i >= 0; i--, base_bits >>= 1)
+        for (i = 7; i >= 0; i--, base_bits >>= 1)
             if (base_bits & 0x1)
                 break;
         if (base_bits != 1)
@@ -91,8 +89,7 @@ el2_probe(struct device *dev)
 
 /*  Try all of the locations that aren't obviously empty.  This touches
     a lot of locations, and is much riskier than the code above. */
-int
-el2_pio_autoprobe(struct device *dev)
+int el2_pio_autoprobe(struct device *dev)
 {
     int i;
     for (i = 0; i < 8; i++)
@@ -105,7 +102,7 @@ el2_pio_autoprobe(struct device *dev)
         if (inb_p(ports[i] + 0x408) == 0xff)
             continue;
         if (inb(ports[i] + 0x403) == (0x80 >> i) /* Preliminary check */
-                && el2probe1(ports[i], dev))
+            && el2probe1(ports[i], dev))
             return 0;
     }
     return ENODEV;
@@ -114,8 +111,7 @@ el2_pio_autoprobe(struct device *dev)
 /* Probe for the Etherlink II card at I/O port base IOADDR,
    returning non-zero on sucess.  If found, set the station
    address and memory parameters in DEVICE. */
-int
-el2probe1(int ioaddr, struct device *dev)
+int el2probe1(int ioaddr, struct device *dev)
 {
     int i, iobase_reg, membase_reg, saved_406;
     unsigned char *station_addr = dev->dev_addr;
@@ -126,8 +122,7 @@ el2probe1(int ioaddr, struct device *dev)
     iobase_reg = inb(ioaddr + 0x403);
     membase_reg = inb(ioaddr + 0x404);
     /* Verify ASIC register that should be 0 or have a single bit set. */
-    if (   (iobase_reg  & (iobase_reg - 1))
-            || (membase_reg & (membase_reg - 1)))
+    if ((iobase_reg & (iobase_reg - 1)) || (membase_reg & (membase_reg - 1)))
     {
         printk("  not found.\n");
         return 0;
@@ -141,9 +136,7 @@ el2probe1(int ioaddr, struct device *dev)
     {
         printk(" %2.2X", (station_addr[i] = inb(ioaddr + i)));
     }
-    if ( station_addr[0] != 0x02
-            || station_addr[1] != 0x60
-            || station_addr[2] != 0x8c)
+    if (station_addr[0] != 0x02 || station_addr[1] != 0x60 || station_addr[2] != 0x8c)
     {
         printk("  3C503 not found.\n");
         /* Restore the register we frobbed. */
@@ -160,8 +153,9 @@ el2probe1(int ioaddr, struct device *dev)
     outb(ECNTRL_THIN, ioaddr + 0x406);
     dev->base_addr = ioaddr;
     /* Probe for, turn on and clear the board's shared memory. */
-    if (ei_debug > 2) printk(" memory jumpers %2.2x ", membase_reg);
-    outb(EGACFR_NORM, ioaddr + 0x405);	/* Enable RAM */
+    if (ei_debug > 2)
+        printk(" memory jumpers %2.2x ", membase_reg);
+    outb(EGACFR_NORM, ioaddr + 0x405); /* Enable RAM */
 
     /* This should be probed for (or set via an ioctl()) at run-time.
        Right now we use a sleazy hack to pass in the interface number
@@ -182,7 +176,7 @@ el2probe1(int ioaddr, struct device *dev)
         dev->mem_start = ((membase_reg & 0xc0) ? 0xD8000 : 0xC8000) +
                          ((membase_reg & 0xA0) ? 0x4000 : 0);
 
-#define EL2_MEMSIZE (EL2SM_STOP_PG - EL2SM_START_PG)*256
+#define EL2_MEMSIZE (EL2SM_STOP_PG - EL2SM_START_PG) * 256
 #ifdef EL2MEMTEST
         /* This has never found an error, but someone might care. */
         {
@@ -193,8 +187,7 @@ el2probe1(int ioaddr, struct device *dev)
             for (i = 1; i < EL2_MEMSIZE / sizeof(mem_base[0]); i++)
             {
                 mem_base[i] = memtest_value;
-                if (mem_base[0] != 0xba5eba5e
-                        || mem_base[i] != memtest_value)
+                if (mem_base[0] != 0xba5eba5e || mem_base[i] != memtest_value)
                 {
                     printk(" memory failure or memory address conflict.\n");
                     dev->mem_start = 0;
@@ -204,7 +197,7 @@ el2probe1(int ioaddr, struct device *dev)
                 mem_base[i] = 0;
             }
         }
-#endif  /* EL2MEMTEST */
+#endif /* EL2MEMTEST */
         /* Divide the on-board memory into a single maximum-sized transmit
            (double-sized for ping-pong transmit) buffer at the base, and
            use the rest as a receive ring. */
@@ -247,7 +240,7 @@ el2probe1(int ioaddr, struct device *dev)
 
     return ioaddr;
 }
-
+
 static int
 el2_open(struct device *dev)
 {
@@ -257,24 +250,23 @@ el2_open(struct device *dev)
         int irqlist[] = {5, 9, 3, 4, 0};
         int *irqp = irqlist;
 
-        outb(EGACFR_NORM, E33G_GACFR);	/* Enable RAM and interrupts. */
+        outb(EGACFR_NORM, E33G_GACFR); /* Enable RAM and interrupts. */
         do
         {
-            if (request_irq (*irqp, NULL) != -EBUSY)
+            if (request_irq(*irqp, NULL) != -EBUSY)
             {
                 /* Twinkle the interrupt, and check if it's seen. */
                 autoirq_setup(0);
                 outb_p(0x04 << ((*irqp == 9) ? 2 : *irqp), E33G_IDCFR);
                 outb_p(0x00, E33G_IDCFR);
-                if (*irqp == autoirq_report(0)	 /* It's a good IRQ line! */
-                        && request_irq (dev->irq = *irqp, &ei_interrupt) == 0)
+                if (*irqp == autoirq_report(0) /* It's a good IRQ line! */
+                    && request_irq(dev->irq = *irqp, &ei_interrupt) == 0)
                     break;
             }
-        }
-        while (*++irqp);
+        } while (*++irqp);
         if (*irqp == 0)
         {
-            outb(EGACFR_IRQOFF, E33G_GACFR);	/* disable interrupts. */
+            outb(EGACFR_IRQOFF, E33G_GACFR); /* disable interrupts. */
             return -EAGAIN;
         }
     }
@@ -295,7 +287,7 @@ el2_close(struct device *dev)
     free_irq(dev->irq);
     dev->irq = ei_status.saved_irq;
     irq2dev_map[dev->irq] = NULL;
-    outb(EGACFR_IRQOFF, E33G_GACFR);	/* disable interrupts. */
+    outb(EGACFR_IRQOFF, E33G_GACFR); /* disable interrupts. */
 
     NS8390_init(dev, 0);
 
@@ -319,7 +311,8 @@ el2_reset_8390(struct device *dev)
     ei_status.txing = 0;
     outb_p(ei_status.interface_num == 0 ? ECNTRL_THIN : ECNTRL_AUI, E33G_CNTRL);
     el2_init_card(dev);
-    if (ei_debug > 1) printk("done\n");
+    if (ei_debug > 1)
+        printk("done\n");
 }
 
 /* Initialize the 3c503 GA registers after a reset. */
@@ -332,23 +325,23 @@ el2_init_card(struct device *dev)
     /* Set ASIC copy of rx's first and last+1 buffer pages */
     /* These must be the same as in the 8390. */
     outb(ei_status.rx_start_page, E33G_STARTPG);
-    outb(ei_status.stop_page,  E33G_STOPPG);
+    outb(ei_status.stop_page, E33G_STOPPG);
 
     /* Point the vector pointer registers somewhere ?harmless?. */
-    outb(0xff, E33G_VP2);	/* Point at the ROM restart location 0xffff0 */
+    outb(0xff, E33G_VP2); /* Point at the ROM restart location 0xffff0 */
     outb(0xff, E33G_VP1);
     outb(0x00, E33G_VP0);
     /* Turn off all interrupts until we're opened. */
-    outb_p(0x00,  dev->base_addr + EN0_IMR);
+    outb_p(0x00, dev->base_addr + EN0_IMR);
     /* Enable IRQs iff started. */
     outb(EGACFR_NORM, E33G_GACFR);
 
     /* Set the interrupt line. */
     outb_p((0x04 << (dev->irq == 9 ? 2 : dev->irq)), E33G_IDCFR);
-    outb_p(8, E33G_DRQCNT);		/* Set burst size to 8 */
-    outb_p(0x20, E33G_DMAAH);	/* Put a valid addr in the GA DMA */
+    outb_p(8, E33G_DRQCNT);   /* Set burst size to 8 */
+    outb_p(0x20, E33G_DMAAH); /* Put a valid addr in the GA DMA */
     outb_p(0x00, E33G_DMAAL);
-    return;			/* We always succeed */
+    return; /* We always succeed */
 }
 
 /* Either use the shared memory (if enabled on the board) or put the packet
@@ -357,33 +350,32 @@ static void
 el2_block_output(struct device *dev, int count,
                  const unsigned char *buf, const start_page)
 {
-    int i;				/* Buffer index */
-    int boguscount = 0;		/* timeout counter */
+    int i;              /* Buffer index */
+    int boguscount = 0; /* timeout counter */
 
     /* This should really be set with during an open(). */
-    outb(EGACFR_NORM, E33G_GACFR);	/* Enable RAM and interrupts. */
+    outb(EGACFR_NORM, E33G_GACFR); /* Enable RAM and interrupts. */
 
-    if (dev->mem_start)  	/* Shared memory transfer */
+    if (dev->mem_start) /* Shared memory transfer */
     {
         void *dest_addr = (void *)(dev->mem_start +
                                    ((start_page - ei_status.tx_start_page) << 8));
         memcpy(dest_addr, buf, count);
-        if (ei_debug > 2  &&  memcmp(dest_addr, buf, count))
+        if (ei_debug > 2 && memcmp(dest_addr, buf, count))
             printk("%s: 3c503 send_packet() bad memory copy @ %#5x.\n",
-                   dev->name, (int) dest_addr);
+                   dev->name, (int)dest_addr);
         return;
     }
     /* No shared memory, put the packet out the slow way. */
     /* Set up then start the internal memory transfer to Tx Start Page */
     outb(0x00, E33G_DMAAL);
     outb_p(start_page, E33G_DMAAH);
-    outb_p((ei_status.interface_num ? ECNTRL_AUI : ECNTRL_THIN ) | ECNTRL_OUTPUT
-           | ECNTRL_START, E33G_CNTRL);
+    outb_p((ei_status.interface_num ? ECNTRL_AUI : ECNTRL_THIN) | ECNTRL_OUTPUT | ECNTRL_START, E33G_CNTRL);
 
     /* This is the byte copy loop: it should probably be tuned for
        for speed once everything is working.  I think it is possible
        to output 8 bytes between each check of the status bit. */
-    for(i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
     {
         if (i % 8 == 0)
             while ((inb(E33G_STATUS) & ESTAT_DPRDY) == 0)
@@ -408,7 +400,7 @@ el2_block_input(struct device *dev, int count, char *buf, int ring_offset)
     unsigned int i;
 
     /* Maybe enable shared memory just be to be safe... nahh.*/
-    if (dev->mem_start)  	/* Use the shared memory. */
+    if (dev->mem_start) /* Use the shared memory. */
     {
         ring_offset -= (EL2SM_START_PG << 8);
         if (dev->mem_start + ring_offset + count > end_of_ring)
@@ -426,12 +418,11 @@ el2_block_input(struct device *dev, int count, char *buf, int ring_offset)
     /* No shared memory, use programmed I/O. */
     outb(ring_offset & 0xff, E33G_DMAAL);
     outb_p((ring_offset >> 8) & 0xff, E33G_DMAAH);
-    outb_p((ei_status.interface_num == 0 ? ECNTRL_THIN : ECNTRL_AUI) | ECNTRL_INPUT
-           | ECNTRL_START, E33G_CNTRL);
+    outb_p((ei_status.interface_num == 0 ? ECNTRL_THIN : ECNTRL_AUI) | ECNTRL_INPUT | ECNTRL_START, E33G_CNTRL);
 
     /* This is the byte copy loop: it should probably be tuned for
        for speed once everything is working. */
-    for(i = 0; i < count; i++)
+    for (i = 0; i < count; i++)
     {
         if (i % 8 == 0)
             while ((inb(E33G_STATUS) & ESTAT_DPRDY) == 0)
@@ -447,7 +438,7 @@ el2_block_input(struct device *dev, int count, char *buf, int ring_offset)
     outb_p(ei_status.interface_num == 0 ? ECNTRL_THIN : ECNTRL_AUI, E33G_CNTRL);
     return 0;
 }
-
+
 /*
  * Local variables:
  *  version-control: t

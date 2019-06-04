@@ -32,7 +32,7 @@ int getname(const char *filename, char **result)
     unsigned long i, page;
     char *tmp, c;
 
-    i = (unsigned long) filename;
+    i = (unsigned long)filename;
     if (!i || i >= TASK_SIZE)
         return -EFAULT;
     i = TASK_SIZE - i;
@@ -45,9 +45,9 @@ int getname(const char *filename, char **result)
     c = get_fs_byte(filename++);
     if (!c)
         return -ENOENT;
-    if(!(page = __get_free_page(GFP_KERNEL)))
+    if (!(page = __get_free_page(GFP_KERNEL)))
         return -ENOMEM;
-    *result = tmp = (char *) page;
+    *result = tmp = (char *)page;
     while (--i)
     {
         *(tmp++) = c;
@@ -64,7 +64,7 @@ int getname(const char *filename, char **result)
 
 void putname(char *name)
 {
-    free_page((unsigned long) name);
+    free_page((unsigned long)name);
 }
 
 /*
@@ -189,8 +189,8 @@ static int dir_namei(const char *pathname, int *namelen, const char **name,
     while (1)
     {
         thisname = pathname;
-        for(len = 0; (c = *(pathname++)) && (c != '/'); len++)
-            /* nothing */ ;
+        for (len = 0; (c = *(pathname++)) && (c != '/'); len++)
+            /* nothing */;
         if (!c)
             break;
         base->i_count++;
@@ -226,7 +226,7 @@ static int _namei(const char *pathname, struct inode *base,
     error = dir_namei(pathname, &namelen, &basename, base, &base);
     if (error)
         return error;
-    base->i_count++;	/* lookup uses up base */
+    base->i_count++; /* lookup uses up base */
     error = lookup(base, basename, namelen, &inode);
     if (error)
     {
@@ -306,7 +306,7 @@ int open_namei(const char *pathname, int flag, int mode,
     error = dir_namei(pathname, &namelen, &basename, base, &dir);
     if (error)
         return error;
-    if (!namelen)  			/* special case: '/usr/' etc */
+    if (!namelen) /* special case: '/usr/' etc */
     {
         if (flag & 2)
         {
@@ -322,7 +322,7 @@ int open_namei(const char *pathname, int flag, int mode,
         *res_inode = dir;
         return 0;
     }
-    dir->i_count++;		/* lookup eats the dir */
+    dir->i_count++; /* lookup eats the dir */
     if (flag & O_CREAT)
     {
         down(&dir->i_sem);
@@ -343,7 +343,7 @@ int open_namei(const char *pathname, int flag, int mode,
             error = -EROFS;
         else
         {
-            dir->i_count++;		/* create eats the dir */
+            dir->i_count++; /* create eats the dir */
             error = dir->i_op->create(dir, basename, namelen, mode, res_inode);
             up(&dir->i_sem);
             iput(dir);
@@ -389,7 +389,7 @@ int open_namei(const char *pathname, int flag, int mode,
     }
     if ((inode->i_count > 1) && (flag & 2))
     {
-        for (p = &LAST_TASK ; p > &FIRST_TASK ; --p)
+        for (p = &LAST_TASK; p > &FIRST_TASK; --p)
         {
             struct vm_area_struct *mpnt;
             if (!*p)
@@ -399,7 +399,7 @@ int open_namei(const char *pathname, int flag, int mode,
                 iput(inode);
                 return -ETXTBSY;
             }
-            for(mpnt = (*p)->mmap; mpnt; mpnt = mpnt->vm_next)
+            for (mpnt = (*p)->mmap; mpnt; mpnt = mpnt->vm_next)
             {
                 if (mpnt->vm_page_prot & PAGE_RW)
                     continue;
@@ -671,7 +671,7 @@ static int do_symlink(const char *oldname, const char *newname)
 asmlinkage int sys_symlink(const char *oldname, const char *newname)
 {
     int error;
-    char *from, * to;
+    char *from, *to;
 
     error = getname(oldname, &from);
     if (!error)
@@ -757,8 +757,8 @@ asmlinkage int sys_link(const char *oldname, const char *newname)
 
 static int do_rename(const char *oldname, const char *newname)
 {
-    struct inode *old_dir, * new_dir;
-    const char *old_base, * new_base;
+    struct inode *old_dir, *new_dir;
+    const char *old_base, *new_base;
     int old_len, new_len, error;
 
     error = dir_namei(oldname, &old_len, &old_base, NULL, &old_dir);
@@ -824,7 +824,7 @@ static int do_rename(const char *oldname, const char *newname)
 asmlinkage int sys_rename(const char *oldname, const char *newname)
 {
     int error;
-    char *from, * to;
+    char *from, *to;
 
     error = getname(oldname, &from);
     if (!error)

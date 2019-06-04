@@ -74,7 +74,6 @@ static unsigned short pull16(unsigned char **cpp);
 
 extern int ip_csum(struct iphdr *iph);
 
-
 /* Initialize compression data structure
  *	slots must be in range 0 to 255 (zero meaning no compression)
  */
@@ -87,28 +86,28 @@ slhc_init(int rslots, int tslots)
 
     comp = (struct slcompress *)kmalloc(sizeof(struct slcompress),
                                         GFP_KERNEL);
-    if (! comp)
+    if (!comp)
         return NULL;
 
     memset(comp, 0, sizeof(struct slcompress));
 
-    if ( rslots > 0  &&  rslots < 256 )
+    if (rslots > 0 && rslots < 256)
     {
         comp->rstate =
             (struct cstate *)kmalloc(rslots * sizeof(struct cstate),
                                      GFP_KERNEL);
-        if (! comp->rstate)
+        if (!comp->rstate)
             return NULL;
         memset(comp->rstate, 0, rslots * sizeof(struct cstate));
         comp->rslot_limit = rslots - 1;
     }
 
-    if ( tslots > 0  &&  tslots < 256 )
+    if (tslots > 0 && tslots < 256)
     {
         comp->tstate =
             (struct cstate *)kmalloc(tslots * sizeof(struct cstate),
                                      GFP_KERNEL);
-        if (! comp->tstate)
+        if (!comp->tstate)
             return NULL;
         memset(comp->tstate, 0, rslots * sizeof(struct cstate));
         comp->tslot_limit = tslots - 1;
@@ -125,10 +124,10 @@ slhc_init(int rslots, int tslots)
      */
     comp->flags |= SLF_TOSS;
 
-    if ( tslots > 0 )
+    if (tslots > 0)
     {
         ts = comp->tstate;
-        for(i = comp->tslot_limit; i > 0; --i)
+        for (i = comp->tslot_limit; i > 0; --i)
         {
             ts[i].cs_this = i;
             ts[i].next = &(ts[i - 1]);
@@ -139,23 +138,20 @@ slhc_init(int rslots, int tslots)
     return comp;
 }
 
-
 /* Free a compression data structure */
-void
-slhc_free(struct slcompress *comp)
+void slhc_free(struct slcompress *comp)
 {
-    if ( comp == NULLSLCOMPR )
+    if (comp == NULLSLCOMPR)
         return;
 
-    if ( comp->rstate != NULLSLSTATE )
-        kfree( comp->rstate );
+    if (comp->rstate != NULLSLSTATE)
+        kfree(comp->rstate);
 
-    if ( comp->tstate != NULLSLSTATE )
-        kfree( comp->tstate );
+    if (comp->tstate != NULLSLSTATE)
+        kfree(comp->tstate);
 
-    kfree( comp );
+    kfree(comp);
 }
-
 
 /* Put a short in host order into a char array in network order */
 static unsigned char *
@@ -167,12 +163,11 @@ put16(unsigned char *cp, unsigned short x)
     return cp;
 }
 
-
 /* Encode a number */
 unsigned char *
 encode(unsigned char *cp, int n)
 {
-    if(n >= 256 || n == 0)
+    if (n >= 256 || n == 0)
     {
         *cp++ = 0;
         cp = put16(cp, n);
@@ -197,19 +192,18 @@ pull16(unsigned char **cpp)
 }
 
 /* Decode a number */
-long
-decode(unsigned char **cpp)
+long decode(unsigned char **cpp)
 {
     register int x;
 
     x = *(*cpp)++;
-    if(x == 0)
+    if (x == 0)
     {
-        return pull16(cpp) & 0xffff;	/* pull16 returns -1 on error */
+        return pull16(cpp) & 0xffff; /* pull16 returns -1 on error */
     }
     else
     {
-        return x & 0xff;		/* -1 if PULLCHAR returned error */
+        return x & 0xff; /* -1 if PULLCHAR returned error */
     }
 }
 
@@ -220,9 +214,8 @@ decode(unsigned char **cpp)
  *    change it to ocp.
  */
 
-int
-slhc_compress(struct slcompress *comp, unsigned char *icp, int isize,
-              unsigned char *ocp, unsigned char **cpp, int compress_cid)
+int slhc_compress(struct slcompress *comp, unsigned char *icp, int isize,
+                  unsigned char *ocp, unsigned char **cpp, int compress_cid)
 {
     register struct cstate *ocs = &(comp->tstate[comp->xmit_oldest]);
     register struct cstate *lcs = ocs;
@@ -235,16 +228,16 @@ slhc_compress(struct slcompress *comp, unsigned char *icp, int isize,
     struct iphdr *ip;
     struct tcphdr *th, *oth;
 
-    ip = (struct iphdr *) icp;
+    ip = (struct iphdr *)icp;
 
     /* Bail if this packet isn't TCP, or is an IP fragment */
-    if(ip->protocol != IPPROTO_TCP || (ntohs(ip->frag_off) & 0x1fff) ||
-            (ip->frag_off & 32))
+    if (ip->protocol != IPPROTO_TCP || (ntohs(ip->frag_off) & 0x1fff) ||
+        (ip->frag_off & 32))
     {
         DPRINT(("comp: noncomp 1 %d %d %d\n", ip->protocol,
                 ntohs(ip->frag_off), ip->frag_off));
         /* Send as regular IP */
-        if(ip->protocol != IPPROTO_TCP)
+        if (ip->protocol != IPPROTO_TCP)
             comp->sls_o_nontcp++;
         else
             comp->sls_o_tcp++;
@@ -258,8 +251,8 @@ slhc_compress(struct slcompress *comp, unsigned char *icp, int isize,
     /*  Bail if the TCP packet isn't `compressible' (i.e., ACK isn't set or
      *  some other control bit is set).
      */
-    if(th->syn || th->fin || th->rst ||
-            ! (th->ack))
+    if (th->syn || th->fin || th->rst ||
+        !(th->ack))
     {
         DPRINT(("comp: noncomp 2 %x %x %d %d %d %d\n", ip, th,
                 th->syn, th->fin, th->rst, th->ack));
@@ -281,16 +274,13 @@ slhc_compress(struct slcompress *comp, unsigned char *icp, int isize,
      * states via linear search.  If we don't find a state
      * for the datagram, the oldest state is (re-)used.
      */
-    for ( ; ; )
+    for (;;)
     {
-        if( ip->saddr == cs->cs_ip.saddr
-                && ip->daddr == cs->cs_ip.daddr
-                && th->source == cs->cs_tcp.source
-                && th->dest == cs->cs_tcp.dest)
+        if (ip->saddr == cs->cs_ip.saddr && ip->daddr == cs->cs_ip.daddr && th->source == cs->cs_tcp.source && th->dest == cs->cs_tcp.dest)
             goto found;
 
         /* if current equal oldest, at end of list */
-        if ( cs == ocs )
+        if (cs == ocs)
             break;
         lcs = cs;
         cs = cs->next;
@@ -310,11 +300,11 @@ slhc_compress(struct slcompress *comp, unsigned char *icp, int isize,
     DPRINT(("comp: not found\n"));
     goto uncompressed;
 
-found :
+found:
     /*
      * Found it -- move to the front on the connection list.
      */
-    if(lcs == ocs)
+    if (lcs == ocs)
     {
         /* found at most recently used */
     }
@@ -345,14 +335,7 @@ found :
      */
     oth = &cs->cs_tcp;
 
-    if(last_retran
-            || ip->version != cs->cs_ip.version || ip->ihl != cs->cs_ip.ihl
-            || ip->tos != cs->cs_ip.tos
-            || (ip->frag_off & 64) != (cs->cs_ip.frag_off & 64)
-            || ip->ttl != cs->cs_ip.ttl
-            || th->doff != cs->cs_tcp.doff
-            || (ip->ihl > 5 && memcmp(ip + 1, cs->cs_ipopt, ((ip->ihl) - 5) * 4) != 0)
-            || (th->doff > 5 && memcmp(th + 1, cs->cs_tcpopt, ((th->doff) - 5) * 4 != 0)))
+    if (last_retran || ip->version != cs->cs_ip.version || ip->ihl != cs->cs_ip.ihl || ip->tos != cs->cs_ip.tos || (ip->frag_off & 64) != (cs->cs_ip.frag_off & 64) || ip->ttl != cs->cs_ip.ttl || th->doff != cs->cs_tcp.doff || (ip->ihl > 5 && memcmp(ip + 1, cs->cs_ipopt, ((ip->ihl) - 5) * 4) != 0) || (th->doff > 5 && memcmp(th + 1, cs->cs_tcpopt, ((th->doff) - 5) * 4 != 0)))
     {
         DPRINT(("comp: incompat\n"));
         goto uncompressed;
@@ -364,13 +347,13 @@ found :
      * ack, seq (the order minimizes the number of temporaries
      * needed in this section of code).
      */
-    if(th->urg)
+    if (th->urg)
     {
         deltaS = ntohs(th->urg_ptr);
         cp = encode(cp, deltaS);
         changes |= NEW_U;
     }
-    else if(th->urg_ptr != oth->urg_ptr)
+    else if (th->urg_ptr != oth->urg_ptr)
     {
         /* argh! URG not set but urp changed -- a sensible
          * implementation should never do this but RFC793
@@ -379,37 +362,37 @@ found :
         DPRINT(("comp: urg incompat\n"));
         goto uncompressed;
     }
-    if((deltaS = ntohs(th->window) - ntohs(oth->window)) != 0)
+    if ((deltaS = ntohs(th->window) - ntohs(oth->window)) != 0)
     {
         cp = encode(cp, deltaS);
         changes |= NEW_W;
     }
-    if((deltaA = ntohl(th->ack_seq) - ntohl(oth->ack_seq)) != 0L)
+    if ((deltaA = ntohl(th->ack_seq) - ntohl(oth->ack_seq)) != 0L)
     {
-        if(deltaA > 0x0000ffff)
+        if (deltaA > 0x0000ffff)
             goto uncompressed;
         cp = encode(cp, deltaA);
         changes |= NEW_A;
     }
-    if((deltaS = ntohl(th->seq) - ntohl(oth->seq)) != 0L)
+    if ((deltaS = ntohl(th->seq) - ntohl(oth->seq)) != 0L)
     {
-        if(deltaS > 0x0000ffff)
+        if (deltaS > 0x0000ffff)
             goto uncompressed;
         cp = encode(cp, deltaS);
         changes |= NEW_S;
     }
 
-    switch(changes)
+    switch (changes)
     {
-    case 0:	/* Nothing changed. If this packet contains data and the
+    case 0: /* Nothing changed. If this packet contains data and the
 		 * last one didn't, this is probably a data packet following
 		 * an ack (normal on an interactive connection) and we send
 		 * it compressed.  Otherwise it's probably a retransmit,
 		 * retransmitted ack or window probe.  Send it uncompressed
 		 * in case the other side missed the compressed version.
 		 */
-        if(ip->tot_len != cs->cs_ip.tot_len &&
-                ntohs(cs->cs_ip.tot_len) == hlen)
+        if (ip->tot_len != cs->cs_ip.tot_len &&
+            ntohs(cs->cs_ip.tot_len) == hlen)
             break;
         DPRINT(("comp: retrans\n"));
         goto uncompressed;
@@ -421,9 +404,9 @@ found :
          */
         DPRINT(("comp: special\n"));
         goto uncompressed;
-    case NEW_S|NEW_A:
-        if(deltaS == deltaA &&
-                deltaS == ntohs(cs->cs_ip.tot_len) - hlen)
+    case NEW_S | NEW_A:
+        if (deltaS == deltaA &&
+            deltaS == ntohs(cs->cs_ip.tot_len) - hlen)
         {
             /* special case for echoed terminal traffic */
             changes = SPECIAL_I;
@@ -431,7 +414,7 @@ found :
         }
         break;
     case NEW_S:
-        if(deltaS == ntohs(cs->cs_ip.tot_len) - hlen)
+        if (deltaS == ntohs(cs->cs_ip.tot_len) - hlen)
         {
             /* special case for data xfer */
             changes = SPECIAL_D;
@@ -440,12 +423,12 @@ found :
         break;
     }
     deltaS = ntohs(ip->id) - ntohs(cs->cs_ip.id);
-    if(deltaS != 1)
+    if (deltaS != 1)
     {
         cp = encode(cp, deltaS);
         changes |= NEW_I;
     }
-    if(th->psh)
+    if (th->psh)
         changes |= TCP_PUSH_BIT;
     /* Grab the cksum before we overwrite it below.  Then update our
      * state with this packet's header.
@@ -460,7 +443,7 @@ found :
      * So, (cp - new_seq) + 4 bytes of header are needed.
      */
     deltaS = cp - new_seq;
-    if(compress_cid == 0 || comp->xmit_current != cs->cs_this)
+    if (compress_cid == 0 || comp->xmit_current != cs->cs_this)
     {
         cp = ocp;
         *cpp = ocp;
@@ -474,10 +457,10 @@ found :
         *cpp = ocp;
         *cp++ = changes;
     }
-    cp = put16(cp, (short)deltaA);	/* Write TCP checksum */
+    cp = put16(cp, (short)deltaA); /* Write TCP checksum */
     /* deltaS is now the size of the change section of the compressed header */
     DPRINT(("comp: %x %x %x %d %d\n", icp, cp, new_seq, hlen, deltaS));
-    memcpy(cp, new_seq, deltaS);	/* Write list of deltas */
+    memcpy(cp, new_seq, deltaS); /* Write list of deltas */
     memcpy(cp + deltaS, icp + hlen, isize - hlen);
     comp->sls_o_compressed++;
     ocp[0] |= SL_TYPE_COMPRESSED_TCP;
@@ -503,9 +486,7 @@ uncompressed:
     return isize;
 }
 
-
-int
-slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
+int slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
 {
     register int changes;
     long x;
@@ -517,23 +498,23 @@ slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
 
     /* We've got a compressed packet; read the change byte */
     comp->sls_i_compressed++;
-    if(isize < 3)
+    if (isize < 3)
     {
         comp->sls_i_error++;
         DPRINT(("uncomp: runt\n"));
         return 0;
     }
     changes = *cp++;
-    if(changes & NEW_C)
+    if (changes & NEW_C)
     {
         /* Make sure the state index is in range, then grab the state.
          * If we have a good state index, clear the 'discard' flag.
          */
-        x = *cp++;	/* Read conn index */
-        if(x < 0 || x > comp->rslot_limit)
+        x = *cp++; /* Read conn index */
+        if (x < 0 || x > comp->rslot_limit)
             goto bad;
 
-        comp->flags &= ~ SLF_TOSS;
+        comp->flags &= ~SLF_TOSS;
         comp->recv_current = x;
     }
     else
@@ -541,7 +522,7 @@ slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
         /* this packet has an implicit state index.  If we've
          * had a line error since the last time we got an
          * explicit state index, we have to toss the packet. */
-        if(comp->flags & SLF_TOSS)
+        if (comp->flags & SLF_TOSS)
         {
             comp->sls_i_tossed++;
             DPRINT(("uncomp: toss\n"));
@@ -552,7 +533,7 @@ slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
     thp = &cs->cs_tcp;
     ip = &cs->cs_ip;
 
-    if((x = pull16(&cp)) == -1)  	/* Read the TCP checksum */
+    if ((x = pull16(&cp)) == -1) /* Read the TCP checksum */
     {
         DPRINT(("uncomp: bad tcp chk\n"));
         goto bad;
@@ -568,27 +549,27 @@ slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
 
     hdrlen = ip->ihl * 4 + thp->doff * 4;
 
-    switch(changes & SPECIALS_MASK)
+    switch (changes & SPECIALS_MASK)
     {
-    case SPECIAL_I:		/* Echoed terminal traffic */
+    case SPECIAL_I: /* Echoed terminal traffic */
     {
         register short i;
         i = ntohs(ip->tot_len) - hdrlen;
-        thp->ack_seq = htonl( ntohl(thp->ack_seq) + i);
-        thp->seq = htonl( ntohl(thp->seq) + i);
+        thp->ack_seq = htonl(ntohl(thp->ack_seq) + i);
+        thp->seq = htonl(ntohl(thp->seq) + i);
     }
     break;
 
-    case SPECIAL_D:			/* Unidirectional data */
-        thp->seq = htonl( ntohl(thp->seq) +
-                          ntohs(ip->tot_len) - hdrlen);
+    case SPECIAL_D: /* Unidirectional data */
+        thp->seq = htonl(ntohl(thp->seq) +
+                         ntohs(ip->tot_len) - hdrlen);
         break;
 
     default:
-        if(changes & NEW_U)
+        if (changes & NEW_U)
         {
             thp->urg = 1;
-            if((x = decode(&cp)) == -1)
+            if ((x = decode(&cp)) == -1)
             {
                 DPRINT(("uncomp: bad U\n"));
                 goto bad;
@@ -597,46 +578,46 @@ slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
         }
         else
             thp->urg = 0;
-        if(changes & NEW_W)
+        if (changes & NEW_W)
         {
-            if((x = decode(&cp)) == -1)
+            if ((x = decode(&cp)) == -1)
             {
                 DPRINT(("uncomp: bad W\n"));
                 goto bad;
             }
-            thp->window = htons( ntohs(thp->window) + x);
+            thp->window = htons(ntohs(thp->window) + x);
         }
-        if(changes & NEW_A)
+        if (changes & NEW_A)
         {
-            if((x = decode(&cp)) == -1)
+            if ((x = decode(&cp)) == -1)
             {
                 DPRINT(("uncomp: bad A\n"));
                 goto bad;
             }
-            thp->ack_seq = htonl( ntohl(thp->ack_seq) + x);
+            thp->ack_seq = htonl(ntohl(thp->ack_seq) + x);
         }
-        if(changes & NEW_S)
+        if (changes & NEW_S)
         {
-            if((x = decode(&cp)) == -1)
+            if ((x = decode(&cp)) == -1)
             {
                 DPRINT(("uncomp: bad S\n"));
                 goto bad;
             }
-            thp->seq = htonl( ntohl(thp->seq) + x);
+            thp->seq = htonl(ntohl(thp->seq) + x);
         }
         break;
     }
-    if(changes & NEW_I)
+    if (changes & NEW_I)
     {
-        if((x = decode(&cp)) == -1)
+        if ((x = decode(&cp)) == -1)
         {
             DPRINT(("uncomp: bad I\n"));
             goto bad;
         }
-        ip->id = htons (ntohs (ip->id) + x);
+        ip->id = htons(ntohs(ip->id) + x);
     }
     else
-        ip->id = htons (ntohs (ip->id) + 1);
+        ip->id = htons(ntohs(ip->id) + 1);
 
     /*
      * At this point, cp points to the first byte of data in the
@@ -676,16 +657,15 @@ slhc_uncompress(struct slcompress *comp, unsigned char *icp, int isize)
         cp += ((thp->doff) - 5) * 4;
     }
 
-    if (inet_debug == DBG_SLIP) printk("\runcomp: change %x len %d\n", changes, len);
+    if (inet_debug == DBG_SLIP)
+        printk("\runcomp: change %x len %d\n", changes, len);
     return len;
 bad:
     comp->sls_i_error++;
-    return slhc_toss( comp );
+    return slhc_toss(comp);
 }
 
-
-int
-slhc_remember(struct slcompress *comp, unsigned char *icp, int isize)
+int slhc_remember(struct slcompress *comp, unsigned char *icp, int isize)
 {
     register struct cstate *cs;
     short ip_len;
@@ -694,32 +674,32 @@ slhc_remember(struct slcompress *comp, unsigned char *icp, int isize)
 
     unsigned char index;
 
-    if(isize < 20)
+    if (isize < 20)
     {
         /* The packet is shorter than a legal IP header */
         comp->sls_i_runt++;
-        return slhc_toss( comp );
+        return slhc_toss(comp);
     }
     /* Sneak a peek at the IP header's IHL field to find its length */
     ip_len = (icp[0] & 0xf) << 2;
-    if(ip_len < 20)
+    if (ip_len < 20)
     {
         /* The IP header length field is too small */
         comp->sls_i_runt++;
-        return slhc_toss( comp );
+        return slhc_toss(comp);
     }
     index = icp[9];
     icp[9] = IPPROTO_TCP;
-    ip = (struct iphdr *) icp;
+    ip = (struct iphdr *)icp;
 
     if (ip_csum(ip))
     {
         /* Bad IP header checksum; discard */
         comp->sls_i_badcheck++;
-        return slhc_toss( comp );
+        return slhc_toss(comp);
     }
     thp = (struct tcphdr *)(((unsigned char *)ip) + ip->ihl * 4);
-    if(index > comp->rslot_limit)
+    if (index > comp->rslot_limit)
     {
         comp->sls_i_error++;
         return slhc_toss(comp);
@@ -727,7 +707,7 @@ slhc_remember(struct slcompress *comp, unsigned char *icp, int isize)
 
     /* Update local state */
     cs = &comp->rstate[comp->recv_current = index];
-    comp->flags &= ~ SLF_TOSS;
+    comp->flags &= ~SLF_TOSS;
     memcpy(&cs->cs_ip, ip, 20);
     memcpy(&cs->cs_tcp, thp, 20);
     if (ip->ihl > 5)
@@ -742,17 +722,14 @@ slhc_remember(struct slcompress *comp, unsigned char *icp, int isize)
     return isize;
 }
 
-
-int
-slhc_toss(struct slcompress *comp)
+int slhc_toss(struct slcompress *comp)
 {
-    if ( comp == NULLSLCOMPR )
+    if (comp == NULLSLCOMPR)
         return 0;
 
     comp->flags |= SLF_TOSS;
     return 0;
 }
-
 
 void slhc_i_status(struct slcompress *comp)
 {
@@ -765,7 +742,6 @@ void slhc_i_status(struct slcompress *comp)
                comp->sls_i_tossed);
     }
 }
-
 
 void slhc_o_status(struct slcompress *comp)
 {
@@ -781,4 +757,3 @@ void slhc_o_status(struct slcompress *comp)
                comp->sls_o_misses);
     }
 }
-
