@@ -75,8 +75,7 @@ static int check(int flag, select_table *wait, struct file *file)
     return 0;
 }
 
-int do_select(int n, fd_set *in, fd_set *out, fd_set *ex,
-              fd_set *res_in, fd_set *res_out, fd_set *res_ex)
+int do_select(int n, fd_set *in, fd_set *out, fd_set *ex, fd_set *res_in, fd_set *res_out, fd_set *res_ex)
 {
     int count;
     select_table wait_table, *wait;
@@ -215,11 +214,14 @@ asmlinkage int sys_select(unsigned long *buffer)
     i = verify_area(VERIFY_READ, buffer, 20);
     if (i)
         return i;
+    
     n = get_fs_long(buffer++);
     if (n < 0)
         return -EINVAL;
+    
     if (n > NR_OPEN)
         n = NR_OPEN;
+    
     inp = (fd_set *)get_fs_long(buffer++);
     outp = (fd_set *)get_fs_long(buffer++);
     exp = (fd_set *)get_fs_long(buffer++);
@@ -228,6 +230,7 @@ asmlinkage int sys_select(unsigned long *buffer)
         (i = get_fd_set(n, outp, &out)) ||
         (i = get_fd_set(n, exp, &ex)))
         return i;
+    
     timeout = ~0UL;
     if (tvp)
     {
@@ -239,6 +242,7 @@ asmlinkage int sys_select(unsigned long *buffer)
         if (timeout)
             timeout += jiffies + 1;
     }
+    
     current->timeout = timeout;
     i = do_select(n, &in, &out, &ex, &res_in, &res_out, &res_ex);
     if (current->timeout > jiffies)
@@ -253,6 +257,7 @@ asmlinkage int sys_select(unsigned long *buffer)
         timeout *= (1000000 / HZ);
         put_fs_long(timeout, (unsigned long *)&tvp->tv_usec);
     }
+    
     if (i < 0)
         return i;
     if (!i && (current->signal & ~current->blocked))

@@ -165,49 +165,42 @@ void unix_unlock(struct unix_proto_data *upd)
 }
 
 /* don't have to do anything. */
-static int
-unix_proto_listen(struct socket *sock, int backlog)
+static int unix_proto_listen(struct socket *sock, int backlog)
 {
     return (0);
 }
 
-static int
-unix_proto_setsockopt(struct socket *sock, int level, int optname,
+static int unix_proto_setsockopt(struct socket *sock, int level, int optname,
                       char *optval, int optlen)
 {
     return (-EOPNOTSUPP);
 }
 
-static int
-unix_proto_getsockopt(struct socket *sock, int level, int optname,
+static int unix_proto_getsockopt(struct socket *sock, int level, int optname,
                       char *optval, int *optlen)
 {
     return (-EOPNOTSUPP);
 }
 
-static int
-unix_proto_sendto(struct socket *sock, void *buff, int len, int nonblock,
+static int unix_proto_sendto(struct socket *sock, void *buff, int len, int nonblock,
                   unsigned flags, struct sockaddr *addr, int addr_len)
 {
     return (-EOPNOTSUPP);
 }
 
-static int
-unix_proto_recvfrom(struct socket *sock, void *buff, int len, int nonblock,
+static int unix_proto_recvfrom(struct socket *sock, void *buff, int len, int nonblock,
                     unsigned flags, struct sockaddr *addr, int *addr_len)
 {
     return (-EOPNOTSUPP);
 }
 
-static int
-unix_proto_shutdown(struct socket *sock, int how)
+static int unix_proto_shutdown(struct socket *sock, int how)
 {
     return (-EOPNOTSUPP);
 }
 
 /* This error needs to be checked. */
-static int
-unix_proto_send(struct socket *sock, void *buff, int len, int nonblock,
+static int unix_proto_send(struct socket *sock, void *buff, int len, int nonblock,
                 unsigned flags)
 {
     if (flags != 0)
@@ -216,8 +209,7 @@ unix_proto_send(struct socket *sock, void *buff, int len, int nonblock,
 }
 
 /* This error needs to be checked. */
-static int
-unix_proto_recv(struct socket *sock, void *buff, int len, int nonblock,
+static int unix_proto_recv(struct socket *sock, void *buff, int len, int nonblock,
                 unsigned flags)
 {
     if (flags != 0)
@@ -225,9 +217,7 @@ unix_proto_recv(struct socket *sock, void *buff, int len, int nonblock,
     return (unix_proto_read(sock, (char *)buff, len, nonblock));
 }
 
-static struct unix_proto_data *
-unix_data_lookup(struct sockaddr_un *sockun, int sockaddr_len,
-                 struct inode *inode)
+static struct unix_proto_data *unix_data_lookup(struct sockaddr_un *sockun, int sockaddr_len, struct inode *inode)
 {
     struct unix_proto_data *upd;
 
@@ -242,8 +232,7 @@ unix_data_lookup(struct sockaddr_un *sockun, int sockaddr_len,
     return (NULL);
 }
 
-static struct unix_proto_data *
-unix_data_alloc(void)
+static struct unix_proto_data *unix_data_alloc(void)
 {
     struct unix_proto_data *upd;
 
@@ -268,8 +257,7 @@ unix_data_alloc(void)
     return (NULL);
 }
 
-static inline void
-unix_data_ref(struct unix_proto_data *upd)
+static inline void unix_data_ref(struct unix_proto_data *upd)
 {
     if (!upd)
     {
@@ -280,8 +268,7 @@ unix_data_ref(struct unix_proto_data *upd)
     dprintf(1, "UNIX: data_ref: refing data 0x%x(%d)\n", upd, upd->refcnt);
 }
 
-static void
-unix_data_deref(struct unix_proto_data *upd)
+static void unix_data_deref(struct unix_proto_data *upd)
 {
     if (!upd)
     {
@@ -376,9 +363,7 @@ static int unix_proto_release(struct socket *sock, struct socket *peer)
  *	  Here we return EINVAL, but it may be necessary to re-bind.
  *	  I think thats what BSD does in the case of datagram sockets...
  */
-static int
-unix_proto_bind(struct socket *sock, struct sockaddr *umyaddr,
-                int sockaddr_len)
+static int unix_proto_bind(struct socket *sock, struct sockaddr *umyaddr, int sockaddr_len)
 {
     char fname[sizeof(((struct sockaddr_un *)0)->sun_path) + 1];
     struct unix_proto_data *upd = UN_DATA(sock);
@@ -570,9 +555,7 @@ static int unix_proto_accept(struct socket *sock, struct socket *newsock, int fl
 }
 
 /* Gets the current name or the name of the connected socket. */
-static int
-unix_proto_getname(struct socket *sock, struct sockaddr *usockaddr,
-                   int *usockaddr_len, int peer)
+static int unix_proto_getname(struct socket *sock, struct sockaddr *usockaddr, int *usockaddr_len, int peer)
 {
     struct unix_proto_data *upd;
     int len;
@@ -610,8 +593,7 @@ unix_proto_getname(struct socket *sock, struct sockaddr *usockaddr,
 }
 
 /* We read from our own buf. */
-static int
-unix_proto_read(struct socket *sock, char *ubuf, int size, int nonblock)
+static int unix_proto_read(struct socket *sock, char *ubuf, int size, int nonblock)
 {
     struct unix_proto_data *upd;
     int todo, avail;
@@ -683,8 +665,7 @@ unix_proto_read(struct socket *sock, char *ubuf, int size, int nonblock)
  * peer so we are safe that the buffer remains, even after the
  * peer has disconnected, which we check other ways.
  */
-static int
-unix_proto_write(struct socket *sock, char *ubuf, int size, int nonblock)
+static int unix_proto_write(struct socket *sock, char *ubuf, int size, int nonblock)
 {
     struct unix_proto_data *pupd;
     int todo, space;
@@ -775,8 +756,7 @@ unix_proto_write(struct socket *sock, char *ubuf, int size, int nonblock)
     return (size - todo);
 }
 
-static int
-unix_proto_select(struct socket *sock, int sel_type, select_table *wait)
+static int unix_proto_select(struct socket *sock, int sel_type, select_table *wait)
 {
     struct unix_proto_data *upd, *peerupd;
 

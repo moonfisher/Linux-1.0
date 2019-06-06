@@ -69,22 +69,22 @@ struct sock
      * Not all are volatile, but some are, so we
      * might as well say they all are.
      */
-    volatile char inuse,
-        dead,
-        urginline,
-        intr,
-        blog,
-        done,
-        reuse,
-        keepopen,
-        linger,
-        delay_acks,
-        destroy,
-        ack_timed,
-        no_check,
-        zapped, /* In ax25 & ipx means not linked */
-        broadcast,
-        nonagle;
+    volatile char inuse;
+    volatile char dead;
+    volatile char urginline;
+    volatile char intr;
+    volatile char blog;
+    volatile char done;
+    volatile char reuse;
+    volatile char keepopen;
+    volatile char linger;
+    volatile char delay_acks;
+    volatile char destroy;
+    volatile char ack_timed;
+    volatile char no_check;
+    volatile char zapped; /* In ax25 & ipx means not linked */
+    volatile char broadcast;
+    volatile char nonagle;
     unsigned long lingertime;
     int proc;
     struct sock *next;
@@ -95,9 +95,9 @@ struct sock
     struct sk_buff *partial;
     struct timer_list partial_timer;
     long retransmits;
-    struct sk_buff *volatile wback,
-        *volatile wfront,
-        *volatile rqueue;
+    struct sk_buff *volatile wback;
+    struct sk_buff *volatile wfront;
+    struct sk_buff *volatile rqueue;
     struct proto *prot;
     struct wait_queue **sleep;
     unsigned long daddr;
@@ -171,59 +171,31 @@ struct sock
 
 struct proto
 {
-    struct sk_buff *(*wmalloc)(struct sock *sk,
-                               unsigned long size, int force,
-                               int priority);
-    struct sk_buff *(*rmalloc)(struct sock *sk,
-                               unsigned long size, int force,
-                               int priority);
-    void (*wfree)(struct sock *sk, void *mem,
-                  unsigned long size);
-    void (*rfree)(struct sock *sk, void *mem,
-                  unsigned long size);
+    struct sk_buff *(*wmalloc)(struct sock *sk, unsigned long size, int force, int priority);
+    struct sk_buff *(*rmalloc)(struct sock *sk, unsigned long size, int force, int priority);
+    void (*wfree)(struct sock *sk, void *mem, unsigned long size);
+    void (*rfree)(struct sock *sk, void *mem, unsigned long size);
     unsigned long (*rspace)(struct sock *sk);
     unsigned long (*wspace)(struct sock *sk);
     void (*close)(struct sock *sk, int timeout);
-    int (*read)(struct sock *sk, unsigned char *to,
-                int len, int nonblock, unsigned flags);
-    int (*write)(struct sock *sk, unsigned char *to,
-                 int len, int nonblock, unsigned flags);
-    int (*sendto)(struct sock *sk,
-                  unsigned char *from, int len, int noblock,
-                  unsigned flags, struct sockaddr_in *usin,
-                  int addr_len);
-    int (*recvfrom)(struct sock *sk,
-                    unsigned char *from, int len, int noblock,
-                    unsigned flags, struct sockaddr_in *usin,
-                    int *addr_len);
-    int (*build_header)(struct sk_buff *skb,
-                        unsigned long saddr,
-                        unsigned long daddr,
-                        struct device **dev, int type,
-                        struct options *opt, int len, int tos, int ttl);
-    int (*connect)(struct sock *sk,
-                   struct sockaddr_in *usin, int addr_len);
+    int (*read)(struct sock *sk, unsigned char *to, int len, int nonblock, unsigned flags);
+    int (*write)(struct sock *sk, unsigned char *to, int len, int nonblock, unsigned flags);
+    int (*sendto)(struct sock *sk, unsigned char *from, int len, int noblock, unsigned flags, struct sockaddr_in *usin, int addr_len);
+    int (*recvfrom)(struct sock *sk, unsigned char *from, int len, int noblock, unsigned flags, struct sockaddr_in *usin, int *addr_len);
+    int (*build_header)(struct sk_buff *skb, unsigned long saddr, unsigned long daddr, struct device **dev, int type, struct options *opt, int len, int tos, int ttl);
+    int (*connect)(struct sock *sk, struct sockaddr_in *usin, int addr_len);
     struct sock *(*accept)(struct sock *sk, int flags);
-    void (*queue_xmit)(struct sock *sk,
-                       struct device *dev, struct sk_buff *skb,
-                       int free);
+    void (*queue_xmit)(struct sock *sk, struct device *dev, struct sk_buff *skb, int free);
     void (*retransmit)(struct sock *sk, int all);
     void (*write_wakeup)(struct sock *sk);
     void (*read_wakeup)(struct sock *sk);
-    int (*rcv)(struct sk_buff *buff, struct device *dev,
-               struct options *opt, unsigned long daddr,
-               unsigned short len, unsigned long saddr,
-               int redo, struct inet_protocol *protocol);
-    int (*select)(struct sock *sk, int which,
-                  select_table *wait);
-    int (*ioctl)(struct sock *sk, int cmd,
-                 unsigned long arg);
+    int (*rcv)(struct sk_buff *buff, struct device *dev, struct options *opt, unsigned long daddr, unsigned short len, unsigned long saddr, int redo, struct inet_protocol *protocol);
+    int (*select)(struct sock *sk, int which, select_table *wait);
+    int (*ioctl)(struct sock *sk, int cmd, unsigned long arg);
     int (*init)(struct sock *sk);
     void (*shutdown)(struct sock *sk, int how);
-    int (*setsockopt)(struct sock *sk, int level, int optname,
-                      char *optval, int optlen);
-    int (*getsockopt)(struct sock *sk, int level, int optname,
-                      char *optval, int *option);
+    int (*setsockopt)(struct sock *sk, int level, int optname, char *optval, int optlen);
+    int (*getsockopt)(struct sock *sk, int level, int optname, char *optval, int *option);
     unsigned short max_header;
     unsigned long retransmits;
     struct sock *sock_array[SOCK_ARRAY_SIZE];

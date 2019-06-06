@@ -82,12 +82,12 @@ extern unsigned long avenrun[];		/* Load averages */
 #include "linux/vm86.h"
 #include "linux/math_emu.h"
 
-#define TASK_RUNNING		0
-#define TASK_INTERRUPTIBLE	1
+#define TASK_RUNNING		    0
+#define TASK_INTERRUPTIBLE	    1
 #define TASK_UNINTERRUPTIBLE	2
-#define TASK_ZOMBIE		3
-#define TASK_STOPPED		4
-#define TASK_SWAPPING		5
+#define TASK_ZOMBIE		        3
+#define TASK_STOPPED		    4
+#define TASK_SWAPPING		    5
 
 #ifndef NULL
 #define NULL ((void *) 0)

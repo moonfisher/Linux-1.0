@@ -17,30 +17,27 @@
 #ifndef _LINUX_TCP_H
 #define _LINUX_TCP_H
 
-
 #define HEADER_SIZE	64		/* maximum header size		*/
-
 
 struct tcphdr
 {
     unsigned short	source;
     unsigned short	dest;
-    unsigned long		seq;
-    unsigned long		ack_seq;
-    unsigned short	res1: 4,
-              doff: 4,
-              fin: 1,
-              syn: 1,
-              rst: 1,
-              psh: 1,
-              ack: 1,
-              urg: 1,
-              res2: 2;
+    unsigned long   seq;
+    unsigned long   ack_seq;
+    unsigned short	res1: 4;
+    unsigned short  doff: 4;
+    unsigned short  fin: 1;
+    unsigned short  syn: 1;
+    unsigned short  rst: 1;
+    unsigned short  psh: 1;
+    unsigned short  ack: 1;
+    unsigned short  urg: 1;
+    unsigned short  res2: 2;
     unsigned short	window;
     unsigned short	check;
     unsigned short	urg_ptr;
 };
-
 
 enum
 {

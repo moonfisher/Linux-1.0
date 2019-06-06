@@ -135,9 +135,7 @@ sport=%d,dport=%d",
     sk->error_report(sk);
 }
 
-static unsigned short
-udp_check(struct udphdr *uh, int len,
-          unsigned long saddr, unsigned long daddr)
+static unsigned short udp_check(struct udphdr *uh, int len, unsigned long saddr, unsigned long daddr)
 {
     unsigned long sum;
 
@@ -202,9 +200,7 @@ udp_check(struct udphdr *uh, int len,
     return ((~sum) & 0xffff);
 }
 
-static void
-udp_send_check(struct udphdr *uh, unsigned long saddr,
-               unsigned long daddr, int len, struct sock *sk)
+static void udp_send_check(struct udphdr *uh, unsigned long saddr, unsigned long daddr, int len, struct sock *sk)
 {
     uh->check = 0;
     if (sk && sk->no_check)
@@ -214,9 +210,7 @@ udp_send_check(struct udphdr *uh, unsigned long saddr,
         uh->check = 0xffff;
 }
 
-static int
-udp_send(struct sock *sk, struct sockaddr_in *sin,
-         unsigned char *from, int len)
+static int udp_send(struct sock *sk, struct sockaddr_in *sin, unsigned char *from, int len)
 {
     struct sk_buff *skb;
     struct device *dev;
@@ -252,8 +246,8 @@ udp_send(struct sock *sk, struct sockaddr_in *sin,
     dev = NULL;
     DPRINTF((DBG_UDP, "UDP: >> IP_Header: %X -> %X dev=%X prot=%X len=%d\n",
              saddr, sin->sin_addr.s_addr, dev, IPPROTO_UDP, skb->mem_len));
-    tmp = sk->prot->build_header(skb, saddr, sin->sin_addr.s_addr,
-                                 &dev, IPPROTO_UDP, sk->opt, skb->mem_len, sk->ip_tos, sk->ip_ttl);
+//    tmp = sk->prot->build_header(skb, saddr, sin->sin_addr.s_addr, &dev, IPPROTO_UDP, sk->opt, skb->mem_len, sk->ip_tos, sk->ip_ttl);
+    tmp = ip_build_header(skb, saddr, sin->sin_addr.s_addr, &dev, IPPROTO_UDP, sk->opt, skb->mem_len, sk->ip_tos, sk->ip_ttl);
     skb->sk = sk; /* So memory is freed correctly */
 
     if (tmp < 0)
@@ -298,14 +292,13 @@ udp_send(struct sock *sk, struct sockaddr_in *sin,
     udp_send_check(uh, saddr, sin->sin_addr.s_addr, skb->len - tmp, sk);
 
     /* Send the datagram to the interface. */
-    sk->prot->queue_xmit(sk, dev, skb, 1);
+//    sk->prot->queue_xmit(sk, dev, skb, 1);
+    ip_queue_xmit(sk, dev, skb, 1);
 
     return (len);
 }
 
-static int
-udp_sendto(struct sock *sk, unsigned char *from, int len, int noblock,
-           unsigned flags, struct sockaddr_in *usin, int addr_len)
+static int udp_sendto(struct sock *sk, unsigned char *from, int len, int noblock, unsigned flags, struct sockaddr_in *usin, int addr_len)
 {
     struct sockaddr_in sin;
     int tmp;
@@ -356,9 +349,7 @@ udp_sendto(struct sock *sk, unsigned char *from, int len, int noblock,
     return (tmp);
 }
 
-static int
-udp_write(struct sock *sk, unsigned char *buff, int len, int noblock,
-          unsigned flags)
+static int udp_write(struct sock *sk, unsigned char *buff, int len, int noblock, unsigned flags)
 {
     return (udp_sendto(sk, buff, len, noblock, flags, NULL, 0));
 }
@@ -442,9 +433,7 @@ int udp_ioctl(struct sock *sk, int cmd, unsigned long arg)
  * This should be easy, if there is something there we\
  * return it, otherwise we block.
  */
-int udp_recvfrom(struct sock *sk, unsigned char *to, int len,
-                 int noblock, unsigned flags, struct sockaddr_in *sin,
-                 int *addr_len)
+int udp_recvfrom(struct sock *sk, unsigned char *to, int len, int noblock, unsigned flags, struct sockaddr_in *sin, int *addr_len)
 {
     int copied = 0;
     struct sk_buff *skb;
@@ -481,12 +470,15 @@ int udp_recvfrom(struct sock *sk, unsigned char *to, int len,
         if (er)
             return (er);
     }
+    
     er = verify_area(VERIFY_WRITE, to, len);
     if (er)
         return er;
+    
     skb = skb_recv_datagram(sk, flags, noblock, &er);
     if (skb == NULL)
         return er;
+    
     copied = min(len, skb->len);
 
     /* FIXME : should use udp header size info value */
@@ -611,7 +603,8 @@ int udp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt, unsign
     skb->len = len - sizeof(*uh);
 
     if (!sk->dead)
-        sk->data_ready(sk, skb->len);
+//        sk->data_ready(sk, skb->len);
+        def_callback2(sk, skb->len);
 
     release_sock(sk);
     return (0);

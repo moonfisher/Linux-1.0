@@ -94,8 +94,7 @@ dprintf(int level, char *fmt, ...)
 #endif
 
 /* Obtains the first available file descriptor and sets it up for use. */
-static int
-get_fd(struct inode *inode)
+static int get_fd(struct inode *inode)
 {
     int fd;
     struct file *file;
@@ -104,14 +103,17 @@ get_fd(struct inode *inode)
     file = get_empty_filp();
     if (!file)
         return (-1);
+    
     for (fd = 0; fd < NR_OPEN; ++fd)
         if (!current->filp[fd])
             break;
+    
     if (fd == NR_OPEN)
     {
         file->f_count = 0;
         return (-1);
     }
+    
     FD_CLR(fd, &current->close_on_exec);
     current->filp[fd] = file;
     file->f_op = &socket_file_ops;
@@ -224,15 +226,13 @@ static struct socket *sock_alloc(int wait)
     }
 }
 
-static inline void
-sock_release_peer(struct socket *peer)
+static inline void sock_release_peer(struct socket *peer)
 {
     peer->state = SS_DISCONNECTING;
     wake_up_interruptible(peer->wait);
 }
 
-static void
-sock_release(struct socket *sock)
+static void sock_release(struct socket *sock)
 {
     int oldstate;
     struct inode *inode;
@@ -267,15 +267,13 @@ sock_release(struct socket *sock)
     iput(inode);
 }
 
-static int
-sock_lseek(struct inode *inode, struct file *file, off_t offset, int whence)
+static int sock_lseek(struct inode *inode, struct file *file, off_t offset, int whence)
 {
     DPRINTF((net_debug, "NET: sock_lseek: huh?\n"));
     return (-ESPIPE);
 }
 
-static int
-sock_read(struct inode *inode, struct file *file, char *ubuf, int size)
+static int sock_read(struct inode *inode, struct file *file, char *ubuf, int size)
 {
     struct socket *sock;
 
@@ -290,8 +288,7 @@ sock_read(struct inode *inode, struct file *file, char *ubuf, int size)
     return (sock->ops->read(sock, ubuf, size, (file->f_flags & O_NONBLOCK)));
 }
 
-static int
-sock_write(struct inode *inode, struct file *file, char *ubuf, int size)
+static int sock_write(struct inode *inode, struct file *file, char *ubuf, int size)
 {
     struct socket *sock;
 
@@ -306,16 +303,13 @@ sock_write(struct inode *inode, struct file *file, char *ubuf, int size)
     return (sock->ops->write(sock, ubuf, size, (file->f_flags & O_NONBLOCK)));
 }
 
-static int
-sock_readdir(struct inode *inode, struct file *file, struct dirent *dirent,
-             int count)
+static int sock_readdir(struct inode *inode, struct file *file, struct dirent *dirent, int count)
 {
     DPRINTF((net_debug, "NET: sock_readdir: huh?\n"));
     return (-EBADF);
 }
 
-int sock_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
-               unsigned long arg)
+int sock_ioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
 {
     struct socket *sock;
 
@@ -329,8 +323,7 @@ int sock_ioctl(struct inode *inode, struct file *file, unsigned int cmd,
     return (sock->ops->ioctl(sock, cmd, arg));
 }
 
-static int
-sock_select(struct inode *inode, struct file *file, int sel_type, select_table *wait)
+static int sock_select(struct inode *inode, struct file *file, int sel_type, select_table *wait)
 {
     struct socket *sock;
 
@@ -804,34 +797,51 @@ static int sock_connect(int fd, struct sockaddr *uservaddr, int addrlen)
     return (0);
 }
 
-static int
-sock_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len)
+static int sock_getsockname(int fd, struct sockaddr *usockaddr, int *usockaddr_len)
 {
     struct socket *sock;
 
     DPRINTF((net_debug, "NET: sock_getsockname: fd = %d\n", fd));
     if (fd < 0 || fd >= NR_OPEN || current->filp[fd] == NULL)
         return (-EBADF);
+    
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
-    return (sock->ops->getname(sock, usockaddr, usockaddr_len, 0));
+    
+//    return (sock->ops->getname(sock, usockaddr, usockaddr_len, 0));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_getname(sock, usockaddr, usockaddr_len, 0);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_getname(sock, usockaddr, usockaddr_len, 0);
+    }
 }
 
-static int
-sock_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len)
+static int sock_getpeername(int fd, struct sockaddr *usockaddr, int *usockaddr_len)
 {
     struct socket *sock;
 
     DPRINTF((net_debug, "NET: sock_getpeername: fd = %d\n", fd));
     if (fd < 0 || fd >= NR_OPEN || current->filp[fd] == NULL)
         return (-EBADF);
+    
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
-    return (sock->ops->getname(sock, usockaddr, usockaddr_len, 1));
+    
+//    return (sock->ops->getname(sock, usockaddr, usockaddr_len, 1));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_getname(sock, usockaddr, usockaddr_len, 1);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_getname(sock, usockaddr, usockaddr_len, 1);
+    }
 }
 
-static int
-sock_send(int fd, void *buff, int len, unsigned flags)
+static int sock_send(int fd, void *buff, int len, unsigned flags)
 {
     struct socket *sock;
     struct file *file;
@@ -842,15 +852,22 @@ sock_send(int fd, void *buff, int len, unsigned flags)
 
     if (fd < 0 || fd >= NR_OPEN || ((file = current->filp[fd]) == NULL))
         return (-EBADF);
+    
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
 
-    return (sock->ops->send(sock, buff, len, (file->f_flags & O_NONBLOCK), flags));
+//    return (sock->ops->send(sock, buff, len, (file->f_flags & O_NONBLOCK), flags));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_send(sock, buff, len, (file->f_flags & O_NONBLOCK), flags);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_send(sock, buff, len, (file->f_flags & O_NONBLOCK), flags);
+    }
 }
 
-static int
-sock_sendto(int fd, void *buff, int len, unsigned flags,
-            struct sockaddr *addr, int addr_len)
+static int sock_sendto(int fd, void *buff, int len, unsigned flags, struct sockaddr *addr, int addr_len)
 {
     struct socket *sock;
     struct file *file;
@@ -865,12 +882,18 @@ sock_sendto(int fd, void *buff, int len, unsigned flags,
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
 
-    return (sock->ops->sendto(sock, buff, len, (file->f_flags & O_NONBLOCK),
-                              flags, addr, addr_len));
+//    return (sock->ops->sendto(sock, buff, len, (file->f_flags & O_NONBLOCK), flags, addr, addr_len));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_sendto(sock, buff, len, (file->f_flags & O_NONBLOCK), flags, addr, addr_len);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_sendto(sock, buff, len, (file->f_flags & O_NONBLOCK), flags, addr, addr_len);
+    }
 }
 
-static int
-sock_recv(int fd, void *buff, int len, unsigned flags)
+static int sock_recv(int fd, void *buff, int len, unsigned flags)
 {
     struct socket *sock;
     struct file *file;
@@ -884,12 +907,18 @@ sock_recv(int fd, void *buff, int len, unsigned flags)
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
 
-    return (sock->ops->recv(sock, buff, len, (file->f_flags & O_NONBLOCK), flags));
+//    return (sock->ops->recv(sock, buff, len, (file->f_flags & O_NONBLOCK), flags));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_recv(sock, buff, len, (file->f_flags & O_NONBLOCK), flags);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_recv(sock, buff, len, (file->f_flags & O_NONBLOCK), flags);
+    }
 }
 
-static int
-sock_recvfrom(int fd, void *buff, int len, unsigned flags,
-              struct sockaddr *addr, int *addr_len)
+static int sock_recvfrom(int fd, void *buff, int len, unsigned flags, struct sockaddr *addr, int *addr_len)
 {
     struct socket *sock;
     struct file *file;
@@ -901,15 +930,22 @@ sock_recvfrom(int fd, void *buff, int len, unsigned flags,
 
     if (fd < 0 || fd >= NR_OPEN || ((file = current->filp[fd]) == NULL))
         return (-EBADF);
+    
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
 
-    return (sock->ops->recvfrom(sock, buff, len, (file->f_flags & O_NONBLOCK),
-                                flags, addr, addr_len));
+//    return (sock->ops->recvfrom(sock, buff, len, (file->f_flags & O_NONBLOCK), flags, addr, addr_len));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_recvfrom(sock, buff, len, (file->f_flags & O_NONBLOCK), flags, addr, addr_len);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_recvfrom(sock, buff, len, (file->f_flags & O_NONBLOCK), flags, addr, addr_len);
+    }
 }
 
-static int
-sock_setsockopt(int fd, int level, int optname, char *optval, int optlen)
+static int sock_setsockopt(int fd, int level, int optname, char *optval, int optlen)
 {
     struct socket *sock;
     struct file *file;
@@ -924,11 +960,18 @@ sock_setsockopt(int fd, int level, int optname, char *optval, int optlen)
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
 
-    return (sock->ops->setsockopt(sock, level, optname, optval, optlen));
+//    return (sock->ops->setsockopt(sock, level, optname, optval, optlen));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_setsockopt(sock, level, optname, optval, optlen);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_setsockopt(sock, level, optname, optval, optlen);
+    }
 }
 
-static int
-sock_getsockopt(int fd, int level, int optname, char *optval, int *optlen)
+static int sock_getsockopt(int fd, int level, int optname, char *optval, int *optlen)
 {
     struct socket *sock;
     struct file *file;
@@ -945,11 +988,18 @@ sock_getsockopt(int fd, int level, int optname, char *optval, int *optlen)
 
     if (!sock->ops || !sock->ops->getsockopt)
         return (0);
-    return (sock->ops->getsockopt(sock, level, optname, optval, optlen));
+//    return (sock->ops->getsockopt(sock, level, optname, optval, optlen));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_getsockopt(sock, level, optname, optval, optlen);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_getsockopt(sock, level, optname, optval, optlen);
+    }
 }
 
-static int
-sock_shutdown(int fd, int how)
+static int sock_shutdown(int fd, int how)
 {
     struct socket *sock;
     struct file *file;
@@ -962,7 +1012,15 @@ sock_shutdown(int fd, int how)
     if (!(sock = sockfd_lookup(fd, NULL)))
         return (-ENOTSOCK);
 
-    return (sock->ops->shutdown(sock, how));
+//    return (sock->ops->shutdown(sock, how));
+    if (sock->ops->family == AF_INET)
+    {
+        return inet_shutdown(sock, how);
+    }
+    else if (sock->ops->family == AF_UNIX)
+    {
+        return unix_proto_shutdown(sock, how);
+    }
 }
 
 int sock_fcntl(struct file *filp, unsigned int cmd, unsigned long arg)
@@ -971,7 +1029,9 @@ int sock_fcntl(struct file *filp, unsigned int cmd, unsigned long arg)
 
     sock = socki_lookup(filp->f_inode);
     if (sock != NULL && sock->ops != NULL && sock->ops->fcntl != NULL)
-        return (sock->ops->fcntl(sock, cmd, arg));
+//        return (sock->ops->fcntl(sock, cmd, arg));
+        return inet_fcntl(sock, cmd, arg);
+}
     return (-EINVAL);
 }
 

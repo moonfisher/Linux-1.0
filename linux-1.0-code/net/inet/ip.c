@@ -1339,7 +1339,18 @@ int ip_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
         * check the protocol handler's return values here...
         */
 //        ipprot->handler(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
-        raw_rcv(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
+        if (iph->protocol == IPPROTO_ICMP)
+        {
+            icmp_rcv(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
+        }
+        else if (iph->protocol == IPPROTO_TCP)
+        {
+            tcp_rcv(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
+        }
+        else if (iph->protocol == IPPROTO_UDP)
+        {
+            udp_rcv(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
+        }
     }
 
     /*

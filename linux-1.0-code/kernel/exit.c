@@ -48,11 +48,14 @@ int send_sig(unsigned long sig, struct task_struct *p, int priv)
 {
     if (!p || sig > 32)
         return -EINVAL;
+    
     if (!priv && ((sig != SIGCONT) || (current->session != p->session)) &&
         (current->euid != p->euid) && (current->uid != p->uid) && !suser())
         return -EPERM;
+    
     if (!sig)
         return 0;
+    
     if ((sig == SIGKILL) || (sig == SIGCONT))
     {
         if (p->state == TASK_STOPPED)
@@ -61,6 +64,7 @@ int send_sig(unsigned long sig, struct task_struct *p, int priv)
         p->signal &= ~((1 << (SIGSTOP - 1)) | (1 << (SIGTSTP - 1)) |
                        (1 << (SIGTTIN - 1)) | (1 << (SIGTTOU - 1)));
     }
+    
     /* Depends on order SIGSTOP, SIGTSTP, SIGTTIN, SIGTTOU */
     if ((sig >= SIGSTOP) && (sig <= SIGTTOU))
         p->signal &= ~(1 << (SIGCONT - 1));

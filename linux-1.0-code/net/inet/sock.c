@@ -451,8 +451,7 @@ void destroy_sock(struct sock *sk)
     DPRINTF((DBG_INET, "leaving destroy_sock\n"));
 }
 
-static int
-inet_fcntl(struct socket *sock, unsigned int cmd, unsigned long arg)
+static int inet_fcntl(struct socket *sock, unsigned int cmd, unsigned long arg)
 {
     struct sock *sk;
 
@@ -1269,9 +1268,7 @@ static int inet_accept(struct socket *sock, struct socket *newsock, int flags)
     return (0);
 }
 
-static int
-inet_getname(struct socket *sock, struct sockaddr *uaddr,
-             int *uaddr_len, int peer)
+static int inet_getname(struct socket *sock, struct sockaddr *uaddr, int *uaddr_len, int peer)
 {
     struct sockaddr_in sin;
     struct sock *sk;
@@ -1322,8 +1319,7 @@ inet_getname(struct socket *sock, struct sockaddr *uaddr,
     return (0);
 }
 
-static int
-inet_read(struct socket *sock, char *ubuf, int size, int noblock)
+static int inet_read(struct socket *sock, char *ubuf, int size, int noblock)
 {
     struct sock *sk;
 
@@ -1343,12 +1339,12 @@ inet_read(struct socket *sock, char *ubuf, int size, int noblock)
         put_sock(sk->num, sk);
         sk->dummy_th.source = ntohs(sk->num);
     }
-    return (sk->prot->read(sk, (unsigned char *)ubuf, size, noblock, 0));
+    
+//    return (sk->prot->read(sk, (unsigned char *)ubuf, size, noblock, 0));
+    return tcp_read(sk, (unsigned char *)ubuf, size, noblock, 0);
 }
 
-static int
-inet_recv(struct socket *sock, void *ubuf, int size, int noblock,
-          unsigned flags)
+static int inet_recv(struct socket *sock, void *ubuf, int size, int noblock, unsigned flags)
 {
     struct sock *sk;
 
@@ -1368,42 +1364,12 @@ inet_recv(struct socket *sock, void *ubuf, int size, int noblock,
         put_sock(sk->num, sk);
         sk->dummy_th.source = ntohs(sk->num);
     }
-    return (sk->prot->read(sk, (unsigned char *)ubuf, size, noblock, flags));
+    
+//    return (sk->prot->read(sk, (unsigned char *)ubuf, size, noblock, flags));
+    return tcp_read(sk, (unsigned char *)ubuf, size, noblock, flags);
 }
 
-static int
-inet_write(struct socket *sock, char *ubuf, int size, int noblock)
-{
-    struct sock *sk;
-
-    sk = (struct sock *)sock->data;
-    if (sk == NULL)
-    {
-        printk("Warning: sock->data = NULL: %d\n", __LINE__);
-        return (0);
-    }
-    if (sk->shutdown & SEND_SHUTDOWN)
-    {
-        send_sig(SIGPIPE, current, 1);
-        return (-EPIPE);
-    }
-
-    /* We may need to bind the socket. */
-    if (sk->num == 0)
-    {
-        sk->num = get_new_socknum(sk->prot, 0);
-        if (sk->num == 0)
-            return (-EAGAIN);
-        put_sock(sk->num, sk);
-        sk->dummy_th.source = ntohs(sk->num);
-    }
-
-    return (sk->prot->write(sk, (unsigned char *)ubuf, size, noblock, 0));
-}
-
-static int
-inet_send(struct socket *sock, void *ubuf, int size, int noblock,
-          unsigned flags)
+static int inet_write(struct socket *sock, char *ubuf, int size, int noblock)
 {
     struct sock *sk;
 
@@ -1429,12 +1395,41 @@ inet_send(struct socket *sock, void *ubuf, int size, int noblock,
         sk->dummy_th.source = ntohs(sk->num);
     }
 
-    return (sk->prot->write(sk, (unsigned char *)ubuf, size, noblock, flags));
+//    return (sk->prot->write(sk, (unsigned char *)ubuf, size, noblock, 0));
+    return tcp_write(sk, (unsigned char *)ubuf, size, noblock, 0);
 }
 
-static int
-inet_sendto(struct socket *sock, void *ubuf, int size, int noblock,
-            unsigned flags, struct sockaddr *sin, int addr_len)
+static int inet_send(struct socket *sock, void *ubuf, int size, int noblock, unsigned flags)
+{
+    struct sock *sk;
+
+    sk = (struct sock *)sock->data;
+    if (sk == NULL)
+    {
+        printk("Warning: sock->data = NULL: %d\n", __LINE__);
+        return (0);
+    }
+    if (sk->shutdown & SEND_SHUTDOWN)
+    {
+        send_sig(SIGPIPE, current, 1);
+        return (-EPIPE);
+    }
+
+    /* We may need to bind the socket. */
+    if (sk->num == 0)
+    {
+        sk->num = get_new_socknum(sk->prot, 0);
+        if (sk->num == 0)
+            return (-EAGAIN);
+        put_sock(sk->num, sk);
+        sk->dummy_th.source = ntohs(sk->num);
+    }
+
+//    return (sk->prot->write(sk, (unsigned char *)ubuf, size, noblock, flags));
+    return tcp_write(sk, (unsigned char *)ubuf, size, noblock, flags);
+}
+
+static int inet_sendto(struct socket *sock, void *ubuf, int size, int noblock, unsigned flags, struct sockaddr *sin, int addr_len)
 {
     struct sock *sk;
 
@@ -1463,13 +1458,11 @@ inet_sendto(struct socket *sock, void *ubuf, int size, int noblock,
         sk->dummy_th.source = ntohs(sk->num);
     }
 
-    return (sk->prot->sendto(sk, (unsigned char *)ubuf, size, noblock, flags,
-                             (struct sockaddr_in *)sin, addr_len));
+//    return (sk->prot->sendto(sk, (unsigned char *)ubuf, size, noblock, flags, (struct sockaddr_in *)sin, addr_len));
+    udp_sendto(sk, (unsigned char *)ubuf, size, noblock, flags, (struct sockaddr_in *)sin, addr_len);
 }
 
-static int
-inet_recvfrom(struct socket *sock, void *ubuf, int size, int noblock,
-              unsigned flags, struct sockaddr *sin, int *addr_len)
+static int inet_recvfrom(struct socket *sock, void *ubuf, int size, int noblock, unsigned flags, struct sockaddr *sin, int *addr_len)
 {
     struct sock *sk;
 
@@ -1493,12 +1486,11 @@ inet_recvfrom(struct socket *sock, void *ubuf, int size, int noblock,
         sk->dummy_th.source = ntohs(sk->num);
     }
 
-    return (sk->prot->recvfrom(sk, (unsigned char *)ubuf, size, noblock, flags,
-                               (struct sockaddr_in *)sin, addr_len));
+//    return (sk->prot->recvfrom(sk, (unsigned char *)ubuf, size, noblock, flags, (struct sockaddr_in *)sin, addr_len));
+    return udp_recvfrom(sk, (unsigned char *)ubuf, size, noblock, flags, (struct sockaddr_in *)sin, addr_len);
 }
 
-static int
-inet_shutdown(struct socket *sock, int how)
+static int inet_shutdown(struct socket *sock, int how)
 {
     struct sock *sk;
 
@@ -1524,12 +1516,12 @@ inet_shutdown(struct socket *sock, int how)
         return (-ENOTCONN);
     sk->shutdown |= how;
     if (sk->prot->shutdown)
-        sk->prot->shutdown(sk, how);
+//        sk->prot->shutdown(sk, how);
+        tcp_shutdown(sk, how);
     return (0);
 }
 
-static int
-inet_select(struct socket *sock, int sel_type, select_table *wait)
+static int inet_select(struct socket *sock, int sel_type, select_table *wait)
 {
     struct sock *sk;
 
@@ -1545,7 +1537,8 @@ inet_select(struct socket *sock, int sel_type, select_table *wait)
         DPRINTF((DBG_INET, "select on non-selectable socket.\n"));
         return (0);
     }
-    return (sk->prot->select(sk, sel_type, wait));
+//    return (sk->prot->select(sk, sel_type, wait));
+    return tcp_select(sk, sel_type, wait);
 }
 
 static int inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
@@ -1563,65 +1556,65 @@ static int inet_ioctl(struct socket *sock, unsigned int cmd, unsigned long arg)
 
     switch (cmd)
     {
-    case FIOSETOWN:
-    case SIOCSPGRP:
-        err = verify_area(VERIFY_READ, (int *)arg, sizeof(long));
-        if (err)
-            return err;
-        if (sk)
-            sk->proc = get_fs_long((int *)arg);
-        return (0);
-    case FIOGETOWN:
-    case SIOCGPGRP:
-        if (sk)
-        {
-            err = verify_area(VERIFY_WRITE, (void *)arg, sizeof(long));
+        case FIOSETOWN:
+        case SIOCSPGRP:
+            err = verify_area(VERIFY_READ, (int *)arg, sizeof(long));
             if (err)
                 return err;
-            put_fs_long(sk->proc, (int *)arg);
-        }
-        return (0);
+            if (sk)
+                sk->proc = get_fs_long((int *)arg);
+            return (0);
+        case FIOGETOWN:
+        case SIOCGPGRP:
+            if (sk)
+            {
+                err = verify_area(VERIFY_WRITE, (void *)arg, sizeof(long));
+                if (err)
+                    return err;
+                put_fs_long(sk->proc, (int *)arg);
+            }
+            return (0);
 
-    case DDIOCSDBG:
-        return (dbg_ioctl((void *)arg, DBG_INET));
+        case DDIOCSDBG:
+            return (dbg_ioctl((void *)arg, DBG_INET));
 
-    case SIOCADDRT:
-    case SIOCADDRTOLD:
-    case SIOCDELRT:
-    case SIOCDELRTOLD:
-        return (rt_ioctl(cmd, (void *)arg));
+        case SIOCADDRT:
+        case SIOCADDRTOLD:
+        case SIOCDELRT:
+        case SIOCDELRTOLD:
+            return (rt_ioctl(cmd, (void *)arg));
 
-    case SIOCDARP:
-    case SIOCGARP:
-    case SIOCSARP:
-        return (arp_ioctl(cmd, (void *)arg));
+        case SIOCDARP:
+        case SIOCGARP:
+        case SIOCSARP:
+            return (arp_ioctl(cmd, (void *)arg));
 
-    case IP_SET_DEV:
-    case SIOCGIFCONF:
-    case SIOCGIFFLAGS:
-    case SIOCSIFFLAGS:
-    case SIOCGIFADDR:
-    case SIOCSIFADDR:
-    case SIOCGIFDSTADDR:
-    case SIOCSIFDSTADDR:
-    case SIOCGIFBRDADDR:
-    case SIOCSIFBRDADDR:
-    case SIOCGIFNETMASK:
-    case SIOCSIFNETMASK:
-    case SIOCGIFMETRIC:
-    case SIOCSIFMETRIC:
-    case SIOCGIFMEM:
-    case SIOCSIFMEM:
-    case SIOCGIFMTU:
-    case SIOCSIFMTU:
-    case SIOCSIFLINK:
-    case SIOCGIFHWADDR:
-        return (dev_ioctl(cmd, (void *)arg));
+        case IP_SET_DEV:
+        case SIOCGIFCONF:
+        case SIOCGIFFLAGS:
+        case SIOCSIFFLAGS:
+        case SIOCGIFADDR:
+        case SIOCSIFADDR:
+        case SIOCGIFDSTADDR:
+        case SIOCSIFDSTADDR:
+        case SIOCGIFBRDADDR:
+        case SIOCSIFBRDADDR:
+        case SIOCGIFNETMASK:
+        case SIOCSIFNETMASK:
+        case SIOCGIFMETRIC:
+        case SIOCSIFMETRIC:
+        case SIOCGIFMEM:
+        case SIOCSIFMEM:
+        case SIOCGIFMTU:
+        case SIOCSIFMTU:
+        case SIOCSIFLINK:
+        case SIOCGIFHWADDR:
+            return (dev_ioctl(cmd, (void *)arg));
 
-    default:
-        if (!sk || !sk->prot->ioctl)
-            return (-EINVAL);
-        return (sk->prot->ioctl(sk, cmd, arg));
+        default:
+            if (!sk || !sk->prot->ioctl)
+                return (-EINVAL);
+            return (sk->prot->ioctl(sk, cmd, arg));
     }
     /*NOTREACHED*/
     return (0);
@@ -1687,8 +1680,7 @@ unsigned long sock_rspace(struct sock *sk)
     return (0);
 }
 
-unsigned long
-sock_wspace(struct sock *sk)
+unsigned long sock_wspace(struct sock *sk)
 {
     if (sk != NULL)
     {
@@ -1743,9 +1735,7 @@ void sock_rfree(struct sock *sk, void *mem, unsigned long size)
  * This routine must find a socket given a TCP or UDP header.
  * Everyhting is assumed to be in net order.
  */
-struct sock *get_sock(struct proto *prot, unsigned short num,
-                      unsigned long raddr,
-                      unsigned short rnum, unsigned long laddr)
+struct sock *get_sock(struct proto *prot, unsigned short num, unsigned long raddr, unsigned short rnum, unsigned long laddr)
 {
     struct sock *s;
     unsigned short hnum;
@@ -1838,9 +1828,7 @@ void release_sock(struct sock *sk)
     }
 }
 
-static int
-inet_fioctl(struct inode *inode, struct file *file,
-            unsigned int cmd, unsigned long arg)
+static int inet_fioctl(struct inode *inode, struct file *file, unsigned int cmd, unsigned long arg)
 {
     int minor, ret;
 
@@ -1852,39 +1840,39 @@ inet_fioctl(struct inode *inode, struct file *file,
     /* Now dispatch on the minor device. */
     switch (minor)
     {
-    case 0: /* INET */
-        ret = inet_ioctl(NULL, cmd, arg);
-        break;
-    case 1: /* IP */
-        ret = ip_ioctl(NULL, cmd, arg);
-        break;
-    case 2: /* ICMP */
-        ret = icmp_ioctl(NULL, cmd, arg);
-        break;
-    case 3: /* TCP */
-        ret = tcp_ioctl(NULL, cmd, arg);
-        break;
-    case 4: /* UDP */
-        ret = udp_ioctl(NULL, cmd, arg);
-        break;
-    default:
-        ret = -ENODEV;
+        case 0: /* INET */
+            ret = inet_ioctl(NULL, cmd, arg);
+            break;
+        case 1: /* IP */
+            ret = ip_ioctl(NULL, cmd, arg);
+            break;
+        case 2: /* ICMP */
+            ret = icmp_ioctl(NULL, cmd, arg);
+            break;
+        case 3: /* TCP */
+            ret = tcp_ioctl(NULL, cmd, arg);
+            break;
+        case 4: /* UDP */
+            ret = udp_ioctl(NULL, cmd, arg);
+            break;
+        default:
+            ret = -ENODEV;
     }
 
     return (ret);
 }
 
 static struct file_operations inet_fops =
-    {
-        NULL,        /* LSEEK	*/
-        NULL,        /* READ		*/
-        NULL,        /* WRITE	*/
-        NULL,        /* READDIR	*/
-        NULL,        /* SELECT	*/
-        inet_fioctl, /* IOCTL	*/
-        NULL,        /* MMAP		*/
-        NULL,        /* OPEN		*/
-        NULL         /* CLOSE	*/
+{
+    NULL,        /* LSEEK	*/
+    NULL,        /* READ		*/
+    NULL,        /* WRITE	*/
+    NULL,        /* READDIR	*/
+    NULL,        /* SELECT	*/
+    inet_fioctl, /* IOCTL	*/
+    NULL,        /* MMAP		*/
+    NULL,        /* OPEN		*/
+    NULL         /* CLOSE	*/
 };
 
 /*
@@ -1952,7 +1940,9 @@ void inet_proto_init(struct ddi_proto *pro)
         udp_prot.sock_array[i] = NULL;
         raw_prot.sock_array[i] = NULL;
     }
+    
     printk("IP Protocols: ");
+    
     for (p = inet_protocol_base; p != NULL;)
     {
         struct inet_protocol *tmp;

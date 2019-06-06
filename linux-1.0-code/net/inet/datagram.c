@@ -93,6 +93,7 @@ restart:
         if (sk->rqueue == NULL)
         {
             interruptible_sleep_on(sk->sleep);
+            
             /* Signals may need a restart of the syscall */
             if (current->signal & ~current->blocked)
             {
@@ -171,35 +172,35 @@ int datagram_select(struct sock *sk, int sel_type, select_table *wait)
     select_wait(sk->sleep, wait);
     switch (sel_type)
     {
-    case SEL_IN:
-        if (sk->type == SOCK_SEQPACKET && sk->state == TCP_CLOSE)
-        {
-            /* Connection closed: Wake up */
-            return (1);
-        }
-        if (sk->rqueue != NULL || sk->err != 0)
-        {
-            /* This appears to be consistent
-               with other stacks */
-            return (1);
-        }
-        return (0);
+        case SEL_IN:
+            if (sk->type == SOCK_SEQPACKET && sk->state == TCP_CLOSE)
+            {
+                /* Connection closed: Wake up */
+                return (1);
+            }
+            if (sk->rqueue != NULL || sk->err != 0)
+            {
+                /* This appears to be consistent
+                   with other stacks */
+                return (1);
+            }
+            return (0);
 
-    case SEL_OUT:
-        if (sk->prot && sk->prot->wspace(sk) >= MIN_WRITE_SPACE)
-        {
-            return (1);
-        }
-        if (sk->prot == NULL && sk->sndbuf - sk->wmem_alloc >= MIN_WRITE_SPACE)
-        {
-            return (1);
-        }
-        return (0);
+        case SEL_OUT:
+            if (sk->prot && sk->prot->wspace(sk) >= MIN_WRITE_SPACE)
+            {
+                return (1);
+            }
+            if (sk->prot == NULL && sk->sndbuf - sk->wmem_alloc >= MIN_WRITE_SPACE)
+            {
+                return (1);
+            }
+            return (0);
 
-    case SEL_EX:
-        if (sk->err)
-            return (1); /* Socket has gone into error state (eg icmp error) */
-        return (0);
+        case SEL_EX:
+            if (sk->err)
+                return (1); /* Socket has gone into error state (eg icmp error) */
+            return (0);
     }
     return (0);
 }

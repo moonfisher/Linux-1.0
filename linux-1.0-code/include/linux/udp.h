@@ -17,7 +17,6 @@
 #ifndef _LINUX_UDP_H
 #define _LINUX_UDP_H
 
-
 struct udphdr
 {
     unsigned short	source;
@@ -25,6 +24,5 @@ struct udphdr
     unsigned short	len;
     unsigned short	check;
 };
-
 
 #endif	/* _LINUX_UDP_H */

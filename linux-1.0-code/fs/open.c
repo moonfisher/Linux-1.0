@@ -491,9 +491,11 @@ asmlinkage int sys_close(unsigned int fd)
 
     if (fd >= NR_OPEN)
         return -EBADF;
+    
     FD_CLR(fd, &current->close_on_exec);
     if (!(filp = current->filp[fd]))
         return -EBADF;
+    
     current->filp[fd] = NULL;
     return (close_fp(filp, fd));
 }

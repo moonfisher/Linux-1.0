@@ -252,8 +252,7 @@ static void icmp_echo(struct icmphdr *icmph, struct sk_buff *skb, struct device 
     skb2->free = 1;
 
     /* Build Layer 2-3 headers for message back to source */
-    offset = ip_build_header(skb2, daddr, saddr, &dev,
-                             IPPROTO_ICMP, opt, len, skb->ip_hdr->tos, 255);
+    offset = ip_build_header(skb2, daddr, saddr, &dev, IPPROTO_ICMP, opt, len, skb->ip_hdr->tos, 255);
     if (offset < 0)
     {
         printk("ICMP: Could not build IP Header for ICMP ECHO Response\n");
@@ -293,10 +292,7 @@ icmp_info(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
 }
 
 /* Handle ICMP_ADRESS_MASK requests. */
-static void
-icmp_address(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
-             unsigned long saddr, unsigned long daddr, int len,
-             struct options *opt)
+static void icmp_address(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev, unsigned long saddr, unsigned long daddr, int len, struct options *opt)
 {
     struct icmphdr *icmphr;
     struct sk_buff *skb2;
@@ -316,8 +312,7 @@ icmp_address(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
     skb2->free = 1;
 
     /* Build Layer 2-3 headers for message back to source */
-    offset = ip_build_header(skb2, daddr, saddr, &dev,
-                             IPPROTO_ICMP, opt, len, skb->ip_hdr->tos, 255);
+    offset = ip_build_header(skb2, daddr, saddr, &dev, IPPROTO_ICMP, opt, len, skb->ip_hdr->tos, 255);
     if (offset < 0)
     {
         printk("ICMP: Could not build IP Header for ICMP ADDRESS Response\n");
@@ -349,9 +344,7 @@ icmp_address(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
 }
 
 /* Deal with incoming ICMP packets. */
-int icmp_rcv(struct sk_buff *skb1, struct device *dev, struct options *opt,
-             unsigned long daddr, unsigned short len,
-             unsigned long saddr, int redo, struct inet_protocol *protocol)
+int icmp_rcv(struct sk_buff *skb1, struct device *dev, struct options *opt, unsigned long daddr, unsigned short len, unsigned long saddr, int redo, struct inet_protocol *protocol)
 {
     struct icmphdr *icmph;
     unsigned char *buff;
@@ -383,42 +376,42 @@ int icmp_rcv(struct sk_buff *skb1, struct device *dev, struct options *opt,
     /* Parse the ICMP message */
     switch (icmph->type)
     {
-    case ICMP_TIME_EXCEEDED:
-    case ICMP_DEST_UNREACH:
-    case ICMP_SOURCE_QUENCH:
-        icmp_unreach(icmph, skb1);
-        return (0);
-    case ICMP_REDIRECT:
-        icmp_redirect(icmph, skb1, dev);
-        return (0);
-    case ICMP_ECHO:
-        icmp_echo(icmph, skb1, dev, saddr, daddr, len, opt);
-        return 0;
-    case ICMP_ECHOREPLY:
-        skb1->sk = NULL;
-        kfree_skb(skb1, FREE_READ);
-        return (0);
-    case ICMP_INFO_REQUEST:
-        icmp_info(icmph, skb1, dev, saddr, daddr, len, opt);
-        return 0;
-    case ICMP_INFO_REPLY:
-        skb1->sk = NULL;
-        kfree_skb(skb1, FREE_READ);
-        return (0);
-    case ICMP_ADDRESS:
-        icmp_address(icmph, skb1, dev, saddr, daddr, len, opt);
-        return 0;
-    case ICMP_ADDRESSREPLY:
-        skb1->sk = NULL;
-        kfree_skb(skb1, FREE_READ);
-        return (0);
-    default:
-        DPRINTF((DBG_ICMP,
-                 "ICMP: Unsupported ICMP from %s, type = 0x%X\n",
-                 in_ntoa(saddr), icmph->type));
-        skb1->sk = NULL;
-        kfree_skb(skb1, FREE_READ);
-        return (0);
+        case ICMP_TIME_EXCEEDED:
+        case ICMP_DEST_UNREACH:
+        case ICMP_SOURCE_QUENCH:
+            icmp_unreach(icmph, skb1);
+            return (0);
+        case ICMP_REDIRECT:
+            icmp_redirect(icmph, skb1, dev);
+            return (0);
+        case ICMP_ECHO:
+            icmp_echo(icmph, skb1, dev, saddr, daddr, len, opt);
+            return 0;
+        case ICMP_ECHOREPLY:
+            skb1->sk = NULL;
+            kfree_skb(skb1, FREE_READ);
+            return (0);
+        case ICMP_INFO_REQUEST:
+            icmp_info(icmph, skb1, dev, saddr, daddr, len, opt);
+            return 0;
+        case ICMP_INFO_REPLY:
+            skb1->sk = NULL;
+            kfree_skb(skb1, FREE_READ);
+            return (0);
+        case ICMP_ADDRESS:
+            icmp_address(icmph, skb1, dev, saddr, daddr, len, opt);
+            return 0;
+        case ICMP_ADDRESSREPLY:
+            skb1->sk = NULL;
+            kfree_skb(skb1, FREE_READ);
+            return (0);
+        default:
+            DPRINTF((DBG_ICMP,
+                     "ICMP: Unsupported ICMP from %s, type = 0x%X\n",
+                     in_ntoa(saddr), icmph->type));
+            skb1->sk = NULL;
+            kfree_skb(skb1, FREE_READ);
+            return (0);
     }
     /*NOTREACHED*/
     skb1->sk = NULL;
