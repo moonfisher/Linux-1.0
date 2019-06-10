@@ -194,11 +194,11 @@ _system_call:
 1:	call _syscall_trace
 
 	.align 4,0x90
-ret_from_sys_call:
+ret_from_sys_call:  # 系统调动返回点，比如从这里返回到用户态
 	cmpl $0,_intr_count
 	jne 2f
 	movl _bh_mask,%eax
-	andl _bh_active,%eax
+    andl _bh_active,%eax    # 看下上半部分逻辑中有没有标记过中断，需要在此时处理
 	jne handle_bottom_half
 9:	movl EFLAGS(%esp),%eax		# check VM86 flag: CS/SS are
 	testl $(VM_MASK),%eax		# different then
@@ -231,7 +231,8 @@ signal_return:
 	testl $(VM_MASK),EFLAGS(%ecx)
 	jne v86_signal_return
 	pushl %ebx
-	call _do_signal
+    call _do_signal     # signal 信号的处理也是在中断返回之后
+                        # https://blog.csdn.net/heiworld/article/details/25563125
 	popl %ebx
 	popl %ebx
 	RESTORE_ALL

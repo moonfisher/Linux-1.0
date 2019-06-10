@@ -44,9 +44,138 @@ struct desc_struct default_ldt;
  * some others too.
  */
 #define __NR__exit __NR_exit
-static inline _syscall0(int, idle) static inline _syscall0(int, fork) static inline _syscall0(int, pause) static inline _syscall1(int, setup, void *, BIOS) static inline _syscall0(int, sync) static inline _syscall0(pid_t, setsid) static inline _syscall3(int, write, int, fd, const char *, buf, off_t, count) static inline _syscall1(int, dup, int, fd) static inline _syscall3(int, execve, const char *, file, char **, argv, char **, envp) static inline _syscall3(int, open, const char *, file, int, flag, int, mode) static inline _syscall1(int, close, int, fd) static inline _syscall1(int, _exit, int, exitcode) static inline _syscall3(pid_t, waitpid, pid_t, pid, int *, wait_stat, int, options)
 
-    static inline pid_t wait(int *wait_stat)
+static inline int idle(void)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_idle));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int fork(void)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_fork));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int pause(void)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_pause));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int sync(void)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_sync));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline pid_t setsid(void)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_setsid));
+    if (__res >= 0)
+        return (pid_t) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int setup(void *BIOS)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_setup), "b" ((long)(BIOS)));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int dup(int fd)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_dup), "b" ((long)(fd)));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int close(int fd)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_close), "b" ((long)(fd)));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int _exit(int exitcode)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR__exit), "b" ((long)(exitcode)));
+    if (__res >= 0)
+        return (int) __res;
+    errno = -__res;
+    return -1;
+}
+
+static inline int write(int fd, const char *buf, off_t count)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_write),"b" ((long)(fd)),"c" ((long)(buf)),"d" ((long)(count)));
+    if (__res>=0)
+        return (int) __res;
+    errno=-__res;
+    return -1;
+}
+
+static inline int execve(const char *file, char **argv, char **envp)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_execve),"b" ((long)(file)),"c" ((long)(argv)),"d" ((long)(envp)));
+    if (__res>=0)
+        return (int) __res;
+    errno=-__res;
+    return -1;
+}
+
+static inline int open(const char *file, int flag, int mode)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_open),"b" ((long)(file)),"c" ((long)(flag)),"d" ((long)(mode)));
+    if (__res>=0)
+        return (int) __res;
+    errno=-__res;
+    return -1;
+}
+
+static inline pid_t waitpid(pid_t pid, int *wait_stat, int options)
+{
+    long __res;
+    __asm__ volatile ("int $0x80" : "=a" (__res) : "0" (__NR_waitpid),"b" ((long)(pid)),"c" ((long)(wait_stat)),"d" ((long)(options)));
+    if (__res>=0)
+        return (pid_t) __res;
+    errno=-__res;
+    return -1;
+}
+
+static inline pid_t wait(int *wait_stat)
 {
     return waitpid(-1, wait_stat, 0);
 }
