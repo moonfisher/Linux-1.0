@@ -47,12 +47,9 @@ struct arp_table
 extern struct sk_buff *arp_q;
 
 extern void arp_destroy(unsigned long paddr);
-extern int arp_rcv(struct sk_buff *skb, struct device *dev,
-                   struct packet_type *pt);
-extern int arp_find(unsigned char *haddr, unsigned long paddr,
-                    struct device *dev, unsigned long saddr);
-extern void arp_add(unsigned long addr, unsigned char *haddr,
-                    struct device *dev);
+extern int arp_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt);
+extern int arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev, unsigned long saddr);
+extern void arp_add(unsigned long addr, unsigned char *haddr, struct device *dev);
 extern void arp_add_broad(unsigned long addr, struct device *dev);
 extern void arp_queue(struct sk_buff *skb);
 extern int arp_get_info(char *buffer);

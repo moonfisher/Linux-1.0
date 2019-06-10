@@ -75,6 +75,7 @@ int wd_probe(struct device *dev)
 
     if (ioaddr < 0)
         return ENXIO; /* Don't probe at all. */
+    
     if (ioaddr > 0x100)
         return !wdprobe1(ioaddr, dev);
 
@@ -119,23 +120,23 @@ int wdprobe1(int ioaddr, struct device *dev)
 
         switch (inb(ioaddr + 2))
         {
-        case 0x03:
-            word16 = 0;
-            model_name = "PDI8023-8";
-            break;
-        case 0x05:
-            word16 = 0;
-            model_name = "PDUC8023";
-            break;
-        case 0x0a:
-            word16 = 1;
-            model_name = "PDI8023-16";
-            break;
-        /* Either 0x01 (dumb) or they've released a new version. */
-        default:
-            word16 = 0;
-            model_name = "PDI8023";
-            break;
+            case 0x03:
+                word16 = 0;
+                model_name = "PDI8023-8";
+                break;
+            case 0x05:
+                word16 = 0;
+                model_name = "PDUC8023";
+                break;
+            case 0x0a:
+                word16 = 1;
+                model_name = "PDI8023-16";
+                break;
+            /* Either 0x01 (dumb) or they've released a new version. */
+            default:
+                word16 = 0;
+                model_name = "PDI8023";
+                break;
         }
         dev->mem_start = ((reg5 & 0x1c) + 0xc0) << 12;
         dev->irq = (reg5 & 0xe0) == 0xe0 ? 10 : (reg5 >> 5) + 1;
@@ -248,6 +249,9 @@ int wdprobe1(int ioaddr, struct device *dev)
 
     /* Snarf the interrupt now.  There's no point in waiting since we cannot
        share and the board will usually be enabled. */
+    /*
+     设置网卡中断，一旦网卡收到数据包，会通过中断来通知 CPU 取数据
+    */
     if (irqaction(dev->irq, &ei_sigaction))
     {
         printk(" unable to get IRQ %d.\n", dev->irq);

@@ -54,7 +54,7 @@ struct ipq
     struct ipfrag *fragments; /* linked list of received fragments	*/
     struct ipq *next;         /* linked list pointers			*/
     struct ipq *prev;
-    struct device *dev; /* Device - for icmp replies */
+    struct device *dev;     /* Device - for icmp replies */
 };
 
 extern int backoff(int n);

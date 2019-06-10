@@ -104,8 +104,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, struct device *dev)
     iph = (struct iphdr *)(skb_in->data + dev->hard_header_len);
 
     /* Build Layer 2-3 headers for message back to source. */
-    offset = ip_build_header(skb, dev->pa_addr, iph->saddr,
-                             &dev, IPPROTO_ICMP, NULL, len, skb_in->ip_hdr->tos, 255);
+    offset = ip_build_header(skb, dev->pa_addr, iph->saddr, &dev, IPPROTO_ICMP, NULL, len, skb_in->ip_hdr->tos, 255);
     if (offset < 0)
     {
         skb->sk = NULL;
@@ -122,8 +121,7 @@ void icmp_send(struct sk_buff *skb_in, int type, int code, struct device *dev)
     icmph->un.gateway = 0;
     memcpy(icmph + 1, iph, sizeof(struct iphdr) + 8);
 
-    icmph->checksum = ip_compute_csum((unsigned char *)icmph,
-                                      sizeof(struct icmphdr) + sizeof(struct iphdr) + 8);
+    icmph->checksum = ip_compute_csum((unsigned char *)icmph, sizeof(struct icmphdr) + sizeof(struct iphdr) + 8);
 
     DPRINTF((DBG_ICMP, ">>\n"));
     print_icmp(icmph);
@@ -281,10 +279,7 @@ static void icmp_echo(struct icmphdr *icmph, struct sk_buff *skb, struct device 
 }
 
 /* Handle the ICMP INFORMATION REQUEST. */
-static void
-icmp_info(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev,
-          unsigned long saddr, unsigned long daddr, int len,
-          struct options *opt)
+static void icmp_info(struct icmphdr *icmph, struct sk_buff *skb, struct device *dev, unsigned long saddr, unsigned long daddr, int len, struct options *opt)
 {
     /* NOT YET */
     skb->sk = NULL;

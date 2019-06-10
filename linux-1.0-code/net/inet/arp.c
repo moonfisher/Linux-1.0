@@ -298,11 +298,7 @@ static int arp_response(struct arphdr *arp1, struct device *dev, int addrtype)
     }
 
     /* Get some mem and initialize it for the return trip. */
-    skb = alloc_skb(sizeof(struct sk_buff) +
-                        sizeof(struct arphdr) +
-                        (2 * arp1->ar_hln) + (2 * arp1->ar_pln) +
-                        dev->hard_header_len,
-                    GFP_ATOMIC);
+    skb = alloc_skb(sizeof(struct sk_buff) + sizeof(struct arphdr) + (2 * arp1->ar_hln) + (2 * arp1->ar_pln) + dev->hard_header_len, GFP_ATOMIC);
     if (skb == NULL)
     {
         printk("ARP: no memory available for ARP REPLY!\n");
@@ -310,8 +306,7 @@ static int arp_response(struct arphdr *arp1, struct device *dev, int addrtype)
     }
 
     skb->mem_addr = skb;
-    skb->len = sizeof(struct arphdr) + (2 * arp1->ar_hln) +
-               (2 * arp1->ar_pln) + dev->hard_header_len;
+    skb->len = sizeof(struct arphdr) + (2 * arp1->ar_hln) + (2 * arp1->ar_pln) + dev->hard_header_len;
     skb->mem_len = sizeof(struct sk_buff) + skb->len;
     hlen = dev->hard_header(skb->data, dev, ETH_P_ARP, src, dst, skb->len);
     if (hlen < 0)
@@ -632,11 +627,7 @@ void arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
     DPRINTF((DBG_ARP, "dev=%s, ", dev->name));
     DPRINTF((DBG_ARP, "saddr=%s)\n", in_ntoa(saddr)));
 
-    skb = alloc_skb(sizeof(struct sk_buff) +
-                        sizeof(struct arphdr) + (2 * dev->addr_len) +
-                        dev->hard_header_len +
-                        (2 * 4 /* arp->plen */),
-                    GFP_ATOMIC);
+    skb = alloc_skb(sizeof(struct sk_buff) + sizeof(struct arphdr) + (2 * dev->addr_len) + dev->hard_header_len + (2 * 4 /* arp->plen */), GFP_ATOMIC);
     if (skb == NULL)
     {
         printk("ARP: No memory available for REQUEST %s\n", in_ntoa(paddr));
@@ -646,8 +637,7 @@ void arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
     /* Fill in the request. */
     skb->sk = NULL;
     skb->mem_addr = skb;
-    skb->len = sizeof(struct arphdr) +
-               dev->hard_header_len + (2 * dev->addr_len) + 8;
+    skb->len = sizeof(struct arphdr) + dev->hard_header_len + (2 * dev->addr_len) + 8;
     skb->mem_len = sizeof(struct sk_buff) + skb->len;
     skb->arp = 1;
     skb->dev = dev;
@@ -685,6 +675,7 @@ void arp_send(unsigned long paddr, struct device *dev, unsigned long saddr)
 }
 
 /* Find an ARP mapping in the cache. If not found, post a REQUEST. */
+// 从 ARP 表里找到 mac 地址
 int arp_find(unsigned char *haddr, unsigned long paddr, struct device *dev, unsigned long saddr)
 {
     struct arp_table *apt;

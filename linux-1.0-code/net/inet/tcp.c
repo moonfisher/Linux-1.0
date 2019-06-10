@@ -1641,9 +1641,7 @@ static int tcp_recvfrom(struct sock *sk, unsigned char *to, int to_len, int nonb
 }
 
 /* This routine will send an RST to the other tcp. */
-static void
-tcp_reset(unsigned long saddr, unsigned long daddr, struct tcphdr *th,
-          struct proto *prot, struct options *opt, struct device *dev, int tos, int ttl)
+static void tcp_reset(unsigned long saddr, unsigned long daddr, struct tcphdr *th, struct proto *prot, struct options *opt, struct device *dev, int tos, int ttl)
 {
     struct sk_buff *buff;
     struct tcphdr *t1;
@@ -1667,8 +1665,7 @@ tcp_reset(unsigned long saddr, unsigned long daddr, struct tcphdr *th,
     t1 = (struct tcphdr *)buff->data;
 
     /* Put in the IP header and routing stuff. */
-    tmp = prot->build_header(buff, saddr, daddr, &dev, IPPROTO_TCP, opt,
-                             sizeof(struct tcphdr), tos, ttl);
+    tmp = prot->build_header(buff, saddr, daddr, &dev, IPPROTO_TCP, opt, sizeof(struct tcphdr), tos, ttl);
     if (tmp < 0)
     {
         buff->free = 1;
@@ -2826,8 +2823,7 @@ static int tcp_data(struct sk_buff *skb, struct sock *sk, unsigned long saddr, u
 
             if (after(th->ack_seq, sk->acked_seq))
             {
-                newwindow = sk->window -
-                            (th->ack_seq - sk->acked_seq);
+                newwindow = sk->window - (th->ack_seq - sk->acked_seq);
                 if (newwindow < 0)
                     newwindow = 0;
                 sk->window = newwindow;
@@ -2851,8 +2847,7 @@ static int tcp_data(struct sk_buff *skb, struct sock *sk, unsigned long saddr, u
                 {
                     if (after(skb2->h.th->ack_seq, sk->acked_seq))
                     {
-                        newwindow = sk->window -
-                                    (skb2->h.th->ack_seq - sk->acked_seq);
+                        newwindow = sk->window - (skb2->h.th->ack_seq - sk->acked_seq);
                         if (newwindow < 0)
                             newwindow = 0;
                         sk->window = newwindow;

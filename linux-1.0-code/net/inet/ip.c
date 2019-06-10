@@ -191,6 +191,7 @@ static int ip_send(struct sk_buff *skb, unsigned long daddr, int len, struct dev
  * protocol knows what it's doing, otherwise it uses the
  * routing/ARP tables to select a device struct.
  */
+// 根据目的地址查路由表找到具体的网卡设备 dev
 int ip_build_header(struct sk_buff *skb, unsigned long saddr, unsigned long daddr, struct device **dev, int type, struct options *opt, int len, int tos, int ttl)
 {
     static struct options optmem;
@@ -1338,6 +1339,7 @@ int ip_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
         * based on the datagram protocol.  We should really
         * check the protocol handler's return values here...
         */
+        // 根据协议类型来分发到不同的协议模块
 //        ipprot->handler(skb2, dev, opts_p ? &opt : 0, iph->daddr, (ntohs(iph->tot_len) - (iph->ihl * 4)), iph->saddr, 0, ipprot);
         if (iph->protocol == IPPROTO_ICMP)
         {

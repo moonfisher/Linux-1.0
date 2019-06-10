@@ -549,6 +549,7 @@ int udp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt, unsign
     struct udphdr *uh;
 
     uh = (struct udphdr *)skb->h.uh;
+    // 根据 ip 地址，端口号找到对应的 sock
     sk = get_sock(&udp_prot, uh->dest, saddr, uh->source, daddr);
     if (sk == NULL)
     {
@@ -597,7 +598,7 @@ int udp_rcv(struct sk_buff *skb, struct device *dev, struct options *opt, unsign
     print_udp(uh);
 
     /* Now add it to the data chain and wake things up. */
-
+    // 把数据放在消息队列里
     skb_queue_tail(&sk->rqueue, skb);
 
     skb->len = len - sizeof(*uh);

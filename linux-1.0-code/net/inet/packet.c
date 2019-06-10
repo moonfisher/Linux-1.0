@@ -79,10 +79,7 @@ int packet_rcv(struct sk_buff *skb, struct device *dev, struct packet_type *pt)
 }
 
 /* This will do terrible things if len + ipheader + devheader > dev->mtu */
-static int
-packet_sendto(struct sock *sk, unsigned char *from, int len,
-              int noblock, unsigned flags, struct sockaddr_in *usin,
-              int addr_len)
+static int packet_sendto(struct sock *sk, unsigned char *from, int len, int noblock, unsigned flags, struct sockaddr_in *usin, int addr_len)
 {
     struct sk_buff *skb;
     struct device *dev;
@@ -147,15 +144,12 @@ packet_sendto(struct sock *sk, unsigned char *from, int len,
     return (len);
 }
 
-static int
-packet_write(struct sock *sk, unsigned char *buff,
-             int len, int noblock, unsigned flags)
+static int packet_write(struct sock *sk, unsigned char *buff, int len, int noblock, unsigned flags)
 {
     return (packet_sendto(sk, buff, len, noblock, flags, NULL, 0));
 }
 
-static void
-packet_close(struct sock *sk, int timeout)
+static void packet_close(struct sock *sk, int timeout)
 {
     sk->inuse = 1;
     sk->state = TCP_CLOSE;
@@ -165,8 +159,7 @@ packet_close(struct sock *sk, int timeout)
     release_sock(sk);
 }
 
-static int
-packet_init(struct sock *sk)
+static int packet_init(struct sock *sk)
 {
     struct packet_type *p;
 
@@ -189,9 +182,7 @@ packet_init(struct sock *sk)
  * This should be easy, if there is something there
  * we return it, otherwise we block.
  */
-int packet_recvfrom(struct sock *sk, unsigned char *to, int len,
-                    int noblock, unsigned flags, struct sockaddr_in *sin,
-                    int *addr_len)
+int packet_recvfrom(struct sock *sk, unsigned char *to, int len, int noblock, unsigned flags, struct sockaddr_in *sin, int *addr_len)
 {
     int copied = 0;
     struct sk_buff *skb;
@@ -248,35 +239,36 @@ int packet_read(struct sock *sk, unsigned char *buff,
 }
 
 struct proto packet_prot =
+{
+    sock_wmalloc,
+    sock_rmalloc,
+    sock_wfree,
+    sock_rfree,
+    sock_rspace,
+    sock_wspace,
+    packet_close,
+    packet_read,
+    packet_write,
+    packet_sendto,
+    packet_recvfrom,
+    ip_build_header,
+    udp_connect,
+    NULL,
+    ip_queue_xmit,
+    ip_retransmit,
+    NULL,
+    NULL,
+    NULL,
+    datagram_select,
+    NULL,
+    packet_init,
+    NULL,
+    NULL, /* No set/get socket options */
+    NULL,
+    128,
+    0,
     {
-        sock_wmalloc,
-        sock_rmalloc,
-        sock_wfree,
-        sock_rfree,
-        sock_rspace,
-        sock_wspace,
-        packet_close,
-        packet_read,
-        packet_write,
-        packet_sendto,
-        packet_recvfrom,
-        ip_build_header,
-        udp_connect,
         NULL,
-        ip_queue_xmit,
-        ip_retransmit,
-        NULL,
-        NULL,
-        NULL,
-        datagram_select,
-        NULL,
-        packet_init,
-        NULL,
-        NULL, /* No set/get socket options */
-        NULL,
-        128,
-        0,
-        {
-            NULL,
-        },
-        "PACKET"};
+    },
+    "PACKET"    
+};

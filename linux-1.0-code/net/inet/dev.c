@@ -68,35 +68,37 @@
 #ifdef CONFIG_IPX
 
 static struct packet_type ipx_8023_type =
-    {
-        NET16(ETH_P_802_3),
-        0,
-        ipx_rcv,
-        NULL,
-        NULL};
+{
+    NET16(ETH_P_802_3),
+    0,
+    ipx_rcv,
+    NULL,
+    NULL
+};
 
 static struct packet_type ipx_packet_type =
-    {
-        NET16(ETH_P_IPX),
-        0,
-        ipx_rcv,
-        NULL,
-        &ipx_8023_type};
+{
+    NET16(ETH_P_IPX),
+    0,
+    ipx_rcv,
+    NULL,
+    &ipx_8023_type
+};
 
 #endif
 
 #ifdef CONFIG_AX25
 
 static struct packet_type ax25_packet_type =
-    {
-        NET16(ETH_P_AX25),
-        0,
-        ax25_rcv,
-        NULL,
+{
+    NET16(ETH_P_AX25),
+    0,
+    ax25_rcv,
+    NULL,
 #ifdef CONFIG_IPX
-        &ipx_packet_type
+    &ipx_packet_type
 #else
-        NULL
+    NULL
 #endif
 };
 #endif
@@ -136,8 +138,7 @@ static struct sk_buff *volatile backlog = NULL;
 static unsigned long ip_bcast = 0;
 
 /* Return the lesser of the two values. */
-static unsigned long
-min(unsigned long a, unsigned long b)
+static unsigned long min(unsigned long a, unsigned long b)
 {
     if (a < b)
         return (a);
@@ -145,8 +146,7 @@ min(unsigned long a, unsigned long b)
 }
 
 /* Determine a default network mask, based on the IP address. */
-static unsigned long
-get_mask(unsigned long addr)
+static unsigned long get_mask(unsigned long addr)
 {
     unsigned long dst;
 
@@ -493,10 +493,14 @@ void netif_rx(struct sk_buff *skb)
     skb->free = 1;
 
     /* and add it to the "backlog" queue. */
+    // 网卡收到的数据先放到队列
     IS_SKB(skb);
     skb_queue_tail(&backlog, skb);
 
     /* If any packet arrived, mark it for processing. */
+    /*
+     这里是标记有数据来了，并没有马上处理从网卡收到的数据，在 do_bottom_half 里统一处理
+    */
     if (backlog != NULL)
         mark_bh(INET_BH);
 
@@ -600,6 +604,9 @@ int in_inet_bh() /* Used by timer.c */
  * process any data that came in from some interface.
  *
  */
+/*
+ 这里搜索到的
+*/
 void inet_bh(void *tmp)
 {
     struct sk_buff *skb;
@@ -639,6 +646,7 @@ void inet_bh(void *tmp)
         * SLIP and PLIP have no alternative but to force the type to be
         * IP or something like that.  Sigh- FvK
         */
+        // 从以太网包结构里获取上层协议类型 type
 //        type = skb->dev->type_trans(skb, skb->dev);
         type = eth_type_trans(skb, skb->dev);
 
@@ -1027,7 +1035,7 @@ void dev_init(void)
      * from the chain disconnecting the device until the
      * next reboot.
      */
-    dev2 = NULL;
+    dev2 = NULL;    // 一般都是 eth0_dev
     for (dev = dev_base; dev != NULL; dev = dev->next)
     {
 //        if (dev->init && dev->init(dev))
@@ -1043,7 +1051,7 @@ void dev_init(void)
             dev2 = dev;
         }
     }
-
+    
     /* Set up some IP addresses. */
     ip_bcast = in_aton("255.255.255.255");
 }

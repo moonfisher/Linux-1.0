@@ -90,6 +90,13 @@ void enable_irq(unsigned int irq_nr)
  * enabled.  do_bottom_half() is atomic with respect to itself: a
  * bottom_half handler need not be re-entrant.
  */
+/*
+ 下半部是为了解决内核中驱动程序响应中断的效率问题而设置的机制。
+ 通常在上半部响应中断，将关键数据保存下来。而下半部负责在内核空间作进一步的数据处理，以便最终
+ 交付给用户使用。
+ 但在 Linux2.4 中有了新的 tasklet 机制来替代 bottomhalf 机制，bottomhalf 机制存在的意义
+ 主要是兼容和移植了。
+*/
 asmlinkage void do_bottom_half(void)
 {
     unsigned long active;

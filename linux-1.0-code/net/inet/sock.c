@@ -740,13 +740,14 @@ static int inet_listen(struct socket *sock, int backlog)
  *	Default callbacks for user INET sockets. These just wake up
  *	the user owning the socket.
  */
-
+// 唤醒阻塞中的进程来读取网络数据
 static void def_callback1(struct sock *sk)
 {
     if (!sk->dead)
         wake_up_interruptible(sk->sleep);
 }
 
+// 唤醒阻塞中的进程来读取网络数据
 static void def_callback2(struct sock *sk, int len)
 {
     if (!sk->dead)
@@ -1943,19 +1944,22 @@ void inet_proto_init(struct ddi_proto *pro)
     
     printk("IP Protocols: ");
     
-    for (p = inet_protocol_base; p != NULL;)
-    {
-        struct inet_protocol *tmp;
-
-        tmp = (struct inet_protocol *)p->next;
-        inet_add_protocol(p);
-        printk("%s%s", p->name, tmp ? ", " : "\n");
-        p = tmp;
-    }
+//    for (p = inet_protocol_base; p != NULL;)
+//    {
+//        struct inet_protocol *tmp;
+//        tmp = (struct inet_protocol *)p->next;
+//        inet_add_protocol(p);
+//        printk("%s%s", p->name, tmp ? ", " : "\n");
+//        p = tmp;
+//    }
+    inet_add_protocol(&icmp_protocol);
+    inet_add_protocol(&udp_protocol);
+    inet_add_protocol(&tcp_protocol);
 
     /* Initialize the DEV module. */
     dev_init();
 
     /* Initialize the "Buffer Head" pointers. */
+    // 初始化网络收到数据之后的回调入口，网络收到数据，首次处理在 inet_bh 里
     bh_base[INET_BH].routine = inet_bh;
 }

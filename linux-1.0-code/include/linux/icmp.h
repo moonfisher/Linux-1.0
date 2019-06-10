@@ -21,7 +21,7 @@
 #define ICMP_DEST_UNREACH	3	/* Destination Unreachable	*/
 #define ICMP_SOURCE_QUENCH	4	/* Source Quench		*/
 #define ICMP_REDIRECT		5	/* Redirect (change route)	*/
-#define ICMP_ECHO		8	/* Echo Request			*/
+#define ICMP_ECHO		    8	/* Echo Request			*/
 #define ICMP_TIME_EXCEEDED	11	/* Time Exceeded		*/
 #define ICMP_PARAMETERPROB	12	/* Parameter Problem		*/
 #define ICMP_TIMESTAMP		13	/* Timestamp Request		*/

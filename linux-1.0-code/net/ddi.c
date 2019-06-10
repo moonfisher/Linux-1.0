@@ -71,12 +71,17 @@ void ddi_init(void)
     PRINTK(("DDI: Starting up!\n"));
 
     /* First off, kick all configured protocols. */
-    pro = protocols;
-    while (pro->name != NULL)
-    {
-        (*pro->init)(pro);
-        pro++;
-    }
+    /*
+     初始化当前支持的协议，主要是 inet 和 unix 的初始化
+    */
+//    pro = protocols;
+//    while (pro->name != NULL)
+//    {
+//        (*pro->init)(pro);
+//        pro++;
+//    }
+    unix_proto_init();
+    inet_proto_init();
 
     /* Done.  Now kick all configured device drivers. */
     dev = devices;
