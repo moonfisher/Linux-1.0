@@ -1034,8 +1034,7 @@ static inline int input_available_p(struct tty_struct *tty)
     return 0;
 }
 
-static int read_chan(struct tty_struct *tty, struct file *file,
-                     unsigned char *buf, unsigned int nr)
+static int read_chan(struct tty_struct *tty, struct file *file, unsigned char *buf, unsigned int nr)
 {
     struct wait_queue wait = { current, NULL };
     int c;
@@ -1852,8 +1851,7 @@ void do_SAK( struct tty_struct *tty)
  * the kernel stack getting too deep, which might happen if the
  * callback routine calls tty_write_data with itself as an argument.
  */
-int tty_write_data(struct tty_struct *tty, char *bufp, int buflen,
-                   void (*callback)(void *data), void *callarg)
+int tty_write_data(struct tty_struct *tty, char *bufp, int buflen, void (*callback)(void *data), void *callarg)
 {
     int head, tail, count;
     unsigned long flags;

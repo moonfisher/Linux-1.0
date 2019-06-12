@@ -221,21 +221,21 @@ extern unsigned long scsi_dev_init(unsigned long, unsigned long);
 /*
  * This is set up by the setup-routine at boot-time
  */
-#define PARAM empty_zero_page
-#define EXT_MEM_K (*(unsigned short *)(PARAM + 2))
-#define DRIVE_INFO (*(struct drive_info_struct *)(PARAM + 0x80))
-#define SCREEN_INFO (*(struct screen_info *)(PARAM + 0))
-#define MOUNT_ROOT_RDONLY (*(unsigned short *)(PARAM + 0x1F2))
-#define RAMDISK_SIZE (*(unsigned short *)(PARAM + 0x1F8))
-#define ORIG_ROOT_DEV (*(unsigned short *)(PARAM + 0x1FC))
-#define AUX_DEVICE_INFO (*(unsigned char *)(PARAM + 0x1FF))
+#define PARAM               empty_zero_page
+#define EXT_MEM_K           (*(unsigned short *)(PARAM + 2))
+#define DRIVE_INFO          (*(struct drive_info_struct *)(PARAM + 0x80))
+#define SCREEN_INFO         (*(struct screen_info *)(PARAM + 0))
+#define MOUNT_ROOT_RDONLY   (*(unsigned short *)(PARAM + 0x1F2))
+#define RAMDISK_SIZE        (*(unsigned short *)(PARAM + 0x1F8))
+#define ORIG_ROOT_DEV       (*(unsigned short *)(PARAM + 0x1FC))
+#define AUX_DEVICE_INFO     (*(unsigned char *)(PARAM + 0x1FF))
 
 /*
  * Boot command-line arguments
  */
-#define MAX_INIT_ARGS 8
-#define MAX_INIT_ENVS 8
-#define COMMAND_LINE ((char *)(PARAM + 2048))
+#define MAX_INIT_ARGS   8
+#define MAX_INIT_ENVS   8
+#define COMMAND_LINE    ((char *)(PARAM + 2048))
 
 extern void time_init(void);
 

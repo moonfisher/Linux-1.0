@@ -590,6 +590,7 @@ static int do_execve(char *filename, char **argv, char **envp, struct pt_regs *r
 
     if (regs->cs != USER_CS)
         return -EINVAL;
+    
     bprm.p = PAGE_SIZE * MAX_ARG_PAGES - 4;
     for (i = 0; i < MAX_ARG_PAGES; i++) /* clear page-table */
         bprm.page[i] = 0;

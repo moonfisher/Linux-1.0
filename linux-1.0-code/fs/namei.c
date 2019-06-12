@@ -165,8 +165,7 @@ int follow_link(struct inode *dir, struct inode *inode,
  * dir_namei() returns the inode of the directory of the
  * specified name, and the name within that directory.
  */
-static int dir_namei(const char *pathname, int *namelen, const char **name,
-                     struct inode *base, struct inode **res_inode)
+static int dir_namei(const char *pathname, int *namelen, const char **name, struct inode *base, struct inode **res_inode)
 {
     char c;
     const char *thisname;
@@ -293,8 +292,7 @@ int namei(const char *pathname, struct inode **res_inode)
  * which is a lot more logical, and also allows the "no perm" needed
  * for symlinks (where the permissions are checked later).
  */
-int open_namei(const char *pathname, int flag, int mode,
-               struct inode **res_inode, struct inode *base)
+int open_namei(const char *pathname, int flag, int mode, struct inode **res_inode, struct inode *base)
 {
     const char *basename;
     int namelen, error;

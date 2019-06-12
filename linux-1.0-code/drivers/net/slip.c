@@ -440,8 +440,7 @@ sl_bump(struct slip *sl)
 }
 
 /* TTY finished sending a datagram, so clean up. */
-static void
-sl_next(struct slip *sl)
+static void sl_next(struct slip *sl)
 {
     DPRINTF((DBG_SLIP, "SLIP: sl_next(0x%X) called!\n", sl));
     sl_unlock(sl);
@@ -449,8 +448,7 @@ sl_next(struct slip *sl)
 }
 
 /* Encapsulate one IP datagram and stuff into a TTY queue. */
-static void
-sl_encaps(struct slip *sl, unsigned char *icp, int len)
+static void sl_encaps(struct slip *sl, unsigned char *icp, int len)
 {
     unsigned char *bp, *p;
     int count;
@@ -520,8 +518,7 @@ sl_encaps(struct slip *sl, unsigned char *icp, int len)
 
     /* Tell TTY to send it on its way. */
     DPRINTF((DBG_SLIP, "SLIP: kicking TTY for %d bytes at 0x%X\n", count, bp));
-    if (tty_write_data(sl->tty, (char *)bp, count,
-                       (void (*)(void *))sl_next, (void *)sl) == 0)
+    if (tty_write_data(sl->tty, (char *)bp, count, (void (*)(void *))sl_next, (void *)sl) == 0)
     {
         DPRINTF((DBG_SLIP, "SLIP: TTY already done with %d bytes!\n", count));
         sl_next(sl);

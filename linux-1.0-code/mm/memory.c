@@ -1151,8 +1151,7 @@ unsigned long paging_init(unsigned long start_mem, unsigned long end_mem)
     return start_mem;
 }
 
-void mem_init(unsigned long start_low_mem,
-              unsigned long start_mem, unsigned long end_mem)
+void mem_init(unsigned long start_low_mem, unsigned long start_mem, unsigned long end_mem)
 {
     int codepages = 0;
     int reservedpages = 0;

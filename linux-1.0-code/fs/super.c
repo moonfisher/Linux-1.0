@@ -130,8 +130,7 @@ void put_super(dev_t dev)
         sb->s_op->put_super(sb);
 }
 
-static struct super_block *read_super(dev_t dev, char *name, int flags,
-                                      void *data, int silent)
+static struct super_block *read_super(dev_t dev, char *name, int flags, void *data, int silent)
 {
     struct super_block *s;
     struct file_system_type *type;
@@ -545,6 +544,7 @@ asmlinkage int sys_mount(char *dev_name, char *dir_name, char *type,
     return retval;
 }
 
+// 挂载根文件系统
 void mount_root(void)
 {
     struct file_system_type *fs_type;

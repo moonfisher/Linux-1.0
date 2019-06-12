@@ -361,29 +361,29 @@ static int memory_open(struct inode *inode, struct file *filp)
 {
     switch (MINOR(inode->i_rdev))
     {
-    case 0:
-        filp->f_op = &ram_fops;
-        break;
-    case 1:
-        filp->f_op = &mem_fops;
-        break;
-    case 2:
-        filp->f_op = &kmem_fops;
-        break;
-    case 3:
-        filp->f_op = &null_fops;
-        break;
-    case 4:
-        filp->f_op = &port_fops;
-        break;
-    case 5:
-        filp->f_op = &zero_fops;
-        break;
-    case 7:
-        filp->f_op = &full_fops;
-        break;
-    default:
-        return -ENODEV;
+        case 0:
+            filp->f_op = &ram_fops;
+            break;
+        case 1:
+            filp->f_op = &mem_fops;
+            break;
+        case 2:
+            filp->f_op = &kmem_fops;
+            break;
+        case 3:
+            filp->f_op = &null_fops;
+            break;
+        case 4:
+            filp->f_op = &port_fops;
+            break;
+        case 5:
+            filp->f_op = &zero_fops;
+            break;
+        case 7:
+            filp->f_op = &full_fops;
+            break;
+        default:
+            return -ENODEV;
     }
     if (filp->f_op && filp->f_op->open)
         return filp->f_op->open(inode, filp);

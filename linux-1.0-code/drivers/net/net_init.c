@@ -66,10 +66,8 @@ unsigned long lance_init(unsigned long mem_start, unsigned long mem_end);
   It's called from init/main.c with the start and end of free memory,
   and returns the new start of free memory.
   */
-
 unsigned long net_dev_init(unsigned long mem_start, unsigned long mem_end)
 {
-
 #ifdef NET_MAJOR_NUM
     if (register_chrdev(NET_MAJOR_NUM, "network", &netcard_fops))
         printk("WARNING: Unable to get major %d for the network devices.\n",

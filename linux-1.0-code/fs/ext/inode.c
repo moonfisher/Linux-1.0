@@ -55,8 +55,7 @@ static struct super_operations ext_sops =
     NULL
 };
 
-struct super_block *ext_read_super(struct super_block *s, void *data,
-                                   int silent)
+struct super_block *ext_read_super(struct super_block *s, void *data, int silent)
 {
     struct buffer_head *bh;
     struct ext_super_block *es;

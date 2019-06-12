@@ -165,6 +165,7 @@ asmlinkage int sys_fork(struct pt_regs regs)
      */
     if (!(p->kernel_stack_page = __get_free_page(GFP_KERNEL)))
         goto bad_fork_cleanup;
+    
     p->tss.es = KERNEL_DS;
     p->tss.cs = KERNEL_CS;
     p->tss.ss = KERNEL_DS;
@@ -189,6 +190,7 @@ asmlinkage int sys_fork(struct pt_regs regs)
         if (childregs->esp == regs.esp)
             clone_flags |= COPYVM;
     }
+    
     p->exit_signal = clone_flags & CSIGNAL;
     p->tss.ldt = _LDT(nr);
     if (p->ldt)
@@ -197,9 +199,11 @@ asmlinkage int sys_fork(struct pt_regs regs)
         if (p->ldt != NULL)
             memcpy(p->ldt, current->ldt, LDT_ENTRIES * LDT_ENTRY_SIZE);
     }
+    
     p->tss.bitmap = offsetof(struct tss_struct, io_bitmap);
     for (i = 0; i < IO_BITMAP_SIZE + 1; i++) /* IO bitmap is actually SIZE+1 */
         p->tss.io_bitmap[i] = ~0;
+    
     if (last_task_used_math == current)
         __asm__("clts ; fnsave %0 ; frstor %0"
                 : "=m"(p->tss.i387));
@@ -207,6 +211,7 @@ asmlinkage int sys_fork(struct pt_regs regs)
     p->shm = NULL;
     if (copy_vm(p) || shm_fork(current, p))
         goto bad_fork_cleanup;
+    
     if (clone_flags & COPYFD)
     {
         for (i = 0; i < NR_OPEN; i++)
@@ -219,12 +224,14 @@ asmlinkage int sys_fork(struct pt_regs regs)
             if ((f = p->filp[i]) != NULL)
                 f->f_count++;
     }
+    
     if (current->pwd)
         current->pwd->i_count++;
     if (current->root)
         current->root->i_count++;
     if (current->executable)
         current->executable->i_count++;
+    
     dup_mmap(p);
     set_tss_desc(gdt + (nr << 1) + FIRST_TSS_ENTRY, &(p->tss));
     if (p->ldt)
@@ -235,6 +242,7 @@ asmlinkage int sys_fork(struct pt_regs regs)
     p->counter = current->counter >> 1;
     p->state = TASK_RUNNING; /* do this last, just in case */
     return p->pid;
+    
 bad_fork_cleanup:
     task[nr] = NULL;
     REMOVE_LINKS(p);

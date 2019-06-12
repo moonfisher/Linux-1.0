@@ -48,20 +48,20 @@
  */
 
 #define UNNAMED_MAJOR	0
-#define MEM_MAJOR	1
+#define MEM_MAJOR	    1
 #define FLOPPY_MAJOR	2
-#define HD_MAJOR	3
-#define TTY_MAJOR	4
+#define HD_MAJOR	    3
+#define TTY_MAJOR	    4
 #define TTYAUX_MAJOR	5
-#define LP_MAJOR	6
+#define LP_MAJOR	    6
 /* unused: 7 */
 #define SCSI_DISK_MAJOR	8
 #define SCSI_TAPE_MAJOR	9
-#define MOUSE_MAJOR	10
+#define MOUSE_MAJOR	    10
 #define SCSI_CDROM_MAJOR 11
 #define QIC02_TAPE_MAJOR 12
 #define XT_DISK_MAJOR	13
-#define SOUND_MAJOR	14
+#define SOUND_MAJOR	    14
 #define CDU31A_CDROM_MAJOR 15
 #define SOCKET_MAJOR	16
 #define AF_UNIX_MAJOR	17

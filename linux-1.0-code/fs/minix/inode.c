@@ -116,9 +116,7 @@ int minix_remount (struct super_block *sb, int *flags, char *data)
     return 0;
 }
 
-
-struct super_block *minix_read_super(struct super_block *s, void *data,
-                                     int silent)
+struct super_block *minix_read_super(struct super_block *s, void *data, int silent)
 {
     struct buffer_head *bh;
     struct minix_super_block *ms;

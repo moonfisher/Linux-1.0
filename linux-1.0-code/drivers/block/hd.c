@@ -185,9 +185,7 @@ static int controller_busy(void)
     return status;
 }
 
-static void hd_out(unsigned int drive, unsigned int nsect, unsigned int sect,
-                   unsigned int head, unsigned int cyl, unsigned int cmd,
-                   void (*intr_addr)(void))
+static void hd_out(unsigned int drive, unsigned int nsect, unsigned int sect, unsigned int head, unsigned int cyl, unsigned int cmd, void (*intr_addr)(void))
 {
     unsigned short port;
 
@@ -630,15 +628,15 @@ static struct gendisk hd_gendisk =
 {
     MAJOR_NR,	/* Major number */
     "hd",		/* Major name */
-    6,		/* Bits to shift to get real from partition */
+    6,		    /* Bits to shift to get real from partition */
     1 << 6,		/* Number of partitions per real */
-      MAX_HD,		/* maximum number of real */
-      hd_geninit,	/* init function */
-      hd,		/* hd struct */
-      hd_sizes,	/* block sizes */
-      0,		/* number */
-      (void *) hd_info,	/* internal */
-      NULL		/* next */
+    MAX_HD,		/* maximum number of real */
+    hd_geninit,	/* init function */
+    hd,		    /* hd struct */
+    hd_sizes,	/* block sizes */
+    0,		    /* number */
+    (void *) hd_info,	/* internal */
+    NULL		/* next */
 };
 
 static void hd_interrupt(int unused)
@@ -755,7 +753,7 @@ static struct file_operations hd_fops =
 {
     NULL,			/* lseek - default */
     block_read,		/* read - general block-dev read */
-    block_write,		/* write - general block-dev write */
+    block_write,    /* write - general block-dev write */
     NULL,			/* readdir - bad */
     NULL,			/* select */
     hd_ioctl,		/* ioctl */
@@ -772,7 +770,7 @@ unsigned long hd_init(unsigned long mem_start, unsigned long mem_end)
         printk("Unable to get major %d for harddisk\n", MAJOR_NR);
         return mem_start;
     }
-    blk_dev[MAJOR_NR].request_fn = DEVICE_REQUEST;
+    blk_dev[MAJOR_NR].request_fn = do_hd_request;
     read_ahead[MAJOR_NR] = 8;		/* 8 sector (4kB) read-ahead */
     hd_gendisk.next = gendisk_head;
     gendisk_head = &hd_gendisk;

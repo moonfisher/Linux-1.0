@@ -886,8 +886,7 @@ static void kbd_bh(void *unused)
                 cli();
                 if (LEFT(&tty->read_q) >= 2)
                 {
-                    set_bit(tty->read_q.head,
-                            &tty->readq_flags);
+                    set_bit(tty->read_q.head, &tty->readq_flags);
                     put_queue(TTY_BREAK);
                     put_queue(0);
                 }

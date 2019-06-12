@@ -88,7 +88,7 @@ long rd_init(long mem_start, int length)
         printk("RAMDISK: Unable to get major %d.\n", MEM_MAJOR);
         return 0;
     }
-    blk_dev[MEM_MAJOR].request_fn = DEVICE_REQUEST;
+    blk_dev[MEM_MAJOR].request_fn = do_rd_request;
     rd_start = (char *) mem_start;
     rd_length = length;
     cp = rd_start;

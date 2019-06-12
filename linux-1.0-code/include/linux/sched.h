@@ -176,38 +176,85 @@ struct task_struct
     int errno;
     int debugreg[8];  /* Hardware debugging registers */
     /* various fields */
-    struct task_struct *next_task, *prev_task;
+    struct task_struct *next_task;
+    struct task_struct *prev_task;
     struct sigaction sigaction[32];
     unsigned long saved_kernel_stack;
     unsigned long kernel_stack_page;
-    int exit_code, exit_signal;
+    int exit_code;
+    int exit_signal;
     int elf_executable: 1;
     int dumpable: 1;
     int swappable: 1;
     int did_exec: 1;
-    unsigned long start_code, end_code, end_data, start_brk, brk, start_stack, start_mmap;
-    unsigned long arg_start, arg_end, env_start, env_end;
-    int pid, pgrp, session, leader;
+    unsigned long start_code;
+    unsigned long end_code;
+    unsigned long end_data;
+    unsigned long start_brk;
+    unsigned long brk;
+    unsigned long start_stack;
+    unsigned long start_mmap;
+    unsigned long arg_start;
+    unsigned long arg_end;
+    unsigned long env_start;
+    unsigned long env_end;
+    int pid;
+    int pgrp;
+    int session;
+    int leader;
     int	groups[NGROUPS];
     /*
      * pointers to (original) parent process, youngest child, younger sibling,
      * older sibling, respectively.  (p->father can be replaced with
      * p->p_pptr->pid)
      */
-    struct task_struct *p_opptr, *p_pptr, *p_cptr, *p_ysptr, *p_osptr;
+    struct task_struct *p_opptr;
+    struct task_struct *p_pptr;
+    struct task_struct *p_cptr;
+    struct task_struct *p_ysptr;
+    struct task_struct *p_osptr;
     struct wait_queue *wait_chldexit;	/* for wait4() */
     /*
      * For ease of programming... Normal sleeps don't need to
      * keep track of a wait-queue: every task has an entry of its own
      */
-    unsigned short uid, euid, suid;
-    unsigned short gid, egid, sgid;
+    // uid (ruid), 用于在系统中标识一个用户是谁，当用户使用用户名和密码成功登录后一个
+    // linux 系统后就唯一确定了他的 uid.
+    // euid, 用于系统决定用户对系统资源的访问权限，通常情况下等于 uid
+    // suid (Set User ID)，用于对外权限的开放。它是跟文件绑定而不是跟用户绑定
+    /*
+     进程在运行的时候，有一些属性，其中包括 实际用户 ID, 实际组 ID, 有效用户 ID, 有效组 ID 等。
+     实际用户 ID 和实际组 ID 标识我们是谁，谁在运行这个程序,一般这 2 个字段在登陆时决定，在一个
+     登陆会话期间，这些值基本上不改变。
+     
+     而有效用户 ID 和有效组 ID 则决定了进程在运行时的权限。内核在决定进程是否有文件存取权限时，是
+     采用了进程的有效用户 ID 来进行判断的。
+     
+     当一个程序设置了为 SUID 位时，内核就知道了运行这个程序的时候，应该认为是文件的所有者在运行这个
+     程序。即该程序运行的时候，有效用户 ID 是该程序的所有者
+    */
+    unsigned short uid;
+    unsigned short euid;
+    unsigned short suid;
+    unsigned short gid;
+    unsigned short egid;
+    unsigned short sgid;
     unsigned long timeout;
-    unsigned long it_real_value, it_prof_value, it_virt_value;
-    unsigned long it_real_incr, it_prof_incr, it_virt_incr;
-    long utime, stime, cutime, cstime, start_time;
-    unsigned long min_flt, maj_flt;
-    unsigned long cmin_flt, cmaj_flt;
+    unsigned long it_real_value;
+    unsigned long it_prof_value;
+    unsigned long it_virt_value;
+    unsigned long it_real_incr;
+    unsigned long it_prof_incr;
+    unsigned long it_virt_incr;
+    long utime;
+    long stime;
+    long cutime;
+    long cstime;
+    long start_time;
+    unsigned long min_flt;
+    unsigned long maj_flt;
+    unsigned long cmin_flt;
+    unsigned long cmaj_flt;
     struct rlimit rlim[RLIM_NLIMITS];
     unsigned short used_math;
     unsigned short rss;	/* number of resident pages */

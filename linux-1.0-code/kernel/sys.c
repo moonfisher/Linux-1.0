@@ -34,18 +34,18 @@ static int proc_sel(struct task_struct *p, int which, int who)
 {
     switch (which)
     {
-    case PRIO_PROCESS:
-        if (!who && p == current)
-            return 1;
-        return (p->pid == who);
-    case PRIO_PGRP:
-        if (!who)
-            who = current->pgrp;
-        return (p->pgrp == who);
-    case PRIO_USER:
-        if (!who)
-            who = current->uid;
-        return (p->uid == who);
+        case PRIO_PROCESS:
+            if (!who && p == current)
+                return 1;
+            return (p->pid == who);
+        case PRIO_PGRP:
+            if (!who)
+                who = current->pgrp;
+            return (p->pgrp == who);
+        case PRIO_USER:
+            if (!who)
+                who = current->uid;
+            return (p->uid == who);
     }
     return 0;
 }

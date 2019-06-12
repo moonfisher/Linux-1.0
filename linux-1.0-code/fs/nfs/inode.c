@@ -58,9 +58,7 @@ void nfs_put_super(struct super_block *sb)
  * daemon.  We stash theses away in the private superblock fields.
  * Later we can add other mount parameters like caching values.
  */
-
-struct super_block *nfs_read_super(struct super_block *sb, void *raw_data,
-                                   int silent)
+struct super_block *nfs_read_super(struct super_block *sb, void *raw_data, int silent)
 {
     struct nfs_mount_data *data = (struct nfs_mount_data *) raw_data;
     struct nfs_server *server;

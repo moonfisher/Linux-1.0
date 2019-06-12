@@ -231,6 +231,10 @@ signal_return:
 	testl $(VM_MASK),EFLAGS(%ecx)
 	jne v86_signal_return
 	pushl %ebx
+# do_signal() 函数式内核系统调用(int 0x80)中断处理程序中对信号预处理程序。
+# 在退出的时候总会检查下信号位图，假如有的会就会调用 do_signal，它会把信号的处理函数插入
+# 到用户程序堆栈中，然后修改中断返回的环境，直接返回到用户态的信号处理函数中先，再从用户态中
+# 跳转到原先执行系统调用的后一条语句中
     call _do_signal     # signal 信号的处理也是在中断返回之后
                         # https://blog.csdn.net/heiworld/article/details/25563125
 	popl %ebx
