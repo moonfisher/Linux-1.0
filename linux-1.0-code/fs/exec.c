@@ -450,8 +450,7 @@ unsigned long change_ldt(unsigned long text_size, unsigned long *page)
  * that aren't on a block boundary, and for files on filesystems
  * without bmap support.
  */
-int read_exec(struct inode *inode, unsigned long offset,
-              char *addr, unsigned long count)
+int read_exec(struct inode *inode, unsigned long offset, char *addr, unsigned long count)
 {
     struct file file;
     int result = -ENOEXEC;
@@ -803,11 +802,12 @@ extern int load_coff_library(int fd);
 
 /* Here are the actual binaries that will be accepted  */
 struct linux_binfmt formats[] =
-    {
-        {load_aout_binary, load_aout_library},
-        {load_elf_binary, load_elf_library},
-        {load_coff_binary, load_coff_library},
-        {NULL, NULL}};
+{
+    {load_aout_binary, load_aout_library},
+    {load_elf_binary, load_elf_library},
+    {load_coff_binary, load_coff_library},
+    {NULL, NULL}    
+};
 
 /*
  * These are the functions used to load a.out style executables and shared

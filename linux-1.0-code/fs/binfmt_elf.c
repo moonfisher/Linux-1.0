@@ -135,8 +135,7 @@ unsigned long *create_elf_tables(char *p, int argc, int envc, struct elfhdr *exe
    is only provided so that we can read a.out libraries that have
    an ELF header */
 
-static unsigned int load_elf_interp(struct elfhdr *interp_elf_ex,
-                                    struct inode *interpreter_inode)
+static unsigned int load_elf_interp(struct elfhdr *interp_elf_ex, struct inode *interpreter_inode)
 {
     struct file *file;
     struct elf_phdr *elf_phdata = NULL;
@@ -322,9 +321,7 @@ int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 
     /* Now read in all of the header information */
 
-    elf_phdata = (struct elf_phdr *)kmalloc(elf_ex.e_phentsize *
-                                                elf_ex.e_phnum,
-                                            GFP_KERNEL);
+    elf_phdata = (struct elf_phdr *)kmalloc(elf_ex.e_phentsize * elf_ex.e_phnum, GFP_KERNEL);
 
     old_fs = get_fs();
     set_fs(get_ds());
